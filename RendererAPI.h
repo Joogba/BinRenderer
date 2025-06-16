@@ -1,5 +1,8 @@
-
 #pragma once
+
+#include "DrawCommand.h"
+
+#include <DirectXMath.h>
 
 namespace BinRenderer {
 
@@ -21,6 +24,9 @@ namespace BinRenderer {
         virtual void Submit(const DrawCommand& cmd) = 0;
         virtual void EndFrame() = 0;
         virtual void Present() = 0;
+
+        virtual void SetViewProj(const DirectX::XMMATRIX& view,
+            const DirectX::XMMATRIX& proj) = 0;
     };
 
     RendererAPI* CreateD3D11Renderer(); // ∆—≈‰∏Æ

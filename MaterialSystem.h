@@ -7,8 +7,7 @@
 
 namespace BinRenderer {
 
-    struct MaterialTag {};
-    using MaterialHandle = Handle<MaterialTag>;
+
 
     class Material {
     public:

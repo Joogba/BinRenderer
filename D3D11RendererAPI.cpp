@@ -3,9 +3,11 @@
 #include "MeshRegistry.h"
 #include "PSORegistry.h"
 #include "MaterialSystem.h"
+#include "RendererAPI.h"
 
 #include <d3d11.h>
 #include <memory>
+#include <DirectXMath.h>
 
 namespace BinRenderer
 {
@@ -15,6 +17,9 @@ namespace BinRenderer
 
     bool D3D11RendererAPI::Init(const InitParams& params) {
         m_hwnd = static_cast<HWND>(params.windowHandle);
+
+        m_width = params.width;
+        m_height = params.height;
 
         DXGI_SWAP_CHAIN_DESC scDesc = {};
         scDesc.BufferCount = 1;
@@ -51,8 +56,21 @@ namespace BinRenderer
         return true;
     }
 
+    void D3D11RendererAPI::SetViewProj(const DirectX::XMMATRIX& view, const DirectX::XMMATRIX& proj) {
+        m_view = view;
+        m_proj = proj;
+        m_viewProj = XMMatrixMultiply(view, proj);
+    }
+
     void D3D11RendererAPI::BeginFrame() {
-        float clearColor[4] = { 0.1f, 0.1f, 0.3f, 1.0f };
+        D3D11_VIEWPORT vp = {};
+        vp.TopLeftX = 0; vp.TopLeftY = 0;
+        vp.Width = static_cast<FLOAT>(m_width); // (실제는 m_width/m_height)
+        vp.Height = static_cast<FLOAT>(m_height);
+        vp.MinDepth = 0.0f; vp.MaxDepth = 1.0f;
+        m_context->RSSetViewports(1, &vp);
+
+        float clearColor[4] = { 1.0f, 1.0f, 0.3f, 1.0f };
         m_context->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), nullptr);
         m_context->ClearRenderTargetView(m_renderTargetView.Get(), clearColor);
     }
@@ -66,7 +84,9 @@ namespace BinRenderer
     {
         for (const auto& cmd : m_drawQueue.GetCommands()) {
             const Mesh* mesh = m_meshRegistry->Get(cmd.meshHandle);
-            const Material* material = m_materialRegistry->Get(cmd.materialHandle);
+            Material* material = m_materialRegistry->Get(cmd.materialHandle);
+            material->GetUniformSet().Set("modelMatrix", &cmd.transform, sizeof(cmd.transform));
+            material->GetUniformSet().Set("viewProj", &m_viewProj, sizeof(m_viewProj));
             if (!mesh || !material) continue;
 
             const PipelineState* pso = m_psoRegistry->Get(material->GetPSO());
@@ -87,6 +107,7 @@ namespace BinRenderer
             m_context->OMSetBlendState(pso->m_blendState.Get(), pso->m_blendFactor, 0xffffffff);
             m_context->OMSetDepthStencilState(pso->m_depthStencilState.Get(), pso->m_stencilRef);
             m_context->RSSetState(pso->m_rasterizerState.Get());
+
 
             // UniformSet으로 상수버퍼 업데이트
             const UniformSet& uniforms = material->GetUniformSet();
@@ -119,8 +140,34 @@ namespace BinRenderer
     void D3D11RendererAPI::Present() {
         m_swapChain->Present(1, 0);
     }
+    // Accessors
+    ID3D11Device* D3D11RendererAPI::GetDevice() const
+    {
+        return m_device.Get();
+    }
 
-    RendererAPI* CreateD3D11Renderer() {
+    ID3D11DeviceContext* D3D11RendererAPI::GetContext() const
+    {
+        return m_context.Get();
+    }
+
+    MeshRegistry* D3D11RendererAPI::GetMeshRegistry() const
+    {
+        return m_meshRegistry.get();
+    }
+
+    PSORegistry* D3D11RendererAPI::GetPSORegistry() const
+    {
+        return m_psoRegistry.get();
+    }
+
+    MaterialRegistry* D3D11RendererAPI::GetMaterialRegistry() const
+    {
+        return m_materialRegistry.get();
+    }
+
+    RendererAPI* CreateD3D11Renderer()
+    {
         return new D3D11RendererAPI();
     }
 

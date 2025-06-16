@@ -19,7 +19,6 @@ namespace BinRenderer {
     struct MeshTag {};
     struct MaterialTag {};
     struct PSOTag {};
-    
 
     using MeshHandle = Handle<MeshTag>;
     using MaterialHandle = Handle<MaterialTag>;

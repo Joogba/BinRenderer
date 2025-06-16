@@ -106,8 +106,9 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -132,6 +133,8 @@
     <ClInclude Include="GeometryGenerator.h" />
     <ClInclude Include="Handle.h" />
     <ClInclude Include="MaterialSystem.h" />
+    <ClInclude Include="MeshData.h" />
+    <ClInclude Include="MeshFactory.h" />
     <ClInclude Include="MeshRegistry.h" />
     <ClInclude Include="PSORegistry.h" />
     <ClInclude Include="RendererAPI.h" />
@@ -143,10 +146,18 @@
     <ClCompile Include="DrawCommand.h" />
     <ClCompile Include="GeometryGenerator.cpp" />
     <ClCompile Include="MaterialSystem.cpp" />
+    <ClCompile Include="MeshFactory.cpp" />
     <ClCompile Include="MeshRegistry.cpp" />
     <ClCompile Include="PipelineState.h" />
     <ClCompile Include="PSORegistry.cpp" />
+    <ClCompile Include="TestApp.cpp" />
     <ClCompile Include="UniformSystem.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Basic.hlsl">
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VSMain</EntryPointName>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

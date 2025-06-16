@@ -10,7 +10,7 @@ namespace BinRenderer
     {
         MeshHandle meshHandle;
         MaterialHandle materialHandle;
-        PSOHandle pso;
+        PSOHandle psoHandle;
         DirectX::XMMATRIX transform;
     };
 }
