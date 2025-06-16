@@ -147,6 +147,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, PSTR, int nCmdShow)
     auto material = std::make_unique<Material>(psoHandle, layout);
     MaterialHandle matHandle = d3d->GetMaterialRegistry()->Register(std::move(material));
 
+    
+
     // 6) 메시 루프
     MSG msg{};
     while (WM_QUIT != msg.message)
@@ -158,6 +160,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, PSTR, int nCmdShow)
             continue;
         }
 
+        
+
         // 7) 렌더링
         renderer->BeginFrame();
 
@@ -166,20 +170,10 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, PSTR, int nCmdShow)
         cmd.materialHandle = matHandle;
         cmd.psoHandle = psoHandle;
         cmd.transform = DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f);
-
-        // modelMatrix 세팅
-        {
-            auto mat = d3d->GetMaterialRegistry()->Get(cmd.materialHandle);
-            mat->GetUniformSet().Set("modelMatrix", &cmd.transform, sizeof(cmd.transform));
-            // viewProj는 Submit()에서 자동으로 채워줌
-        }
+        cmd.viewId = 0;
 
         auto materialPtr = d3d->GetMaterialRegistry()->Get(matHandle);
-        materialPtr->GetUniformSet().Set(
-            "modelMatrix",
-            &cmd.transform,
-            sizeof(cmd.transform)
-        );
+		materialPtr->GetUniformSet().Set("modelMatrix", &cmd.transform, sizeof(cmd.transform));
 
         renderer->Submit(cmd);
         renderer->Submit();   // 큐 비우며 실제 드로우
