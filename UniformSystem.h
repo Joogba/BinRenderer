@@ -1,0 +1,42 @@
+#pragma once
+
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <memory>
+#include <cstdint>
+
+namespace BinRenderer {
+
+    struct UniformInfo {
+        std::string name;
+        uint32_t offset;
+        uint32_t size;
+    };
+
+    class UniformLayout {
+    public:
+        void AddUniform(const std::string& name, uint32_t size);
+        uint32_t GetTotalSize() const { return m_totalSize; }
+        const std::vector<UniformInfo>& GetUniforms() const { return m_uniforms; }
+        const UniformInfo* Find(const std::string& name) const;
+
+    private:
+        std::vector<UniformInfo> m_uniforms;
+        uint32_t m_totalSize = 0;
+    };
+
+    class UniformSet {
+    public:
+        explicit UniformSet(std::shared_ptr<UniformLayout> layout);
+
+        void Set(const std::string& name, const void* data, uint32_t size);
+        const void* GetRawData() const { return m_buffer.data(); }
+        uint32_t GetSize() const { return static_cast<uint32_t>(m_buffer.size()); }
+
+    private:
+        std::shared_ptr<UniformLayout> m_layout;
+        std::vector<uint8_t> m_buffer;
+    };
+
+} // namespace BinRenderer
