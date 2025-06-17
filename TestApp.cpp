@@ -11,20 +11,42 @@
 #include "Handle.h"
  
 using namespace BinRenderer;
+using namespace DirectX;
+
+int newW = 0;
+int newH = 0;
+
+RendererAPI* renderer;
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    if (WM_SIZE == msg)
-    {
-        int w = LOWORD(lParam), h = HIWORD(lParam);
-        // 렌더러 리사이즈 (추가 API 필요 시 구현)
-    }
-    if (WM_DESTROY == msg)
-    {
-        PostQuitMessage(0);
-        return 0;
-    }
-    return DefWindowProc(hWnd, msg, wParam, lParam);
+	switch (msg) {
+	    case WM_SIZE:
+            /*if (renderer)
+            {
+                newW = LOWORD(lParam);
+                newH = HIWORD(lParam);
+                if (newW > 0 && newH > 0)
+                {
+                    auto renderer = reinterpret_cast<D3D11RendererAPI*>(
+                        GetWindowLongPtr(hWnd, GWLP_USERDATA)
+                        );
+                    if (renderer)
+                    {
+
+                        renderer->Resize(newW, newH);
+                    }
+                }
+            }*/
+            break;
+		    // 최소화(0×0) 땐 스킵
+		    
+        case WM_DESTROY:
+		    PostQuitMessage(0);
+		    return 0;
+	}
+	
+	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, PSTR, int nCmdShow)
@@ -58,21 +80,24 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, PSTR, int nCmdShow)
         nullptr
     );
     assert(hWnd && "Failed to create window");
-    ShowWindow(hWnd, nCmdShow);
-
-    // 2) 렌더러 생성 & 초기화
-    RendererAPI* renderer = CreateD3D11Renderer();
+    renderer = CreateD3D11Renderer();
     InitParams params{ hWnd, 1280, 720 };
     assert(renderer->Init(params) && "Init failed");
 
+    SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(renderer));
+    ShowWindow(hWnd, nCmdShow);
+
+    // 2) 렌더러 생성 & 초기화
+    
+
     // 2.1) 카메라(뷰·투영) 행렬 설정
     using namespace DirectX;
-       // 간단히 원점 쪽으로 Z축 -3 떨어진 위치에서 바라보기
-    XMVECTOR eye = XMVectorSet(1.0f, 0.0f, -3.0f, 0.0f);
-    XMVECTOR at = XMVectorSet(1.0f, 0.0f, 1.0f, 0.0f);
+    // 간단히 원점 쪽으로 Z축 -3 떨어진 위치에서 바라보기
+    XMVECTOR eye = XMVectorSet(0.0f, 0.0f, -10.0f, 0.0f);
+    XMVECTOR at = XMVectorZero();
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
     XMMATRIX view = XMMatrixLookAtLH(eye, at, up);
-    XMMATRIX proj = XMMatrixPerspectiveFovLH(XM_PIDIV4, width / (float)height, 0.1f, 100.0f);
+    XMMATRIX proj = XMMatrixPerspectiveFovLH(XM_PIDIV4, (float)width / (float)height, 0.1f, 100.0f);
     renderer->SetViewProj(view, proj);
 
     // 3) 기하 생성 (앱 레벨)
@@ -147,6 +172,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, PSTR, int nCmdShow)
     auto material = std::make_unique<Material>(psoHandle, layout);
     MaterialHandle matHandle = d3d->GetMaterialRegistry()->Register(std::move(material));
 
+    
+
     // 6) 메시 루프
     MSG msg{};
     while (WM_QUIT != msg.message)
@@ -158,6 +185,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, PSTR, int nCmdShow)
             continue;
         }
 
+        
+
         // 7) 렌더링
         renderer->BeginFrame();
 
@@ -166,20 +195,11 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, PSTR, int nCmdShow)
         cmd.materialHandle = matHandle;
         cmd.psoHandle = psoHandle;
         cmd.transform = DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f);
-
-        // modelMatrix 세팅
-        {
-            auto mat = d3d->GetMaterialRegistry()->Get(cmd.materialHandle);
-            mat->GetUniformSet().Set("modelMatrix", &cmd.transform, sizeof(cmd.transform));
-            // viewProj는 Submit()에서 자동으로 채워줌
-        }
+        cmd.viewId = 0;
 
         auto materialPtr = d3d->GetMaterialRegistry()->Get(matHandle);
-        materialPtr->GetUniformSet().Set(
-            "modelMatrix",
-            &cmd.transform,
-            sizeof(cmd.transform)
-        );
+		materialPtr->GetUniformSet().Set("modelMatrix", &cmd.transform, sizeof(cmd.transform));
+
 
         renderer->Submit(cmd);
         renderer->Submit();   // 큐 비우며 실제 드로우

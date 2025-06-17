@@ -8,9 +8,11 @@ namespace BinRenderer
 {
     struct DrawCommand
     {
-        MeshHandle meshHandle;
-        MaterialHandle materialHandle;
-        PSOHandle psoHandle;
-        DirectX::XMMATRIX transform;
+        uint8_t             viewId = 0;
+        MeshHandle          meshHandle;
+        MaterialHandle      materialHandle;
+        PSOHandle           psoHandle;
+        DirectX::XMMATRIX   transform;
+        uint64_t            sortKey = 0;
     };
 }
