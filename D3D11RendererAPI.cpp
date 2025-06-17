@@ -1,4 +1,4 @@
-#include "D3D11RendererAPI.h"
+ï»¿#include "D3D11RendererAPI.h"
 #include "DrawCommand.h"
 #include "MeshRegistry.h"
 #include "PSORegistry.h"
@@ -9,9 +9,12 @@
 #include <d3d11.h>
 #include <memory>
 #include <DirectXMath.h>
+#include <format>
 
 namespace BinRenderer
 {
+    using namespace DirectX;
+
     D3D11RendererAPI::D3D11RendererAPI()
         : m_hwnd(nullptr)
         , m_view(DirectX::XMMatrixIdentity())
@@ -57,7 +60,7 @@ namespace BinRenderer
         m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
 
         m_device->CreateRenderTargetView(backBuffer.Get(), nullptr, &m_renderTargetView);
-        // --- 1) Depth-Stencil Buffer »ı¼º ---
+        // --- 1) Depth-Stencil Buffer ìƒì„± ---
         D3D11_TEXTURE2D_DESC descDepth = {};
         descDepth.Width = params.width;
         descDepth.Height = params.height;
@@ -77,7 +80,7 @@ namespace BinRenderer
             OutputDebugStringA(buf);
         }
 
-        // --- 2) ±âº» Depth-Stencil State »ı¼º (±íÀÌ Å×½ºÆ® ÄÑ±â) ---
+        // --- 2) ê¸°ë³¸ Depth-Stencil State ìƒì„± (ê¹Šì´ í…ŒìŠ¤íŠ¸ ì¼œê¸°) ---
         D3D11_DEPTH_STENCIL_DESC dsDesc = {};
         dsDesc.DepthEnable = TRUE;
         dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
@@ -85,14 +88,14 @@ namespace BinRenderer
         dsDesc.StencilEnable = FALSE;
         m_device->CreateDepthStencilState(&dsDesc, &m_depthStencilState);
 
-        // 1) ±âº» ºä »ı¼º
+        // 1) ê¸°ë³¸ ë·° ìƒì„±
         CreateView(0);
 
-        // 2) ·»´õ Å¸±ê°ú ±íÀÌ ºä ¿¬°á
+        // 2) ë Œë” íƒ€ê¹ƒê³¼ ê¹Šì´ ë·° ì—°ê²°
         SetViewRTV(0, m_renderTargetView.Get());
         SetViewDSV(0, m_depthStencilView.Get());
 
-        // 3) È­¸é ÀüÃ¼·Î ºäÆ÷Æ® & ±âº» Å¬¸®¾î ¼³Á¤
+        // 3) í™”ë©´ ì „ì²´ë¡œ ë·°í¬íŠ¸ & ê¸°ë³¸ í´ë¦¬ì–´ ì„¤ì •
         SetViewRect(0, 0, 0, params.width, params.height);
         SetViewClear(0,
             static_cast<uint32_t>(ClearFlags::ClearColor | ClearFlags::ClearDepth),
@@ -113,8 +116,97 @@ namespace BinRenderer
         m_viewProj = XMMatrixMultiply(view, proj);
     }
 
+    void D3D11RendererAPI::Resize(uint32_t width, uint32_t height)
+    {
+        if (0 == width || 0 == height)
+            return;
+
+        // 1) ì €ì¥
+        m_width = width;
+        m_height = height;
+
+        if (m_width == 0 && m_height == 0)
+            return;
+        // â€” íˆ¬ì˜ ì¬ê³„ì‚° â€”
+        
+        float fovY = XM_PIDIV4;
+        float aspect = float(m_width) / float(m_height);
+        float zn = 0.1f;
+        float zf = 100.0f;
+        m_proj = XMMatrixPerspectiveFovLH(fovY, aspect, zn, zf);
+        m_viewProj = XMMatrixMultiply(m_view, m_proj);
+
+        char buf[128];
+        sprintf_s(buf, "Resize(): aspect=%.3f, proj[0][0]=%.3f\n",
+            aspect, m_proj.r[0].m128_f32[0]);
+        OutputDebugStringA(buf);
+
+        // ì¹´ë©”ë¼ ìœ„ì¹˜ ë””ë²„ê·¸ ì¶œë ¥
+        {
+            // m_viewì˜ 4ë²ˆì§¸ ì—´(í–‰ì´ ì•„ë‹Œ ì—´!)ì´ ì¹´ë©”ë¼ ìœ„ì¹˜ì´ë¯€ë¡œ:
+            auto v = m_view.r[3].m128_f32;
+
+            // std::formatìœ¼ë¡œ ë©”ì‹œì§€ ìƒì„±
+            auto msg = std::format("view pos: {:.3f}, {:.3f}, {:.3f}\n"
+                , v[0], v[1], v[2]);
+
+            // ë””ë²„ê±° ì¶œë ¥
+            OutputDebugStringA(msg.c_str());
+        }
+
+        // 2) í˜„ì¬ ë°”ì¸ë”© í•´ì œ
+        m_context->OMSetRenderTargets(0, nullptr, nullptr);
+
+        // 3) ê¸°ì¡´ ë¦¬ì†ŒìŠ¤ í•´ì œ
+        m_renderTargetView.Reset();
+        m_depthStencilView.Reset();
+        m_depthStencilBuffer.Reset();
+
+        // 4) SwapChain ë²„í¼ ë¦¬ì‚¬ì´ì¦ˆ
+        //    0: buffer count ìœ ì§€, DXGI_FORMAT_UNKNOWN: ê¸°ì¡´ í¬ë§· ìœ ì§€
+        m_swapChain->ResizeBuffers(
+            0,
+            width,
+            height,
+            DXGI_FORMAT_UNKNOWN,
+            0
+        );
+
+        // 5) ìƒˆ ë°±ë²„í¼ RTV ìƒì„±
+        Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
+        m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+        m_device->CreateRenderTargetView(backBuffer.Get(), nullptr, &m_renderTargetView);
+
+        // 6) ìƒˆ Depth-Stencil ë²„í¼ & ë·° ìƒì„±
+        D3D11_TEXTURE2D_DESC descDepth = {};
+        descDepth.Width = width;
+        descDepth.Height = height;
+        descDepth.MipLevels = 1;
+        descDepth.ArraySize = 1;
+        descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        descDepth.SampleDesc.Count = 1;
+        descDepth.Usage = D3D11_USAGE_DEFAULT;
+        descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+        m_device->CreateTexture2D(&descDepth, nullptr, &m_depthStencilBuffer);
+        m_device->CreateDepthStencilView(
+            m_depthStencilBuffer.Get(),
+            nullptr,
+            &m_depthStencilView
+        );
+
+        // 7) ë·° 0 ì—…ë°ì´íŠ¸
+        SetViewRTV(0, m_renderTargetView.Get());
+        SetViewDSV(0, m_depthStencilView.Get());
+        SetViewRect(0, 0, 0, width, height);
+        for (auto& [viewId, view] : m_views)
+        {
+            m_context->RSSetViewports(1, &view.vp);
+        }
+       
+    }
+
     void D3D11RendererAPI::BeginFrame() {
-        // 1) °¢ ºä(View) º°·Î Å¬¸®¾î ¹× ºäÆ÷Æ® ¼³Á¤
+        // 1) ê° ë·°(View) ë³„ë¡œ í´ë¦¬ì–´ ë° ë·°í¬íŠ¸ ì„¤ì •
         char buf[128];
         sprintf_s(buf,
             ">>> BeginFrame, view count=%zu\n",
@@ -125,15 +217,15 @@ namespace BinRenderer
         for (auto& [viewId, view] : m_views)
         {
             if (!view.rtv || !view.dsv)
-                continue;   // ºä°¡ ¿ÏÀüÈ÷ ¼³Á¤µÇÁö ¾Ê¾Ò´Ù¸é ½ºÅµ!
+                continue;   // ë·°ê°€ ì™„ì „íˆ ì„¤ì •ë˜ì§€ ì•Šì•˜ë‹¤ë©´ ìŠ¤í‚µ!
 
-            // 1.1) ºäÆ÷Æ® ¼³Á¤
+            // 1.1) ë·°í¬íŠ¸ ì„¤ì •
             m_context->RSSetViewports(1, &view.vp);
 
-            // 1.2) ·»´õ Å¸°Ù + ±íÀÌ¡¤½ºÅÙ½Ç ºä ¹ÙÀÎµù
+            // 1.2) ë Œë” íƒ€ê²Ÿ + ê¹Šì´Â·ìŠ¤í…ì‹¤ ë·° ë°”ì¸ë”©
             m_context->OMSetRenderTargets(1, view.rtv.GetAddressOf(), view.dsv.Get());
 
-            // 1.3) ÄÃ·¯ Å¬¸®¾î
+            // 1.3) ì»¬ëŸ¬ í´ë¦¬ì–´
             if (view.clearFlags & ClearFlags::ClearColor)
             {
                 // view.clearColor: 0xAARRGGBB
@@ -146,7 +238,7 @@ namespace BinRenderer
                 m_context->ClearRenderTargetView(view.rtv.Get(), c);
             }
 
-            // 1.4) ±íÀÌ¡¤½ºÅÙ½Ç Å¬¸®¾î
+            // 1.4) ê¹Šì´Â·ìŠ¤í…ì‹¤ í´ë¦¬ì–´
             UINT dsvFlags = 0;
             if (view.clearFlags & ClearFlags::ClearDepth)   dsvFlags |= D3D11_CLEAR_DEPTH;
             if (view.clearFlags & ClearFlags::ClearStencil) dsvFlags |= D3D11_CLEAR_STENCIL;
@@ -155,20 +247,20 @@ namespace BinRenderer
                 m_context->ClearDepthStencilView(view.dsv.Get(), dsvFlags, view.clearDepth, view.clearStencil);
             }
 
-            // 1.5) ±íÀÌ-½ºÅÙ½Ç »óÅÂ Àû¿ë (¸ğµç µå·Î¿ì¿¡¼­ °øÅë »ç¿ë)
+            // 1.5) ê¹Šì´-ìŠ¤í…ì‹¤ ìƒíƒœ ì ìš© (ëª¨ë“  ë“œë¡œìš°ì—ì„œ ê³µí†µ ì‚¬ìš©)
             m_context->OMSetDepthStencilState(m_depthStencilState.Get(), 0);
         }
     }
 
     void D3D11RendererAPI::Submit(const DrawCommand& cmd) {
-        // DrawCommands Ã³¸® ¿¹Á¤
+        // DrawCommands ì²˜ë¦¬ ì˜ˆì •
         m_drawQueue.Submit(cmd);
     }
 
     void D3D11RendererAPI::Submit()
     {
         for (const auto& cmd : m_drawQueue.GetCommands()) {
-            // 1) ViewId¿¡ ¸ÂÃç RTV/DSV Àç¹ÙÀÎµù
+            // 1) ViewIdì— ë§ì¶° RTV/DSV ì¬ë°”ì¸ë”©
             auto& view = m_views[cmd.viewId];
             m_context->OMSetRenderTargets(1, view.rtv.GetAddressOf(), view.dsv.Get());
             m_context->RSSetViewports(1, &view.vp);
@@ -200,7 +292,7 @@ namespace BinRenderer
             m_context->RSSetState(pso->m_rasterizerState.Get());
 
 
-            // UniformSetÀ¸·Î »ó¼ö¹öÆÛ ¾÷µ¥ÀÌÆ®
+            // UniformSetìœ¼ë¡œ ìƒìˆ˜ë²„í¼ ì—…ë°ì´íŠ¸
             const UniformSet& uniforms = material->GetUniformSet();
             D3D11_BUFFER_DESC cbDesc = {};
             cbDesc.ByteWidth = uniforms.GetSize();
@@ -225,7 +317,7 @@ namespace BinRenderer
 
 
     void D3D11RendererAPI::EndFrame() {
-        // Post-processing µî ¿¹Á¤
+        // Post-processing ë“± ì˜ˆì •
     }
 
     void D3D11RendererAPI::Present() {

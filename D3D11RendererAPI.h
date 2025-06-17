@@ -45,6 +45,8 @@ namespace BinRenderer
         void SetViewRect(uint8_t viewId, float x, float y, float width, float height)override;
         void SetViewProj(const DirectX::XMMATRIX& view, const DirectX::XMMATRIX& proj)override;
 
+        void Resize(uint32_t width, uint32_t height) override;
+
     private:
         
         Microsoft::WRL::ComPtr<ID3D11Device> m_device;

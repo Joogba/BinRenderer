@@ -41,6 +41,8 @@ namespace BinRenderer {
 		virtual void SetViewClear(uint8_t viewId, uint32_t flags, uint32_t clearColor, float depth = 1.0f, uint8_t stencil = 0) = 0;
 		virtual void SetViewRect(uint8_t viewId, float x, float y, float width, float height) = 0;
 		virtual void SetViewProj(const DirectX::XMMATRIX& view, const DirectX::XMMATRIX& proj) = 0;
+
+		virtual void  Resize(uint32_t width, uint32_t height) = 0;
 	};
 
 	RendererAPI* CreateD3D11Renderer(); // ∆—≈‰∏Æ
