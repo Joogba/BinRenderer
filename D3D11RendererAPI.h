@@ -5,6 +5,7 @@
 #include "PSORegistry.h"
 #include "MaterialSystem.h"
 #include "View.h"
+#include "TransientBufferAllocator.h"
 
 #include <d3d11.h>
 #include <wrl/client.h>
@@ -12,6 +13,8 @@
 #include <DirectXMath.h>
 #include <unordered_map>
 #include <cstdint> 
+
+
 
 namespace BinRenderer
 {
@@ -46,6 +49,11 @@ namespace BinRenderer
 		void SetViewProj(const DirectX::XMMATRIX& view, const DirectX::XMMATRIX& proj)override;
 
 		void Resize(uint32_t width, uint32_t height) override;
+
+		//TransientBuffer
+		uint32_t AllocTransientVertexBuffer(uint32_t sizeBytes, void*& dataPtr);
+
+		uint32_t AllocTransientIndexBuffer(uint32_t sizeBytes, void*& dataPtr);
 
 	private:
 
@@ -95,6 +103,10 @@ namespace BinRenderer
 			ID3D11RasterizerState * rasterizerState = nullptr;
 		} m_lastState;
 		// ─────────────────────────────────────────
+
+		 // Transient buffer 스트리밍용 헬퍼
+		std::unique_ptr<TransientBufferAllocator> m_vbAllocator;
+		std::unique_ptr<TransientBufferAllocator> m_ibAllocator;
 
 	private:
 		void bindInputLayout(ID3D11InputLayout* layout);

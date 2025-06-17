@@ -5,6 +5,7 @@
 #include "MaterialSystem.h"
 #include "RendererAPI.h"
 #include "View.h"
+#include "TransientBufferAllocator.h"
 
 #include <d3d11.h>
 #include <memory>
@@ -107,6 +108,16 @@ namespace BinRenderer
         m_psoRegistry = std::make_unique<PSORegistry>();
         m_materialRegistry = std::make_unique<MaterialRegistry>();
 
+        // Transient allocator 생성 (예: 4MB씩)
+        m_vbAllocator = std::make_unique<TransientBufferAllocator>(
+            m_device.Get(), m_context.Get(),
+            4u * 1024 * 1024, D3D11_BIND_VERTEX_BUFFER
+        );
+        m_ibAllocator = std::make_unique<TransientBufferAllocator>(
+            m_device.Get(), m_context.Get(),
+            4u * 1024 * 1024, D3D11_BIND_INDEX_BUFFER
+        );
+
         return true;
     }
 
@@ -205,6 +216,16 @@ namespace BinRenderer
        
     }
 
+    uint32_t D3D11RendererAPI::AllocTransientVertexBuffer(uint32_t sizeBytes, void*& dataPtr)
+    {
+        return m_vbAllocator->alloc(sizeBytes, dataPtr);
+    }
+
+    uint32_t D3D11RendererAPI::AllocTransientIndexBuffer(uint32_t sizeBytes, void*& dataPtr)
+    {
+        return m_ibAllocator->alloc(sizeBytes, dataPtr);
+    }
+
     void D3D11RendererAPI::BeginFrame() {
         // 1) 각 뷰(View) 별로 클리어 및 뷰포트 설정
         char buf[128];
@@ -249,6 +270,9 @@ namespace BinRenderer
 
             // 1.5) 깊이-스텐실 상태 적용 (모든 드로우에서 공통 사용)
             m_context->OMSetDepthStencilState(m_depthStencilState.Get(), 0);
+
+            m_vbAllocator->beginFrame();
+            m_ibAllocator->beginFrame();
         }
     }
 
@@ -317,7 +341,10 @@ namespace BinRenderer
 
 
     void D3D11RendererAPI::EndFrame() {
+        m_vbAllocator->endFrame();
+        m_ibAllocator->endFrame();
         // Post-processing 등 예정
+       
     }
 
     void D3D11RendererAPI::Present() {
