@@ -268,28 +268,28 @@ namespace BinRenderer
 
             const Mesh* mesh = m_meshRegistry->Get(cmd.meshHandle);
             Material* material = m_materialRegistry->Get(cmd.materialHandle);
-            material->GetUniformSet().Set("modelMatrix", &cmd.transform, sizeof(cmd.transform));
-            material->GetUniformSet().Set("viewProj", &m_viewProj, sizeof(m_viewProj));
-            if (!mesh || !material) continue;
-
+            if (!mesh || !material) continue;         
+            
             const PipelineState* pso = m_psoRegistry->Get(material->GetPSO());
             if (!pso) continue;
+
+            material->GetUniformSet().Set("modelMatrix", &cmd.transform, sizeof(cmd.transform));
+            material->GetUniformSet().Set("viewProj", &m_viewProj, sizeof(m_viewProj));
+
+            // ── 캐싱 바인딩 ──
+            bindInputLayout(pso->m_inputLayout.Get());
+            bindPrimitiveTopology(pso->m_primitiveTopology);
+            bindShaders(pso);
+            bindBlendState(pso->m_blendState.Get(), pso->m_blendFactor);
+            bindDepthStencilState(pso->m_depthStencilState.Get(), pso->m_stencilRef);
+            bindRasterizerState(pso->m_rasterizerState.Get());
+            // ──────────────────
 
 
             m_context->IASetVertexBuffers(0,1, &mesh->vertexBuffer, &mesh->vertexStride, &mesh->vertexOffset);
             m_context->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-            m_context->IASetInputLayout(pso->m_inputLayout.Get());
-            m_context->IASetPrimitiveTopology(pso->m_primitiveTopology);
 
-            m_context->VSSetShader(pso->m_vertexShader.Get(), nullptr, 0);
-            m_context->PSSetShader(pso->m_pixelShader.Get(), nullptr, 0);
-            if (pso->m_geometryShader) m_context->GSSetShader(pso->m_geometryShader.Get(), nullptr, 0);
-            if (pso->m_hullShader)     m_context->HSSetShader(pso->m_hullShader.Get(), nullptr, 0);
-            if (pso->m_domainShader)   m_context->DSSetShader(pso->m_domainShader.Get(), nullptr, 0);
-
-            m_context->OMSetBlendState(pso->m_blendState.Get(), pso->m_blendFactor, 0xffffffff);
-            m_context->OMSetDepthStencilState(pso->m_depthStencilState.Get(), pso->m_stencilRef);
-            m_context->RSSetState(pso->m_rasterizerState.Get());
+            
 
 
             // UniformSet으로 상수버퍼 업데이트
@@ -392,6 +392,91 @@ namespace BinRenderer
         vp.TopLeftX = x; vp.TopLeftY = y;
         vp.Width = w; vp.Height = h;
         vp.MinDepth = 0.0f; vp.MaxDepth = 1.0f;
+    }
+
+    // 1) InputLayout
+    void D3D11RendererAPI::bindInputLayout(ID3D11InputLayout* layout)
+    {
+        if (layout != m_lastState.inputLayout)
+        {
+            m_context->IASetInputLayout(layout);
+            m_lastState.inputLayout = layout;
+        }
+    }
+
+    // 2) PrimitiveTopology
+    void D3D11RendererAPI::bindPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY topo)
+    {
+        if (topo != m_lastState.topology)
+        {
+            m_context->IASetPrimitiveTopology(topo);
+            m_lastState.topology = topo;
+        }
+    }
+
+    // 3) Shaders
+    void D3D11RendererAPI::bindShaders(const PipelineState* pso)
+    {
+        if (pso->m_vertexShader.Get() != m_lastState.vs)
+        {
+            m_context->VSSetShader(pso->m_vertexShader.Get(), nullptr, 0);
+            m_lastState.vs = pso->m_vertexShader.Get();
+        }
+        if (pso->m_pixelShader.Get() != m_lastState.ps)
+        {
+            m_context->PSSetShader(pso->m_pixelShader.Get(), nullptr, 0);
+            m_lastState.ps = pso->m_pixelShader.Get();
+        }
+        if (pso->m_geometryShader.Get() != m_lastState.gs)
+        {
+            m_context->GSSetShader(pso->m_geometryShader.Get(), nullptr, 0);
+            m_lastState.gs = pso->m_geometryShader.Get();
+        }
+        if (pso->m_hullShader.Get() != m_lastState.hs)
+        {
+            m_context->HSSetShader(pso->m_hullShader.Get(), nullptr, 0);
+            m_lastState.hs = pso->m_hullShader.Get();
+        }
+        if (pso->m_domainShader.Get() != m_lastState.ds)
+        {
+            m_context->DSSetShader(pso->m_domainShader.Get(), nullptr, 0);
+            m_lastState.ds = pso->m_domainShader.Get();
+        }
+    }
+
+    // 4) BlendState
+    void D3D11RendererAPI::bindBlendState(ID3D11BlendState* bs, const float bf[4], UINT mask)
+    {
+        bool   diffBS = bs != m_lastState.blendState;
+        bool   diffBF = 0 != memcmp(bf, m_lastState.blendFactor, sizeof m_lastState.blendFactor);
+        if (diffBS || diffBF)
+        {
+            m_context->OMSetBlendState(bs, bf, mask);
+            m_lastState.blendState = bs;
+            memcpy(m_lastState.blendFactor, bf, sizeof m_lastState.blendFactor);
+            m_lastState.sampleMask = mask;
+        }
+    }
+
+    // 5) DepthStencilState
+    void D3D11RendererAPI::bindDepthStencilState(ID3D11DepthStencilState* dss, UINT stencilRef)
+    {
+        if (dss != m_lastState.depthStencilState || stencilRef != m_lastState.stencilRef)
+        {
+            m_context->OMSetDepthStencilState(dss, stencilRef);
+            m_lastState.depthStencilState = dss;
+            m_lastState.stencilRef = stencilRef;
+        }
+    }
+
+    // 6) RasterizerState
+    void D3D11RendererAPI::bindRasterizerState(ID3D11RasterizerState* rs)
+    {
+        if (rs != m_lastState.rasterizerState)
+        {
+            m_context->RSSetState(rs);
+            m_lastState.rasterizerState = rs;
+        }
     }
 
     RendererAPI* CreateD3D11Renderer()
