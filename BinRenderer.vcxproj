@@ -153,6 +153,7 @@
     <ClCompile Include="PipelineState.h" />
     <ClCompile Include="PSORegistry.cpp" />
     <ClCompile Include="TestApp.cpp" />
+    <ClCompile Include="TransientBufferAllocator.h" />
     <ClCompile Include="UniformSystem.cpp" />
   </ItemGroup>
   <ItemGroup>

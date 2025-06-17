@@ -13,5 +13,6 @@ namespace BinRenderer
         MaterialHandle      materialHandle;
         PSOHandle           psoHandle;
         DirectX::XMMATRIX   transform;
+        uint64_t            sortKey = 0;
     };
 }
