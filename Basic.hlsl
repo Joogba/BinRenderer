@@ -1,3 +1,6 @@
+Texture2D    g_tex0 : register(t0);
+SamplerState g_smp0 : register(s0);
+
 cbuffer ObjectData : register(b0)
 {
     matrix modelMatrix;  // Set("modelMatrix", ...)
@@ -29,8 +32,9 @@ VSOutput VSMain(VSInput input)
     return o;
 }
 
-float4 PSMain(VSOutput i) : SV_TARGET
+float4 PSMain(VSOutput input) : SV_TARGET
 {
    
-    return float4(i.UV, 0.0f, 1.0f);
+    float4 color = g_tex0.Sample(g_smp0, input.UV);
+    return color;
 }

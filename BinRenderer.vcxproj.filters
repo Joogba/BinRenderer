@@ -48,6 +48,9 @@
     <ClCompile Include="TransientBufferAllocator.h">
       <Filter>헤더 파일</Filter>
     </ClCompile>
+    <ClCompile Include="TextureLoader.h">
+      <Filter>헤더 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D3D11RendererAPI.h">
@@ -89,10 +92,21 @@
     <ClInclude Include="View.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="TextureRegistry.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SamplerRegistry.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Basic.hlsl">
       <Filter>리소스 파일</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\Users\tjdwn\Downloads\checker.png">
+      <Filter>리소스 파일</Filter>
+    </Image>
   </ItemGroup>
 </Project>

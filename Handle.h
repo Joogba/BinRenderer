@@ -24,4 +24,7 @@ namespace BinRenderer {
     using MaterialHandle = Handle<MaterialTag>;
     using PSOHandle = Handle<PSOTag>;
 
+    struct TextureHandle { uint32_t idx; };
+    struct SamplerHandle { uint32_t idx; };
+
 } // namespace BinRenderer

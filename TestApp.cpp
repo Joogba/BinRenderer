@@ -3,12 +3,15 @@
 #include <cassert>
 #include <d3d11.h>
 #include <d3dcompiler.h>
+#include <memory>
+
 
 #include "D3D11RendererAPI.h"
 #include "GeometryGenerator.h"
 #include "MeshFactory.h"
 #include "DrawCommand.h"
 #include "Handle.h"
+#include "TextureLoader.h"
  
 using namespace BinRenderer;
 using namespace DirectX;
@@ -109,6 +112,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, PSTR, int nCmdShow)
     auto quadMesh = MeshFactory::CreateMeshFromData(device, quadData);
     MeshHandle quadHandle = d3d->GetMeshRegistry()->Register(*quadMesh);
 
+    
+
     // 2.1 HLSL 컴파일
     ComPtr<ID3DBlob> vsBlob, psBlob, errBlob;
     HRESULT hr = D3DCompileFromFile(
@@ -170,9 +175,27 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, PSTR, int nCmdShow)
     layout->AddUniform("modelMatrix", sizeof(DirectX::XMMATRIX));
     layout->AddUniform("viewProj", sizeof(DirectX::XMMATRIX));
     auto material = std::make_unique<Material>(psoHandle, layout);
-    MaterialHandle matHandle = d3d->GetMaterialRegistry()->Register(std::move(material));
 
-    
+    // 텍스쳐 샘플러 등록
+
+    ComPtr<ID3D11ShaderResourceView> checkerSrv =
+        BinRenderer::LoadTexture(d3d->GetDevice(), "checker.png");
+
+    TextureHandle checkerTex = d3d->GetTextureRegistry()->Register(checkerSrv);
+
+    D3D11_SAMPLER_DESC sd{};
+    sd.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sd.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    sd.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    sd.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    ComPtr<ID3D11SamplerState> sampler;
+    d3d->GetDevice()->CreateSamplerState(&sd, &sampler);
+    SamplerHandle checkerSmp = d3d->GetSamplerRegistry()->Register(sampler);
+
+    // 머티리얼 설정 시…
+    material->BindTexture(0, checkerTex);   // t0 레지스터
+    material->BindSampler(0, checkerSmp);   // s0 레지스터
+    auto matHandle = d3d->GetMaterialRegistry()->Register(std::move(material));
 
     // 6) 메시 루프
     MSG msg{};

@@ -11,6 +11,7 @@
 #include <memory>
 #include <DirectXMath.h>
 #include <format>
+#include <wrl/client.h>
 
 namespace BinRenderer
 {
@@ -29,6 +30,9 @@ namespace BinRenderer
 	D3D11RendererAPI::~D3D11RendererAPI() {}
 
 	bool D3D11RendererAPI::Init(const InitParams& params) {
+		
+
+
 		// 0) UniformLayout 미리 정의된 유니폼 등록
 		{
 			// 예시: 하나의 머티리얼 레이아웃 생성 시 호출
@@ -116,6 +120,8 @@ namespace BinRenderer
 		m_meshRegistry = std::make_unique<MeshRegistry>();
 		m_psoRegistry = std::make_unique<PSORegistry>();
 		m_materialRegistry = std::make_unique<MaterialRegistry>();
+		m_textureRegistry = std::make_unique<TextureRegistry>();
+		m_samplerRegistry = std::make_unique<SamplerRegistry>();
 
 		// Transient allocator 생성 (예: 4MB씩)
 		m_vbAllocator = std::make_unique<TransientBufferAllocator>(
@@ -390,6 +396,27 @@ namespace BinRenderer
 					m_context->PSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
 				}
 
+				{
+					// 5.1) Texture2D
+					for (auto& tb : mat->GetTextureBindings())
+					{
+						auto* srv = m_textureRegistry->Get(tb.handle); // ID3D11ShaderResourceView*
+						if (srv)
+						{
+							m_context->PSSetShaderResources(tb.slot, 1, &srv);
+						}
+					}
+					// 5.2) SamplerState
+					for (auto& sb : mat->GetSamplerBindings())
+					{
+						auto* ss = m_samplerRegistry->Get(sb.handle); // ID3D11SamplerState*
+						if (ss)
+						{
+							m_context->PSSetSamplers(sb.slot, 1, &ss);
+						}
+					}
+				}
+
 				// 6) DrawIndexed
 				m_context->DrawIndexed(mesh->indexCount, 0, 0);
 			});
@@ -430,6 +457,16 @@ namespace BinRenderer
 	MaterialRegistry* D3D11RendererAPI::GetMaterialRegistry() const
 	{
 		return m_materialRegistry.get();
+	}
+
+	TextureRegistry* D3D11RendererAPI::GetTextureRegistry() const
+	{
+		return m_textureRegistry.get();
+	}
+
+	SamplerRegistry* D3D11RendererAPI::GetSamplerRegistry() const
+	{
+		return m_samplerRegistry.get();
 	}
 
 	void D3D11RendererAPI::CreateView(uint8_t id)

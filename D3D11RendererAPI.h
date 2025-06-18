@@ -3,6 +3,8 @@
 #include "DrawQueue.h"
 #include "MeshRegistry.h"
 #include "PSORegistry.h"
+#include "TextureRegistry.h"
+#include "SamplerRegistry.h"
 #include "MaterialSystem.h"
 #include "View.h"
 #include "TransientBufferAllocator.h"
@@ -39,6 +41,8 @@ namespace BinRenderer
 		MeshRegistry* GetMeshRegistry() const;
 		PSORegistry* GetPSORegistry() const;
 		MaterialRegistry* GetMaterialRegistry() const;
+		TextureRegistry* GetTextureRegistry() const;
+		SamplerRegistry * GetSamplerRegistry() const;
 
 		//View
 		void CreateView(uint8_t viewId)override;
@@ -77,6 +81,8 @@ namespace BinRenderer
 		std::unique_ptr<MeshRegistry>       m_meshRegistry;
 		std::unique_ptr<PSORegistry>        m_psoRegistry;
 		std::unique_ptr<MaterialRegistry>   m_materialRegistry;
+		std::unique_ptr<TextureRegistry>   m_textureRegistry;
+		std::unique_ptr<SamplerRegistry>   m_samplerRegistry;
 
 		std::unordered_map<uint8_t, View> m_views;
 

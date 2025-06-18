@@ -139,6 +139,8 @@
     <ClInclude Include="MeshRegistry.h" />
     <ClInclude Include="PSORegistry.h" />
     <ClInclude Include="RendererAPI.h" />
+    <ClInclude Include="SamplerRegistry.h" />
+    <ClInclude Include="TextureRegistry.h" />
     <ClInclude Include="UniformSystem.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="View.h" />
@@ -153,6 +155,7 @@
     <ClCompile Include="PipelineState.h" />
     <ClCompile Include="PSORegistry.cpp" />
     <ClCompile Include="TestApp.cpp" />
+    <ClCompile Include="TextureLoader.h" />
     <ClCompile Include="TransientBufferAllocator.h" />
     <ClCompile Include="UniformSystem.cpp" />
   </ItemGroup>
@@ -161,6 +164,9 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VSMain</EntryPointName>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\Users\tjdwn\Downloads\checker.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
