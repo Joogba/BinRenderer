@@ -29,6 +29,15 @@ namespace BinRenderer
 	D3D11RendererAPI::~D3D11RendererAPI() {}
 
 	bool D3D11RendererAPI::Init(const InitParams& params) {
+		// 0) UniformLayout 미리 정의된 유니폼 등록
+		{
+			// 예시: 하나의 머티리얼 레이아웃 생성 시 호출
+			auto layout = std::make_shared<UniformLayout>();
+			// modelMatrix 와 viewProj 위치 예약
+			layout->AddPredefined(PredefinedUniformType::ModelViewProj, sizeof(DirectX::XMMATRIX));
+			layout->AddPredefined(PredefinedUniformType::ViewProj, sizeof(DirectX::XMMATRIX));
+		}
+
 		m_hwnd = static_cast<HWND>(params.windowHandle);
 		m_width = params.width;
 		m_height = params.height;
@@ -334,11 +343,23 @@ namespace BinRenderer
 				m_context->RSSetViewports(1, &view.vp);
 				m_context->OMSetRenderTargets(1, view.rtv.GetAddressOf(), view.dsv.Get());
 
+				
+
 				// 2) Mesh/Material/PSO 획득
 				const Mesh* mesh = m_meshRegistry->Get(cmd.meshHandle);
 				Material* mat = m_materialRegistry->Get(cmd.materialHandle);
 				const PipelineState* pso = m_psoRegistry->Get(mat->GetPSO());
 				if (!mesh || !mat || !pso) return;
+
+				// 2) UniformSet 자동 채우기
+				assert(mat);
+				auto& us = mat->GetUniformSet();
+
+				// 모델뷰프로젝션
+				DirectX::XMMATRIX mvp = cmd.transform * m_viewProj;
+				us.ApplyPredefined(PredefinedUniformType::ModelViewProj
+					, &mvp
+					, sizeof(mvp));
 
 				// 3) State 바인딩 (bind* 헬퍼)
 				bindInputLayout(pso->m_inputLayout.Get());
@@ -354,7 +375,6 @@ namespace BinRenderer
 
 				// 5) 상수버퍼 업데이트
 				//   material->GetUniformSet().Set(...) 은 이미 Submit(cmd) 시 채워졌다고 가정
-				const UniformSet& us = mat->GetUniformSet();
 				D3D11_BUFFER_DESC cbDesc = {};
 				cbDesc.ByteWidth = us.GetSize();
 				cbDesc.Usage = D3D11_USAGE_DEFAULT;
