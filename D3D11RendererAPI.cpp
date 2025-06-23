@@ -123,14 +123,16 @@ namespace BinRenderer
 		m_textureRegistry = std::make_unique<TextureRegistry>();
 		m_samplerRegistry = std::make_unique<SamplerRegistry>();
 
-		// Transient allocator 생성 (예: 4MB씩)
-		m_vbAllocator = std::make_unique<TransientBufferAllocator>(
+		// 4) Transient 버퍼 생성 (4MB 씩)
+		const uint32_t vbSize = 4 * 1024 * 1024;
+		const uint32_t ibSize = 1 * 1024 * 1024;
+		m_transientVB = std::make_unique<TransientBufferAllocator>(
 			m_device.Get(), m_context.Get(),
-			4u * 1024 * 1024, D3D11_BIND_VERTEX_BUFFER
+			vbSize, D3D11_BIND_VERTEX_BUFFER
 		);
-		m_ibAllocator = std::make_unique<TransientBufferAllocator>(
+		m_transientIB = std::make_unique<TransientBufferAllocator>(
 			m_device.Get(), m_context.Get(),
-			4u * 1024 * 1024, D3D11_BIND_INDEX_BUFFER
+			ibSize, D3D11_BIND_INDEX_BUFFER
 		);
 
 		return true;
@@ -233,12 +235,12 @@ namespace BinRenderer
 
 	uint32_t D3D11RendererAPI::AllocTransientVertexBuffer(uint32_t sizeBytes, void*& dataPtr)
 	{
-		return m_vbAllocator->alloc(sizeBytes, dataPtr);
+		return m_transientVB->alloc(sizeBytes, dataPtr);
 	}
 
 	uint32_t D3D11RendererAPI::AllocTransientIndexBuffer(uint32_t sizeBytes, void*& dataPtr)
 	{
-		return m_ibAllocator->alloc(sizeBytes, dataPtr);
+		return m_transientIB->alloc(sizeBytes, dataPtr);
 	}
 
 	void D3D11RendererAPI::BeginFrame() {
@@ -286,8 +288,8 @@ namespace BinRenderer
 			// 1.5) 깊이-스텐실 상태 적용 (모든 드로우에서 공통 사용)
 			m_context->OMSetDepthStencilState(m_depthStencilState.Get(), 0);
 
-			m_vbAllocator->beginFrame();
-			m_ibAllocator->beginFrame();
+			m_transientVB->beginFrame();
+			m_transientIB->beginFrame();
 		}
 	}
 
@@ -340,64 +342,48 @@ namespace BinRenderer
 
 	void D3D11RendererAPI::Submit()
 	{
-		// DrawQueue::flush()에 람다로 실제 드로우 로직 전달
 		m_drawQueue.flush([this](const DrawCommand& cmd)
 			{
-				// (기존 Submit() 안의 per-command 렌더링 코드)
-				// 1) View 바인딩
+				// 1) 뷰 바인딩
 				auto& view = m_views[cmd.viewId];
 				m_context->RSSetViewports(1, &view.vp);
 				m_context->OMSetRenderTargets(1, view.rtv.GetAddressOf(), view.dsv.Get());
 
-				
-
-				// 2) Mesh/Material/PSO 획득
+				// 2) 리소스 획득
 				const Mesh* mesh = m_meshRegistry->Get(cmd.meshHandle);
 				Material* mat = m_materialRegistry->Get(cmd.materialHandle);
 				const PipelineState* pso = m_psoRegistry->Get(mat->GetPSO());
 				if (!mesh || !mat || !pso) return;
 
-				// 2) UniformSet 자동 채우기
-				assert(mat);
+				// 3) Uniform 자동 채우기
 				auto& us = mat->GetUniformSet();
+				XMMATRIX mvp = cmd.transform * m_viewProj;
+				us.ApplyPredefined(PredefinedUniformType::ModelViewProj, &mvp, sizeof(mvp));
 
-				// 모델뷰프로젝션
-				DirectX::XMMATRIX mvp = cmd.transform * m_viewProj;
-				us.ApplyPredefined(PredefinedUniformType::ModelViewProj
-					, &mvp
-					, sizeof(mvp));
-
-				// 3) State 바인딩 (bind* 헬퍼)
+				// 4) 파이프라인 상태 바인딩
 				bindInputLayout(pso->m_inputLayout.Get());
 				bindPrimitiveTopology(pso->m_primitiveTopology);
 				bindShaders(pso);
-				bindBlendState(pso->m_blendState.Get(), pso->m_blendFactor);
+				bindBlendState(pso->m_blendState.Get(), pso->m_blendFactor, 0xFFFFFFFF);
 				bindDepthStencilState(pso->m_depthStencilState.Get(), pso->m_stencilRef);
 				bindRasterizerState(pso->m_rasterizerState.Get());
 
-				// 4) VB/IB 바인딩
-				m_context->IASetVertexBuffers(0, 1, &mesh->vertexBuffer, &mesh->vertexStride, &mesh->vertexOffset);
-				m_context->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
 				// 5) 상수버퍼 업데이트
-				//   material->GetUniformSet().Set(...) 은 이미 Submit(cmd) 시 채워졌다고 가정
-				D3D11_BUFFER_DESC cbDesc = {};
-				cbDesc.ByteWidth = us.GetSize();
-				cbDesc.Usage = D3D11_USAGE_DEFAULT;
-				cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-
-				D3D11_SUBRESOURCE_DATA initData = {};
-				initData.pSysMem = us.GetRawData();
-
-				Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
-				HRESULT hr = m_device->CreateBuffer(&cbDesc, &initData, &constantBuffer);
-				if (SUCCEEDED(hr)) {
-					m_context->VSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
-					m_context->PSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
+				D3D11_BUFFER_DESC bd = {};
+				bd.ByteWidth = us.GetSize();
+				bd.Usage = D3D11_USAGE_DEFAULT;
+				bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+				D3D11_SUBRESOURCE_DATA sd = { us.GetRawData(), 0, 0 };
+				ComPtr<ID3D11Buffer> cb;
+				if (SUCCEEDED(m_device->CreateBuffer(&bd, &sd, &cb)))
+				{
+					m_context->VSSetConstantBuffers(0, 1, cb.GetAddressOf());
+					m_context->PSSetConstantBuffers(0, 1, cb.GetAddressOf());
 				}
 
+				// 6) 텍스처·샘플러 바인딩 (생략)
 				{
-					// 5.1) Texture2D
+					//Texture2D
 					for (auto& tb : mat->GetTextureBindings())
 					{
 						auto* srv = m_textureRegistry->Get(tb.handle); // ID3D11ShaderResourceView*
@@ -406,7 +392,7 @@ namespace BinRenderer
 							m_context->PSSetShaderResources(tb.slot, 1, &srv);
 						}
 					}
-					// 5.2) SamplerState
+					// SamplerState
 					for (auto& sb : mat->GetSamplerBindings())
 					{
 						auto* ss = m_samplerRegistry->Get(sb.handle); // ID3D11SamplerState*
@@ -417,15 +403,67 @@ namespace BinRenderer
 					}
 				}
 
-				// 6) DrawIndexed
-				m_context->DrawIndexed(mesh->indexCount, 0, 0);
+
+				// 7) 인스턴싱 & 드로우
+				if (1 < cmd.instanceCount)
+				{
+					// 7.1) 행렬 스트리밍
+					void* dataPtr = nullptr;
+					uint32_t vbOff = m_transientVB->alloc(
+						sizeof(XMMATRIX) * cmd.instanceCount,
+						dataPtr
+					);
+					memcpy(dataPtr,
+						cmd.transforms.data(),
+						sizeof(XMMATRIX) * cmd.instanceCount
+					);
+
+					// 7.2) VB 2스트림 바인딩
+					ID3D11Buffer* vbs[2] = {
+						mesh->vertexBuffer.Get(),
+						m_transientVB->buffer()
+					};
+					UINT strides[2] = {
+						mesh->vertexStride,
+						sizeof(XMMATRIX)
+					};
+					UINT offsets[2] = {
+						mesh->vertexOffset,
+						vbOff
+					};
+					m_context->IASetVertexBuffers(0, 2, vbs, strides, offsets);
+
+					// 7.3) IB 바인딩 & 인스턴스드 드로우
+					m_context->IASetIndexBuffer(mesh->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+					m_context->DrawIndexedInstanced(
+						mesh->indexCount,
+						cmd.instanceCount,
+						0, 0, 0
+					);
+				}
+				else
+				{
+					// 기존 단일 드로우
+					m_context->IASetVertexBuffers(
+						0, 1,
+						mesh->vertexBuffer.GetAddressOf(),
+						&mesh->vertexStride,
+						&mesh->vertexOffset
+					);
+					m_context->IASetIndexBuffer(
+						mesh->indexBuffer.Get(),
+						DXGI_FORMAT_R32_UINT,
+						0
+					);
+					m_context->DrawIndexed(mesh->indexCount, 0, 0);
+				}
 			});
 	}
 
 
 	void D3D11RendererAPI::EndFrame() {
-		m_vbAllocator->endFrame();
-		m_ibAllocator->endFrame();
+		m_transientVB->endFrame();
+		m_transientIB->endFrame();
 		// Post-processing 등 예정
 
 	}

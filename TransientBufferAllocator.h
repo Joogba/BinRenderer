@@ -21,6 +21,7 @@ namespace BinRenderer {
         )
             : m_context(context)
             , m_size(totalBytes)
+            , m_bindFlags(bindFlags)
         {
             D3D11_BUFFER_DESC desc{};
             desc.ByteWidth = totalBytes;

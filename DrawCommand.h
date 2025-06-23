@@ -1,6 +1,7 @@
 #pragma once
 #include <DirectXMath.h>
 #include <cstdint>
+#include <vector>
 
 #include "Handle.h"
 
@@ -14,5 +15,9 @@ namespace BinRenderer
         PSOHandle           psoHandle;
         DirectX::XMMATRIX   transform;
         uint64_t            sortKey = 0;
+
+        uint32_t            instanceCount = 1;
+        uint32_t            instanceOffset = 0;
+        std::vector<DirectX::XMMATRIX> transforms;
     };
 }

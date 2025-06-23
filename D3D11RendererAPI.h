@@ -111,8 +111,8 @@ namespace BinRenderer
 		// ─────────────────────────────────────────
 
 		 // Transient buffer 스트리밍용 헬퍼
-		std::unique_ptr<TransientBufferAllocator> m_vbAllocator;
-		std::unique_ptr<TransientBufferAllocator> m_ibAllocator;
+		std::unique_ptr<TransientBufferAllocator> m_transientVB;
+		std::unique_ptr<TransientBufferAllocator> m_transientIB;
 
 	private:
 		void bindInputLayout(ID3D11InputLayout* layout);

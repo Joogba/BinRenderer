@@ -149,13 +149,19 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, PSTR, int nCmdShow)
     d3d->GetDevice()->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &ps);
 
     // 2.3 InputLayout 정의 (Vertex.h 구조에 맞춰서)
-    D3D11_INPUT_ELEMENT_DESC layoutDesc[] =
-    {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, position),    D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "NORMAL"  , 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, normalModel), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, offsetof(Vertex, texcoord),    D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "TANGENT" , 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, tangentModel),D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    };
+	D3D11_INPUT_ELEMENT_DESC layoutDesc[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, position),    D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL"  , 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, normalModel), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, offsetof(Vertex, texcoord),    D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENT" , 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, tangentModel),D3D11_INPUT_PER_VERTEX_DATA, 0 },
+
+		// 스트림 1 : 인스턴스 (4행렬 float4씩)
+	    { "TEXCOORD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,  0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+	    { "TEXCOORD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+	    { "TEXCOORD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+	    { "TEXCOORD", 4, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+	};
     ComPtr<ID3D11InputLayout> inputLayout;
     d3d->GetDevice()->CreateInputLayout(
         layoutDesc, _countof(layoutDesc),
@@ -219,6 +225,14 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, PSTR, int nCmdShow)
         cmd.psoHandle = psoHandle;
         cmd.transform = DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f);
         cmd.viewId = 0;
+        cmd.instanceCount = 5;
+        cmd.transforms.resize(cmd.instanceCount);
+        for (uint32_t i = 0; i < cmd.instanceCount; ++i)
+        {
+            // 예: X축으로 조금씩 떨어뜨려서 4개 그린다
+            cmd.transforms[i] = DirectX::XMMatrixTranslation(float(i) * 1.5f, 0, 0);
+        }
+
 
         auto materialPtr = d3d->GetMaterialRegistry()->Get(matHandle);
 		materialPtr->GetUniformSet().Set("modelMatrix", &cmd.transform, sizeof(cmd.transform));
