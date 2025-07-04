@@ -19,10 +19,18 @@ namespace BinRenderer {
     struct MeshTag {};
     struct MaterialTag {};
     struct PSOTag {};
+    struct TextureHandleTag {};
+    struct RTVHandleTag {};
+    struct SRVHandleTag {};
+    struct DSVHandleTag {};
 
     using MeshHandle = Handle<MeshTag>;
     using MaterialHandle = Handle<MaterialTag>;
     using PSOHandle = Handle<PSOTag>;
+    using TextureHandle = Handle<TextureHandleTag>;
+    using RenderTargetViewHandle = Handle<RTVHandleTag>;
+    using ShaderResourceViewHandle = Handle<SRVHandleTag>;
+    using DepthStencilViewHandle = Handle<DSVHandleTag>;
 
     struct TextureHandle { uint32_t idx; };
     struct SamplerHandle { uint32_t idx; };

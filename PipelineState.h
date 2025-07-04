@@ -49,6 +49,7 @@ namespace BinRenderer {
         UINT  m_stencilRef = 0;
 
         D3D11_PRIMITIVE_TOPOLOGY m_primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        UINT m_sampleMask = 0xFFFFFFFF;
     };
 
 } // namespace BinRenderer

@@ -129,16 +129,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CompositePass.h" />
     <ClInclude Include="D3D11RendererAPI.h" />
+    <ClInclude Include="DeferredRenderer.h" />
     <ClInclude Include="DrawQueue.h" />
+    <ClInclude Include="GBufferPass.h" />
     <ClInclude Include="GeometryGenerator.h" />
     <ClInclude Include="Handle.h" />
+    <ClInclude Include="LightingPass.h" />
     <ClInclude Include="MaterialSystem.h" />
     <ClInclude Include="MeshData.h" />
     <ClInclude Include="MeshFactory.h" />
     <ClInclude Include="MeshRegistry.h" />
+    <ClInclude Include="PassResources.h" />
     <ClInclude Include="PSORegistry.h" />
     <ClInclude Include="RendererAPI.h" />
+    <ClInclude Include="RenderGraph.h" />
+    <ClInclude Include="RenderGraphBuilder.h" />
+    <ClInclude Include="RenderStates.h" />
     <ClInclude Include="SamplerRegistry.h" />
     <ClInclude Include="TextureRegistry.h" />
     <ClInclude Include="UniformSystem.h" />
@@ -146,14 +154,20 @@
     <ClInclude Include="View.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CompositePass.cpp" />
     <ClCompile Include="D3D11RendererAPI.cpp" />
+    <ClCompile Include="DeferredRenderer.cpp" />
     <ClCompile Include="DrawCommand.h" />
+    <ClCompile Include="GBufferPass.cpp" />
     <ClCompile Include="GeometryGenerator.cpp" />
+    <ClCompile Include="IRenderPass.h" />
+    <ClCompile Include="LightingPass.cpp" />
     <ClCompile Include="MaterialSystem.cpp" />
     <ClCompile Include="MeshFactory.cpp" />
     <ClCompile Include="MeshRegistry.cpp" />
     <ClCompile Include="PipelineState.h" />
     <ClCompile Include="PSORegistry.cpp" />
+    <ClCompile Include="RenderGraphBuilder.cpp" />
     <ClCompile Include="TestApp.cpp" />
     <ClCompile Include="TextureLoader.h" />
     <ClCompile Include="TransientBufferAllocator.h" />
