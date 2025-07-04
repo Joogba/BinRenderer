@@ -167,7 +167,6 @@
     <ClCompile Include="MeshRegistry.cpp" />
     <ClCompile Include="PipelineState.h" />
     <ClCompile Include="PSORegistry.cpp" />
-    <ClCompile Include="RenderGraphBuilder.cpp" />
     <ClCompile Include="TestApp.cpp" />
     <ClCompile Include="TextureLoader.h" />
     <ClCompile Include="TransientBufferAllocator.h" />

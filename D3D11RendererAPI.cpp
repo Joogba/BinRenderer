@@ -4,6 +4,10 @@
 
 #include <cassert>
 #include <d3dcompiler.h>
+#include <DirectXMath.h>
+#include <algorithm>
+
+using namespace DirectX;
 
 namespace {
     HRESULT CompileShaderFromFile(
@@ -148,6 +152,18 @@ namespace BinRenderer {
             &sd, &m_swapChain,
             &m_device, nullptr, &m_context
         );
+
+        // 2) 기본 깊이·스텐실 상태 생성 (Depth 테스트 ON, 쓰기 ON, Func=LESS, 스텐실 OFF)
+        D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+        dsDesc.DepthEnable = TRUE;
+        dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+        dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+        dsDesc.StencilEnable = FALSE;
+        // (dsDesc.FrontFace, dsDesc.BackFace 등도 설정)
+        HRESULT hr = m_device->CreateDepthStencilState(&dsDesc, &m_depthStencilState);
+        assert(SUCCEEDED(hr) && "CreateDepthStencilState failed");
+
+
         return SUCCEEDED(hr);
     }
 
@@ -156,8 +172,61 @@ namespace BinRenderer {
         m_swapChain->ResizeBuffers(0, w, h, DXGI_FORMAT_UNKNOWN, 0);
     }
 
-    void D3D11RendererAPI::BeginFrame() {}
-    void D3D11RendererAPI::EndFrame() {}
+	void D3D11RendererAPI::BeginFrame()
+	{
+		// 1) 각 View 별로 뷰포트/RTV+DSV 바인딩 및 클리어
+		for (auto& [viewId, view] : m_views)
+		{
+			if (!view.rtv || !view.dsv)
+				continue;
+
+			// 1.1) 뷰포트 설정
+			m_context->RSSetViewports(1, &view.vp);
+
+			// 1.2) RTV + DSV 바인딩
+			m_context->OMSetRenderTargets(
+				1,
+				view.rtv.GetAddressOf(),
+				view.dsv.Get()
+				 );
+
+			// 컬러 클리어
+			if (view.clearFlags & ClearFlags::ClearColor)
+			{
+				float c[4] = {
+				((view.clearColor >> 16) & 0xFF) / 255.0f,
+				((view.clearColor >> 8) & 0xFF) / 255.0f,
+				((view.clearColor >> 0) & 0xFF) / 255.0f,
+				((view.clearColor >> 24) & 0xFF) / 255.0f,
+				};
+				m_context->ClearRenderTargetView(view.rtv.Get(), c);
+			}
+
+			//깊이·스텐실 클리어
+			UINT dflags = 0;
+			if (view.clearFlags & ClearFlags::ClearDepth)   dflags |= D3D11_CLEAR_DEPTH;
+			if (view.clearFlags & ClearFlags::ClearStencil) dflags |= D3D11_CLEAR_STENCIL;
+			if (dflags)
+				m_context->ClearDepthStencilView(
+					view.dsv.Get(),
+					dflags,
+					view.clearDepth,
+					view.clearStencil
+				);
+
+			// DepthStencilState 적용
+			m_context->OMSetDepthStencilState(m_depthStencilState.Get(), 0);
+		}
+
+		// 2) 트랜지언트 버퍼 프레임 시작
+		m_transientVB->beginFrame();
+		m_transientIB->beginFrame();
+	}
+    void D3D11RendererAPI::EndFrame() 
+    {
+        m_transientVB->endFrame();
+        m_transientIB->endFrame();
+    }
 
     void D3D11RendererAPI::Present() {
         m_swapChain->Present(1, 0);
@@ -348,13 +417,118 @@ namespace BinRenderer {
         m_context->PSSetSamplers(slot, 1, &ss);
     }
 
-    void D3D11RendererAPI::EnqueueDraw(const DrawCommand& cmd)
+    void D3D11RendererAPI::EnqueueDraw(const DrawCommand& incmd)
     {
-        
+        DrawCommand cmd = incmd;
+
+        // UniformSet 초기값 업데이트
+        auto* material = m_materialRegistry->Get(cmd.materialHandle);
+        if (material)
+        {
+            material->GetUniformSet().Set("modelMatrix", &cmd.transform, sizeof(cmd.transform));
+            material->GetUniformSet().Set("viewProj", &m_viewProj, sizeof(m_viewProj));
+        }
+
+        // sortkey
+        // 상위 8비트: viewId
+        cmd.sortKey = (uint64_t(cmd.viewId) & 0xFFull) << 56;
+        // 다음 16비트: PSO handle
+        cmd.sortKey |= (uint64_t(cmd.psoHandle.idx) & 0xFFFFull) << 40;
+        // 다음 16비트: Material handle
+        cmd.sortKey |= (uint64_t(cmd.materialHandle.idx) & 0xFFFFull) << 24;
+        // 하위 24비트: 뷰 공간 Z 정규화값
+        {
+            XMVECTOR worldPos = cmd.transform.r[3];
+            XMVECTOR viewPos = XMVector3TransformCoord(worldPos, m_view);
+            float depth = XMVectorGetZ(viewPos);
+            float ndc = (depth - 0.1f) / (100.0f - 0.1f);
+            ndc = std::clamp(ndc, 0.0f, 1.0f);
+            uint32_t zbits = uint32_t(ndc * 0xFFFFFF);
+            cmd.sortKey |= uint64_t(zbits) & 0xFFFFFFull;
+        }
+
+        m_drawQueue.Submit(cmd);
+
     }
 
-    void D3D11RendererAPI::ExecuteDrawQueue() {
-        // existing DrawQueue flush logic
+    void D3D11RendererAPI::ExecuteDrawQueue()
+    {
+        m_drawQueue.flush([this](const DrawCommand& cmd)
+            {
+                // 2.1) 뷰포트 & 렌더타겟 바인딩
+                auto& view = m_views[cmd.viewId];
+                m_context->RSSetViewports(1, &view.vp);
+                m_context->OMSetRenderTargets(1, view.rtv.GetAddressOf(), view.dsv.Get());
+
+                // 2.2) 파이프라인 상태 & UniformSet 적용
+                auto* material = m_materialRegistry->Get(cmd.materialHandle);
+                const PipelineState* pso = m_psoRegistry->Get(material->GetPSO());
+
+                // 미리 채워둔 modelMatrix, viewProj 를 재적용
+                auto& us = material->GetUniformSet();
+                XMMATRIX mvp = cmd.transform * m_viewProj;
+                us.ApplyPredefined(PredefinedUniformType::ModelViewProj, &mvp, sizeof(mvp));
+
+                bindInputLayout(pso->m_inputLayout.Get());
+                bindPrimitiveTopology(pso->m_primitiveTopology);
+                bindShaders(*pso);
+                bindBlendState(pso->m_blendState.Get(), pso->m_blendFactor, pso->m_sampleMask);
+                bindDepthStencilState(pso->m_depthStencilState.Get(), pso->m_stencilRef);
+                bindRasterizerState(pso->m_rasterizerState.Get());
+
+                // 2.3) 상수버퍼 생성 및 바인딩
+                D3D11_BUFFER_DESC bd = {};
+                bd.ByteWidth = us.GetSize();
+                bd.Usage = D3D11_USAGE_DEFAULT;
+                bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+                D3D11_SUBRESOURCE_DATA sd{ us.GetRawData(), 0, 0 };
+                Microsoft::WRL::ComPtr<ID3D11Buffer> cb;
+                if (SUCCEEDED(m_device->CreateBuffer(&bd, &sd, &cb)))
+                {
+                    m_context->VSSetConstantBuffers(0, 1, cb.GetAddressOf());
+                    m_context->PSSetConstantBuffers(0, 1, cb.GetAddressOf());
+                }
+
+                // 2.4) 텍스처·샘플러 바인딩
+                for (auto& tb : material->GetTextureBindings())
+                {
+                    auto srv = m_textureRegistry->Get(tb.handle);
+                    m_context->PSSetShaderResources(tb.slot, 1, &srv);
+                }
+                for (auto& sb : material->GetSamplerBindings())
+                {
+                    auto ss = m_samplerRegistry->Get(sb.handle);
+                    m_context->PSSetSamplers(sb.slot, 1, &ss);
+                }
+
+                // 2.5) 드로우 호출 (인스턴싱 포함)
+                auto* mesh = m_meshRegistry->Get(cmd.meshHandle);
+                if (cmd.instanceCount > 1)
+                {
+                    void* dataPtr = nullptr;
+                    uint32_t vbOff = m_transientVB->alloc(
+                        sizeof(XMMATRIX) * cmd.instanceCount,
+                        dataPtr
+                    );
+                    memcpy(dataPtr, cmd.transforms.data(), sizeof(XMMATRIX) * cmd.instanceCount);
+
+                    ID3D11Buffer* vbs[2] = {
+                        mesh->vertexBuffer.Get(),
+                        m_transientVB->buffer()
+                    };
+                    UINT strides[2] = { mesh->vertexStride, sizeof(XMMATRIX) };
+                    UINT offsets[2] = { mesh->vertexOffset, vbOff };
+                    m_context->IASetVertexBuffers(0, 2, vbs, strides, offsets);
+                    m_context->IASetIndexBuffer(mesh->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+                    m_context->DrawIndexedInstanced(mesh->indexCount, cmd.instanceCount, 0, 0, 0);
+                }
+                else
+                {
+                    m_context->IASetVertexBuffers(0, 1, mesh->vertexBuffer.GetAddressOf(), &mesh->vertexStride, &mesh->vertexOffset);
+                    m_context->IASetIndexBuffer(mesh->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+                    m_context->DrawIndexed(mesh->indexCount, 0, 0);
+                }
+            });
     }
 
     void D3D11RendererAPI::BindFullScreenQuad() {
