@@ -27,6 +27,9 @@ namespace BinRenderer
         /// 매 프레임 G-Buffer→Lighting→Composite 실행
         void RenderFrame();
 
+        /// 윈도우 크기 바뀔때 호출
+        void Resize(uint32_t newWidth, uint32_t newHeight);
+
     private:
         // 실제 렌더링 구현체 (초기에는 D3D11RendererAPI)
         std::unique_ptr<BinRenderer::RendererAPI> m_core;
@@ -36,5 +39,10 @@ namespace BinRenderer
         std::unique_ptr<IRenderPass> m_gbufferPass;
         std::unique_ptr<IRenderPass> m_lightingPass;
         std::unique_ptr<IRenderPass> m_compositePass;
+
+        uint32_t m_width = 0;
+        uint32_t m_height = 0;
+
+        void setupPasses();
     };
 }

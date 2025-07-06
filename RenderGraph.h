@@ -18,6 +18,19 @@ namespace BinRenderer {
             m_passes.push_back(std::move(pass));
         }
 
+        /// 크기 바뀌었을 때 호출
+        void Resize(uint32_t w, uint32_t h) {
+            if (w == m_width && h == m_height) return;
+            m_width = w;
+            m_height = h;
+            //  이미 생성된 리소스 맵을 비워서 다음 Build()에서
+            //  모두 다시 생성되도록 함
+            m_globalResources.rtvs.clear();
+            m_globalResources.srvs.clear();
+            m_globalResources.dsvs.clear();
+            //m_globalResources = PassResources();
+        }
+
         // 1) Graph Build : Declare all passes -> create resources
         void Build() {
             RenderGraphBuilder builder(m_width, m_height);
