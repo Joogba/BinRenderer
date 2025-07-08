@@ -3,7 +3,6 @@
 #include "RendererAPI.h"
 
 #include <wrl/client.h>
-#include <d3d11.h>
 
 namespace BinRenderer
 {

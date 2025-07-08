@@ -1,5 +1,5 @@
 #pragma once
-#include "Handle.h"
+#include "Core/Handle.h"
 #include <unordered_map>
 #include <memory>
 #include <wrl/client.h>
@@ -13,10 +13,10 @@ using Microsoft::WRL::ComPtr;
         ComPtr<ID3D11Buffer> vertexBuffer;
         ComPtr<ID3D11Buffer> indexBuffer;
         UINT indexCount = 0;
-        UINT vertexStride = 0; // Á¤Á¡ ÇÏ³ªÀÇ Å©±â (ex: sizeof(Vertex))
-        UINT vertexOffset = 0; // ¹öÆÛ ³» Á¤Á¡ ½ÃÀÛ À§Ä¡ (º¸Åë 0)
+        UINT vertexStride = 0; // ì •ì  í•˜ë‚˜ì˜ í¬ê¸° (ex: sizeof(Vertex))
+        UINT vertexOffset = 0; // ë²„í¼ ë‚´ ì •ì  ì‹œì‘ ìœ„ì¹˜ (ë³´í†µ 0)
 
-        // ÀÎ½ºÅÏ½º µ¥ÀÌÅÍ ½ºÆ®¸²
+        // ì¸ìŠ¤í„´ìŠ¤ ë°ì´í„° ìŠ¤íŠ¸ë¦¼
         ComPtr<ID3D11Buffer> instanceBuffer;
         UINT                 instanceStride = 0;
         UINT                 instanceOffset = 0;

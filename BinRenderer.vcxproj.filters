@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="D3D11RendererAPI.cpp">
+    <ClCompile Include="Platform\D3D11\D3D11RendererAPI.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="DrawCommand.h">
+    <ClCompile Include="Core\DrawCommand.h">
       <Filter>헤더 파일</Filter>
     </ClCompile>
     <ClCompile Include="GeometryGenerator.cpp">
@@ -51,33 +51,39 @@
     <ClCompile Include="TextureLoader.h">
       <Filter>헤더 파일</Filter>
     </ClCompile>
-    <ClCompile Include="IRenderPass.h">
+    <ClCompile Include="Core\IRenderPass.h">
       <Filter>헤더 파일</Filter>
     </ClCompile>
-    <ClCompile Include="GBufferPass.cpp">
+    <ClCompile Include="Passes\GBufferPass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="LightingPass.cpp">
+    <ClCompile Include="Passes\LightingPass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="CompositePass.cpp">
+    <ClCompile Include="Passes\CompositePass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="DeferredRenderer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Platform\D3D11\D3D11Utils.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RenderEnums.h">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D3D11RendererAPI.h">
+    <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="DrawQueue.h">
+    <ClInclude Include="Core\DrawQueue.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="GeometryGenerator.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Handle.h">
+    <ClInclude Include="Core\Handle.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="MaterialSystem.h">
@@ -89,7 +95,7 @@
     <ClInclude Include="PSORegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RendererAPI.h">
+    <ClInclude Include="Core\RendererAPI.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="UniformSystem.h">
@@ -113,28 +119,37 @@
     <ClInclude Include="SamplerRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="GBufferPass.h">
+    <ClInclude Include="Passes\GBufferPass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="LightingPass.h">
+    <ClInclude Include="Passes\LightingPass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="CompositePass.h">
+    <ClInclude Include="Passes\CompositePass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="DeferredRenderer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RenderGraphBuilder.h">
+    <ClInclude Include="Core\RenderGraphBuilder.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="PassResources.h">
+    <ClInclude Include="Core\PassResources.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RenderStates.h">
+    <ClInclude Include="Core\RenderStates.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RenderGraph.h">
+    <ClInclude Include="Core\RenderGraph.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Format.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PrimitiveTopology.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform\D3D11\D3D11Utils.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

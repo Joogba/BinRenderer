@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Handle.h"
+#include "Core/Handle.h"
 #include "PSORegistry.h"
 #include "UniformSystem.h"
 
@@ -26,7 +26,7 @@ namespace BinRenderer {
         UniformSet& GetUniformSet() { return *m_uniformSet; }
         const UniformSet& GetUniformSet() const { return *m_uniformSet; }
 
-         // Texture / Sampler µÓ∑œ API
+         // Texture / Sampler Îì±Î°ù API
          void BindTexture(uint32_t slot, TextureHandle th) { m_textures.push_back({ slot, th }); }
          void BindSampler(uint32_t slot, SamplerHandle sh) { m_samplers.push_back({ slot, sh }); }
 

@@ -30,6 +30,12 @@ namespace BinRenderer
         /// 윈도우 크기 바뀔때 호출
         void Resize(uint32_t newWidth, uint32_t newHeight);
 
+        // renderer api getter
+        RendererAPI* GetCore() const { return m_core.get(); }
+
+        // light pass 에 라이트 정보 전달
+        void SetLight(const std::vector<Light>& lights);
+
     private:
         // 실제 렌더링 구현체 (초기에는 D3D11RendererAPI)
         std::unique_ptr<BinRenderer::RendererAPI> m_core;

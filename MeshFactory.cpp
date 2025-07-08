@@ -1,6 +1,6 @@
 #include "MeshFactory.h"
 #include "GeometryGenerator.h"
-#include "Handle.h"
+#include "Core/Handle.h"
 #include <cassert>
 #include <wrl/client.h>
 

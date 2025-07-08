@@ -1,250 +1,120 @@
-// TestApp.cpp
 #include <windows.h>
-#include <cassert>
-#include <d3d11.h>
-#include <d3dcompiler.h>
-#include <memory>
-
-
-#include "D3D11RendererAPI.h"
-#include "GeometryGenerator.h"
+#include <vector>
+#include <DirectXMath.h>
 #include "MeshFactory.h"
-#include "DrawCommand.h"
-#include "Handle.h"
-#include "TextureLoader.h"
- 
+#include "D3D11RendererAPI.h"
+#include "DeferredRenderer.h"
+#include "Vertex.h"
+
 using namespace BinRenderer;
 using namespace DirectX;
 
-int newW = 0;
-int newH = 0;
+// Í∞ÑÎã®Ìïú FPS Ïπ¥Î©îÎùº Ïª®Ìä∏Î°§
+struct Camera {
+    XMVECTOR eye = XMVectorSet(0, 3, -10, 0);
+    XMVECTOR target = XMVectorZero();
+    XMVECTOR up = XMVectorSet(0, 1, 0, 0);
+    float fov = XM_PIDIV4;
+    float aspect = 1.0f;
+    float zn = 0.1f, zf = 1000.f;
 
-RendererAPI* renderer;
+    XMMATRIX GetView() const { return XMMatrixLookAtLH(eye, target, up); }
+    XMMATRIX GetProj() const { return XMMatrixPerspectiveFovLH(fov, aspect, zn, zf); }
+};
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	switch (msg) {
-	    case WM_SIZE:
-            /*if (renderer)
-            {
-                newW = LOWORD(lParam);
-                newH = HIWORD(lParam);
-                if (newW > 0 && newH > 0)
-                {
-                    auto renderer = reinterpret_cast<D3D11RendererAPI*>(
-                        GetWindowLongPtr(hWnd, GWLP_USERDATA)
-                        );
-                    if (renderer)
-                    {
+// ÎùºÏù¥Ìä∏ Ï†ïÎ≥¥
+struct Light {
+    XMFLOAT3 pos;
+    XMFLOAT3 color;
+};
 
-                        renderer->Resize(newW, newH);
-                    }
-                }
-            }*/
-            break;
-		    // √÷º“»≠(0°ø0) ∂© Ω∫≈µ
-		    
-        case WM_DESTROY:
-		    PostQuitMessage(0);
-		    return 0;
-	}
-	
-	return DefWindowProc(hWnd, msg, wParam, lParam);
+// Ï†ÑÏó≠
+HWND            g_hWnd = nullptr;
+UINT            g_width = 1280;
+UINT            g_height = 720;
+DeferredRenderer g_renderer;
+Camera           g_camera;
+std::vector<Light>   g_lights;
+std::vector<std::pair<MeshHandle, XMMATRIX>> g_meshes;
+
+// ÏúàÎèÑÏö∞ ÌîÑÎ°úÏãúÏ†Ä
+LRESULT CALLBACK WndProc(HWND h, UINT msg, WPARAM w, LPARAM l) {
+    if (msg == WM_DESTROY) { PostQuitMessage(0); return 0; }
+    return DefWindowProc(h, msg, w, l);
 }
 
-int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, PSTR, int nCmdShow)
-{
-    // 1) ¿©µµøÏ ª˝º∫
-    const wchar_t CLASS_NAME[] = L"BinRendererWindowClass";
-    WNDCLASS wc = {};
-    wc.lpfnWndProc = WndProc;
-    wc.hInstance = hInst;
-    wc.lpszClassName = CLASS_NAME;
-    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
+    // 1) ÏúàÎèÑÏö∞ ÌÅ¥ÎûòÏä§ & ÏÉùÏÑ±
+    WNDCLASS wc = { CS_OWNDC, WndProc,0,0, hInst, LoadIcon(nullptr,IDI_APPLICATION),
+                    LoadCursor(nullptr,IDC_ARROW), HBRUSH(COLOR_WINDOW + 1),
+                    nullptr, L"TestApp" };
     RegisterClass(&wc);
-
-    const int width = 1280;
-    const int height = 720;
-    DWORD style = WS_OVERLAPPEDWINDOW;
-    RECT rect = { 0, 0, width, height };
-    AdjustWindowRect(&rect, style, FALSE);
-
-    HWND hWnd = CreateWindowEx(
-        0,
-        CLASS_NAME,
-        L"BinRenderer TestApp",
-        style,
+    g_hWnd = CreateWindow(L"TestApp", L"DeferredRenderer Test",
+        WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        rect.right - rect.left,
-        rect.bottom - rect.top,
-        nullptr,
-        nullptr,
-        hInst,
-        nullptr
-    );
-    assert(hWnd && "Failed to create window");
-    renderer = CreateD3D11Renderer();
-    InitParams params{ hWnd, 1280, 720 };
-    assert(renderer->Init(params) && "Init failed");
+        g_width, g_height, nullptr, nullptr, hInst, nullptr);
+    ShowWindow(g_hWnd, SW_SHOW);
 
-    SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(renderer));
-    ShowWindow(hWnd, nCmdShow);
+    // 2) DeferredRenderer Ï¥àÍ∏∞Ìôî
+    InitParams ip{ g_hWnd, (int)g_width, (int)g_height };
+    g_renderer.Init(ip);
 
-    // 2) ∑ª¥ı∑Ø ª˝º∫ & √ ±‚»≠
-    
+    // 3) Ïπ¥Î©îÎùº ÌîÑÎ°úÏ†ùÏÖò ÏÑ∏ÌåÖ
+    g_camera.aspect = float(g_width) / float(g_height);
 
-    // 2.1) ƒ´∏ﬁ∂Û(∫‰°§≈ıøµ) «‡∑ƒ º≥¡§
-    using namespace DirectX;
-    // ∞£¥‹»˜ ø¯¡° ¬ ¿∏∑Œ Z√‡ -3 ∂≥æÓ¡¯ ¿ßƒ°ø°º≠ πŸ∂Û∫∏±‚
-    XMVECTOR eye = XMVectorSet(0.0f, 0.0f, -10.0f, 0.0f);
-    XMVECTOR at = XMVectorZero();
-    XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    XMMATRIX view = XMMatrixLookAtLH(eye, at, up);
-    XMMATRIX proj = XMMatrixPerspectiveFovLH(XM_PIDIV4, (float)width / (float)height, 0.1f, 100.0f);
-    renderer->SetViewProj(view, proj);
+    // 4) Î©îÏâ¨¬∑Ï°∞Î™Ö Î∞∞Ïπò
+    //    MeshBuilderÎ•º ÌÜµÌï¥ Í∏∞Î≥∏ ÌÅêÎ∏å, ÌèâÎ©¥ ÏÉùÏÑ±
+    auto* d3d = static_cast<D3D11RendererAPI*>(g_renderer.GetCore());
+    Mesh cubeMesh = MeshFactory::CreateCube(d3d->GetDevice(), 1.0f);
+    Mesh planeMesh = MeshFactory::CreatePlane(d3d->GetDevice(), 20.0f);
+    auto cubeH = d3d->GetMeshRegistry()->Register(cubeMesh);
+    auto planeH = d3d->GetMeshRegistry()->Register(planeMesh);
 
-    // 3) ±‚«œ ª˝º∫ (æ€ ∑π∫ß)
-    MeshData quadData = GeometryGenerator::MakeSquare(0.5f, { 1,1 });
+    // ÌèâÎ©¥: y=0
+    g_meshes.push_back({ planeH, XMMatrixIdentity() });
+    // ÌÅêÎ∏å Î™á Í∞ú Î∞∞Ïπò
+    for (int x = -2; x <= 2; x += 2)
+        for (int z = -2; z <= 2; z += 2) {
+            XMMATRIX t = XMMatrixTranslation(float(x * 2), 1.0f, float(z * 2));
+            g_meshes.push_back({ cubeH, t });
+        }
 
-    // 4) GPU πˆ∆€ ª˝º∫ & µÓ∑œ
-    auto d3d = static_cast<D3D11RendererAPI*>(renderer);
-    ID3D11Device* device = d3d->GetDevice();
-    auto quadMesh = MeshFactory::CreateMeshFromData(device, quadData);
-    MeshHandle quadHandle = d3d->GetMeshRegistry()->Register(*quadMesh);
+    // Ïó¨Îü¨ Ìè¨Ïù∏Ìä∏ ÎùºÏù¥Ìä∏
+    g_lights = {
+        {{+5,5,-5},{1,0,0}},
+        {{-5,5,-5},{0,1,0}},
+        {{+5,5,+5},{0,0,1}},
+        {{-5,5,+5},{1,1,0}}
+    };
 
-    
-
-    // 2.1 HLSL ƒƒ∆ƒ¿œ
-    ComPtr<ID3DBlob> vsBlob, psBlob, errBlob;
-    HRESULT hr = D3DCompileFromFile(
-        L"Basic.hlsl",
-        nullptr,
-        D3D_COMPILE_STANDARD_FILE_INCLUDE,
-        "VSMain", "vs_5_0",
-        0, 0,
-        &vsBlob, &errBlob
-    );
-    if (FAILED(hr) && errBlob)
-    {
-        OutputDebugStringA((char*)errBlob->GetBufferPointer());
-    }
-    assert(SUCCEEDED(hr));
-
-
-    // Pixel Shader
-    hr = D3DCompileFromFile(
-        L"Basic.hlsl",
-        nullptr,
-        D3D_COMPILE_STANDARD_FILE_INCLUDE,
-        "PSMain", "ps_5_0",
-        0, 0,
-        &psBlob, &errBlob
-    );
-    assert(SUCCEEDED(hr));
-
-    // 2.2 Ω«¡¶ D3D11 ºŒ¿Ã¥ı ∞¥√º ª˝º∫z
-    ComPtr<ID3D11VertexShader>   vs;
-    ComPtr<ID3D11PixelShader>    ps;
-    d3d->GetDevice()->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vs);
-    d3d->GetDevice()->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &ps);
-
-    // 2.3 InputLayout ¡§¿« (Vertex.h ±∏¡∂ø° ∏¬√Áº≠)
-	D3D11_INPUT_ELEMENT_DESC layoutDesc[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, position),    D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL"  , 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, normalModel), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, offsetof(Vertex, texcoord),    D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TANGENT" , 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, tangentModel),D3D11_INPUT_PER_VERTEX_DATA, 0 },
-
-		// Ω∫∆Æ∏≤ 1 : ¿ŒΩ∫≈œΩ∫ (4«‡∑ƒ float4æø)
-	    { "TEXCOORD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,  0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-	    { "TEXCOORD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-	    { "TEXCOORD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-	    { "TEXCOORD", 4, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-	};
-    ComPtr<ID3D11InputLayout> inputLayout;
-    d3d->GetDevice()->CreateInputLayout(
-        layoutDesc, _countof(layoutDesc),
-        vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
-        &inputLayout
-    );
-
-    // 5) ¥‹¿œ PSO + ∏”∆º∏ÆæÛ ª˝º∫ (∞£∑´»˜)
-    //    Ω«¡¶∑Œ¥¬ ºŒ¿Ã¥ı ∑Œµ˘ + ªÛ≈¬ º≥¡§¿Ã « ø‰
-    auto pso = std::make_unique<PipelineState>();
-    pso->m_vertexShader = vs;
-    pso->m_pixelShader = ps;
-    pso->m_inputLayout = inputLayout;
-    PSOHandle psoHandle = d3d->GetPSORegistry()->Register(std::move(pso));
-
-    auto layout = std::make_shared<UniformLayout>();
-    layout->AddUniform("modelMatrix", sizeof(DirectX::XMMATRIX));
-    layout->AddUniform("viewProj", sizeof(DirectX::XMMATRIX));
-    auto material = std::make_unique<Material>(psoHandle, layout);
-
-    // ≈ÿΩ∫√ƒ ª˘«√∑Ø µÓ∑œ
-
-    ComPtr<ID3D11ShaderResourceView> checkerSrv =
-        BinRenderer::LoadTexture(d3d->GetDevice(), "checker.png");
-
-    TextureHandle checkerTex = d3d->GetTextureRegistry()->Register(checkerSrv);
-
-    D3D11_SAMPLER_DESC sd{};
-    sd.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    sd.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    sd.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    sd.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    ComPtr<ID3D11SamplerState> sampler;
-    d3d->GetDevice()->CreateSamplerState(&sd, &sampler);
-    SamplerHandle checkerSmp = d3d->GetSamplerRegistry()->Register(sampler);
-
-    // ∏”∆º∏ÆæÛ º≥¡§ Ω√°¶
-    material->BindTexture(0, checkerTex);   // t0 ∑π¡ˆΩ∫≈Õ
-    material->BindSampler(0, checkerSmp);   // s0 ∑π¡ˆΩ∫≈Õ
-    auto matHandle = d3d->GetMaterialRegistry()->Register(std::move(material));
-
-    // 6) ∏ﬁΩ√ ∑Á«¡
-    MSG msg{};
-    while (WM_QUIT != msg.message)
-    {
-        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-        {
+    // 5) Î©îÏãú Î£®ÌîÑ
+    MSG msg;
+    while (true) {
+        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT) break;
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-            continue;
         }
 
-        
+        // Í∞ÑÎã®Ìûà Ïπ¥Î©îÎùº Í≥†Ï†ï, ÎùºÏù¥Ìä∏ÎèÑ ÏóÖÎç∞Ïù¥Ìä∏ ÏóÜÏùå
 
-        // 7) ∑ª¥ı∏µ
-        renderer->BeginFrame();
-
-        DrawCommand cmd;
-        cmd.meshHandle = quadHandle;
-        cmd.materialHandle = matHandle;
-        cmd.psoHandle = psoHandle;
-        cmd.transform = DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f);
-        cmd.viewId = 0;
-        cmd.instanceCount = 5;
-        cmd.transforms.resize(cmd.instanceCount);
-        for (uint32_t i = 0; i < cmd.instanceCount; ++i)
-        {
-            // øπ: X√‡¿∏∑Œ ¡∂±›æø ∂≥æÓ∂ﬂ∑¡º≠ 4∞≥ ±◊∏∞¥Ÿ
-            cmd.transforms[i] = DirectX::XMMatrixTranslation(float(i) * 1.5f, 0, 0);
+        // Submit Í∞Å DrawCommand
+        for (auto& [mh, mat] : g_meshes) {
+            DrawCommand cmd;
+            cmd.meshHandle = mh;
+            cmd.materialHandle = MaterialHandle::Invalid; // DeferredRenderer ÎÇ¥Î∂ÄÏóêÏÑú GBufferPassÍ∞Ä PSOÎßå ÏÇ¨Ïö©
+            cmd.psoHandle = PSOHandle::Invalid;      // Ïã§Ï†ú PSOÎäî Ìå®Ïä§Í∞Ä Î∞îÏù∏Îî©
+            cmd.transform = mat * g_camera.GetView() * g_camera.GetProj();
+            g_renderer.Submit(cmd);
         }
 
+        // ÌÖåÏä§Ìä∏Ïö©: ÎùºÏù¥Ìä∏ Ï†ïÎ≥¥Î•º LightingPassÏóê Ïò¨Î¶¨Í∏∞
+        //   (LightingPass ÎÇ¥Î∂ÄÏóê uniform layoutÏóê ÎßûÏ∂∞ SetUniform Ìò∏Ï∂ú)
+        g_renderer.SetLights(g_lights.data(), (uint32_t)g_lights.size());
 
-        auto materialPtr = d3d->GetMaterialRegistry()->Get(matHandle);
-		materialPtr->GetUniformSet().Set("modelMatrix", &cmd.transform, sizeof(cmd.transform));
-
-
-        renderer->Submit(cmd);
-        renderer->Submit();   // ≈• ∫ÒøÏ∏Á Ω«¡¶ µÂ∑ŒøÏ
-        renderer->EndFrame();
-        renderer->Present();
+        // Î†åÎçî ÌîÑÎ†àÏûÑ
+        g_renderer.RenderFrame();
     }
 
-    // 8) ¡§∏Æ
-    DestroyRenderer(renderer);
     return 0;
 }

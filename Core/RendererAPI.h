@@ -7,12 +7,13 @@
 
 #include "Handle.h"
 #include "RenderStates.h"
+#include "PrimitiveTopology.h"
+#include "Format.h"
 
 namespace BinRenderer {
 
 
-	// API 타입 확장 대비
-	enum class APIType { None, D3D11, Vulkan, OpenGL };
+	
 
 	// 초기화 파라미터
 	struct InitParams {
@@ -21,30 +22,7 @@ namespace BinRenderer {
 		uint32_t height;
 	};
 
-	// Clear 플래그 (비트마스크)
-	enum ClearFlags : uint32_t {
-		ClearColor = 1 << 0,
-		ClearDepth = 1 << 1,
-		ClearStencil = 1 << 2,
-	};
-
-	// 텍스처 포맷
-	enum class Format {
-		RGBA32_FLOAT,
-		R8G8B8A8_UNORM,
-		R16G16B16A16_FLOAT,
-		R32_FLOAT,
-		DEPTH24_STENCIL8,
-		// ... 필요시 추가
-	};
-
-	// 바인드 플래그
-	enum BindFlags : uint32_t {
-		Bind_None = 0,
-		Bind_RenderTarget = 1 << 0,
-		Bind_ShaderResource = 1 << 1,
-		Bind_DepthStencil = 1 << 2,
-	};
+	
 
 	// 텍스처 생성 파라미터
 	struct TextureDesc {
@@ -66,13 +44,13 @@ namespace BinRenderer {
 		DepthStencilState   depthStencilState;
 		BlendState          blendState;
 		float               blendFactor[4] = { 1,1,1,1 };
-		UINT                stencilRef = 0;
-		D3D11_PRIMITIVE_TOPOLOGY           primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-		UINT                               sampleMask = 0xFFFFFFFF;
+		uint32_t                stencilRef = 0;
+		PrimitiveTopology           primitiveTopology = PrimitiveTopology::TriangleList;
+		uint32_t                               sampleMask = 0xFFFFFFFF;
 
 		uint32_t            numRenderTargets = 1;
-		DXGI_FORMAT         rtvFormats[8];
-		DXGI_FORMAT         dsvFormat;
+		Format         rtvFormats[8];
+		Format         dsvFormat;
 	};
 
 	// 샘플러 생성 파라미터
