@@ -23,6 +23,8 @@ namespace BinRenderer {
     struct RTVHandleTag {};
     struct SRVHandleTag {};
     struct DSVHandleTag {};
+    struct SamplerHandleTag {};
+    struct ShaderHandleTag {};
 
     using MeshHandle = Handle<MeshTag>;
     using MaterialHandle = Handle<MaterialTag>;
@@ -31,8 +33,8 @@ namespace BinRenderer {
     using RenderTargetViewHandle = Handle<RTVHandleTag>;
     using ShaderResourceViewHandle = Handle<SRVHandleTag>;
     using DepthStencilViewHandle = Handle<DSVHandleTag>;
-
-    struct TextureHandle { uint32_t idx; };
-    struct SamplerHandle { uint32_t idx; };
+    using SamplerHandle = Handle<SamplerHandleTag>;
+    using ShaderHandle = Handle<ShaderHandleTag>;
+    };
 
 } // namespace BinRenderer

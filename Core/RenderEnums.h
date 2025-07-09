@@ -2,6 +2,15 @@
 #include <cstdint>
 
 namespace BinRenderer {
+
+    enum class ShaderStage {
+        Vertex,
+        Pixel,
+        Compute,
+        Geometry,
+        Hull,
+        Domain,
+    };
     // Clear 플래그 (비트마스크)
     enum class ClearFlags : uint32_t {
         ClearColor = 1 << 0,
@@ -16,6 +25,7 @@ namespace BinRenderer {
         R16G16B16A16_FLOAT,
         R32_FLOAT,
         DEPTH24_STENCIL8,
+        Unknown,
         // ... 필요시 추가
     };
 

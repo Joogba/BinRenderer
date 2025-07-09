@@ -24,16 +24,16 @@
     <ClCompile Include="GeometryGenerator.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="MaterialSystem.cpp">
+    <ClCompile Include="Resources\MaterialRegistry.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="MeshRegistry.cpp">
+    <ClCompile Include="Resources\MeshRegistry.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="PipelineState.h">
       <Filter>헤더 파일</Filter>
     </ClCompile>
-    <ClCompile Include="PSORegistry.cpp">
+    <ClCompile Include="Resources\PSORegistry.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="UniformSystem.cpp">
@@ -86,13 +86,13 @@
     <ClInclude Include="Core\Handle.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="MaterialSystem.h">
+    <ClInclude Include="Resources\MaterialRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="MeshRegistry.h">
+    <ClInclude Include="Resources\MeshRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="PSORegistry.h">
+    <ClInclude Include="Resources\PSORegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Core\RendererAPI.h">
@@ -113,10 +113,10 @@
     <ClInclude Include="View.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="TextureRegistry.h">
+    <ClInclude Include="Resources\TextureRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="SamplerRegistry.h">
+    <ClInclude Include="Resources\SamplerRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Passes\GBufferPass.h">
@@ -143,13 +143,16 @@
     <ClInclude Include="Core\RenderGraph.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Format.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\PrimitiveTopology.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="Platform\D3D11\D3D11Utils.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\FlagOps.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Resources\ResourceManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Resources\ShaderRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

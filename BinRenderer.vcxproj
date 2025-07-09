@@ -130,8 +130,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Core\Format.h" />
-    <ClInclude Include="Core\PrimitiveTopology.h" />
+    <ClInclude Include="Core\FlagOps.h" />
     <ClInclude Include="Platform\D3D11\D3D11Utils.h" />
     <ClInclude Include="Passes\CompositePass.h" />
     <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h" />
@@ -141,18 +140,20 @@
     <ClInclude Include="GeometryGenerator.h" />
     <ClInclude Include="Core\Handle.h" />
     <ClInclude Include="Passes\LightingPass.h" />
-    <ClInclude Include="MaterialSystem.h" />
+    <ClInclude Include="Resources\MaterialRegistry.h" />
     <ClInclude Include="MeshData.h" />
     <ClInclude Include="MeshFactory.h" />
-    <ClInclude Include="MeshRegistry.h" />
+    <ClInclude Include="Resources\MeshRegistry.h" />
     <ClInclude Include="Core\PassResources.h" />
-    <ClInclude Include="PSORegistry.h" />
+    <ClInclude Include="Resources\PSORegistry.h" />
     <ClInclude Include="Core\RendererAPI.h" />
     <ClInclude Include="Core\RenderGraph.h" />
     <ClInclude Include="Core\RenderGraphBuilder.h" />
     <ClInclude Include="Core\RenderStates.h" />
-    <ClInclude Include="SamplerRegistry.h" />
-    <ClInclude Include="TextureRegistry.h" />
+    <ClInclude Include="Resources\ResourceManager.h" />
+    <ClInclude Include="Resources\ShaderRegistry.h" />
+    <ClInclude Include="Resources\SamplerRegistry.h" />
+    <ClInclude Include="Resources\TextureRegistry.h" />
     <ClInclude Include="UniformSystem.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="View.h" />
@@ -168,11 +169,11 @@
     <ClCompile Include="GeometryGenerator.cpp" />
     <ClCompile Include="Core\IRenderPass.h" />
     <ClCompile Include="Passes\LightingPass.cpp" />
-    <ClCompile Include="MaterialSystem.cpp" />
+    <ClCompile Include="Resources\MaterialRegistry.cpp" />
     <ClCompile Include="MeshFactory.cpp" />
-    <ClCompile Include="MeshRegistry.cpp" />
+    <ClCompile Include="Resources\MeshRegistry.cpp" />
     <ClCompile Include="PipelineState.h" />
-    <ClCompile Include="PSORegistry.cpp" />
+    <ClCompile Include="Resources\PSORegistry.cpp" />
     <ClCompile Include="TestApp.cpp" />
     <ClCompile Include="TextureLoader.h" />
     <ClCompile Include="TransientBufferAllocator.h" />

@@ -1,5 +1,6 @@
 #include "LightingPass.h"
-#include "D3D11RendererAPI.h"
+#include "Core/RendererAPI.h"
+#include "Core/FlagOps.h"
 
 namespace BinRenderer
 {
