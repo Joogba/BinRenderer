@@ -1,12 +1,13 @@
 
 #pragma once
 
-#include "RendererAPI.h"
-#include "DrawCommand.h"
-#include "RenderGraph.h"
-#include "GBufferPass.h"
-#include "LightingPass.h"
-#include "CompositePass.h"
+#include "Core/RendererAPI.h"
+#include "Core/DrawCommand.h"
+#include "Core/RenderGraph.h"
+#include "Passes/GBufferPass.h"
+#include "Passes/LightingPass.h"
+#include "Passes/CompositePass.h"
+#include "Core/RenderStates.h"
 
 #include <memory>
 

@@ -1,6 +1,5 @@
 
 #include "DeferredRenderer.h"
-#include "D3D11RendererAPI.h"
 
 namespace BinRenderer
 {

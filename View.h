@@ -1,25 +1,40 @@
-// View.h
 #pragma once
-#include <d3d11.h>
-#include <wrl/client.h>
-#include <DirectXMath.h>
+
+#include <cstdint>
+#include <vector>
+#include <string>
+
+#include "Core/Handle.h"
 
 namespace BinRenderer {
 
-    struct View
-    {
-        // ·»´õ Å¸°Ù + ±íÀÌºä
-        Microsoft::WRL::ComPtr<ID3D11RenderTargetView> rtv;
-        Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsv;
+	struct Viewport {
+		float x = 0.0f;
+		float y = 0.0f;
+		float width = 0.0f;
+		float height = 0.0f;
+		float minDepth = 0.0f;
+		float maxDepth = 1.0f;
+	};
 
-        // Å¬¸®¾î ¼³Á¤
-        uint32_t clearFlags = 0;          // ClearFlags ºñÆ®¸¶½ºÅ©
-        uint32_t clearColor = 0xff000000; // AARRGGBB
-        float    clearDepth = 1.0f;
-        uint8_t  clearStencil = 0;
+	struct View
+	{
+		// ë Œë” íƒ€ê²Ÿ + ê¹Šì´ë·°
+		std::vector<RenderTargetViewHandle> rtvs;   // ë©€í‹°íƒ€ê²Ÿ ì§€ì›
+		DepthStencilViewHandle dsv;
 
-        // ºäÆ÷Æ®
-        D3D11_VIEWPORT vp = { 0,0,0,0,0,1 };
-    };
+		// í´ë¦¬ì–´ ì„¤ì •
+		uint32_t clearFlags = 0;          // enum class ClearFlags ë¹„íŠ¸ë§ˆìŠ¤í¬
+		uint32_t clearColor = 0xff000000; // AARRGGBB (or float[4])
+		float    clearDepth = 1.0f;
+		uint8_t  clearStencil = 0;
+
+		// ë·°í¬íŠ¸
+		Viewport viewport;
+
+		std::string name;
+		// glm::mat4 viewMatrix;
+	   // glm::mat4 projMatrix;
+	};
 
 } // namespace BinRenderer

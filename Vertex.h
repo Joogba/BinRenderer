@@ -1,48 +1,42 @@
 #pragma once
 
-#include <directxtk/SimpleMath.h>
+#include <glm/glm.hpp>
 #include <vector>
 
 namespace BinRenderer {
 
-    using DirectX::SimpleMath::Vector2;
-    using DirectX::SimpleMath::Vector3;
-    using DirectX::SimpleMath::Vector4;
-
+    // DX ì˜ì¡´ì„± ì œê±°: glm::vec* ì‚¬ìš©
     struct Vertex {
-        Vector3 position;
-        Vector3 normalModel;
-        Vector2 texcoord;
-        Vector3 tangentModel;
-        // Vector3 biTangentModel; // biTangent´Â ½¦ÀÌ´õ¿¡¼­ °è»ê
+        glm::vec3 position;
+        glm::vec3 normalModel;
+        glm::vec2 texcoord;
+        glm::vec3 tangentModel;
+        // glm::vec3 biTangentModel; // biTangentëŠ” ì‰ì´ë”ì—ì„œ ê³„ì‚°
     };
 
     struct SkinnedVertex {
-        Vector3 position;
-        Vector3 normalModel;
-        Vector2 texcoord;
-        Vector3 tangentModel;
+        glm::vec3 position;
+        glm::vec3 normalModel;
+        glm::vec2 texcoord;
+        glm::vec3 tangentModel;
 
-        float blendWeights[8] = { 0.0f, 0.0f, 0.0f, 0.0f,
-                                 0.0f, 0.0f, 0.0f, 0.0f };  // BLENDWEIGHT0 and 1
-        uint8_t boneIndices[8] = { 0, 0, 0, 0, 0, 0, 0, 0 }; // BLENDINDICES0 and 1
-
-        // boneWeights°¡ ÃÖ´ë 8°³¶ó°í °¡Á¤ (Luna ±³Àç¿¡¼­´Â 4°³)
-        // boneÀÇ ¼ö°¡ 256°³ ÀÌÇÏ¶ó°í °¡Á¤ uint8_t
+        float blendWeights[8] = { 0.0f };
+        uint8_t boneIndices[8] = { 0 };
+        // boneWeightsê°€ ìµœëŒ€ 8ê°œë¼ê³  ê°€ì •, bone ìˆ˜ê°€ 256ê°œ ì´í•˜ë¼ê³  ê°€ì •
     };
 
     struct GrassVertex {
-        Vector3 posModel;
-        Vector3 normalModel;
-        Vector2 texcoord;
-
-        // ÁÖÀÇ: Instance World´Â º°µµÀÇ ¹öÆÛ·Î º¸³¿
+        glm::vec3 posModel;
+        glm::vec3 normalModel;
+        glm::vec2 texcoord;
+        // Instance WorldëŠ” ë³„ë„ ë²„í¼
     };
 
-    // GrassVS, grassIL°ú ÀÏ°ü¼ºÀÌ ÀÖ¾î¾ß ÇÕ´Ï´Ù.
-    struct GrassInstance {
-        DirectX::SimpleMath::Matrix instanceWorld; // <- Instance ´ÜÀ§ÀÇ Model to World º¯È¯
+    // GrassVS, grassILê³¼ ì¼ê´€ì„±ì´ ìˆì–´ì•¼ í•©ë‹ˆë‹¤.
+    struct alignas(16) GrassInstance {
+        glm::mat4 instanceWorld; // glm::mat4ë¡œ ë³€ê²½
         float windStrength;
+        float pad[3] = { 0.0f, 0.0f, 0.0f }; // 16ë°”ì´íŠ¸ ì •ë ¬
     };
 
 } // namespace BinCore

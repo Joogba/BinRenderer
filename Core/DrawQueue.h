@@ -1,8 +1,10 @@
 #pragma once
-#include "DrawCommand.h"
+
 #include <vector>
 #include <algorithm>
 #include <functional>
+
+#include "DrawCommand.h"
 
 namespace BinRenderer {
 
@@ -13,12 +15,12 @@ namespace BinRenderer {
 		const std::vector<DrawCommand>& GetCommands() const { return m_commands; }
 		void flush(std::function<void(const DrawCommand&)> const& fn)
 		{
-			// 1) SortKey ±âÁØ ¿À¸§Â÷¼ø Á¤·Ä
+			// 1) SortKey ê¸°ì¤€ ì˜¤ë¦„ì°¨ìˆœ ì •ë ¬
 			std::sort(m_commands.begin(), m_commands.end(),
 				[](auto const& a, auto const& b) {
 					return a.sortKey < b.sortKey;
 				});
-			// 2) Á¤·ÄµÈ ¼ø¼­´ë·Î ÄÝ¹é
+			// 2) ì •ë ¬ëœ ìˆœì„œëŒ€ë¡œ ì½œë°±
 			for (auto const& cmd : m_commands)
 			{
 				fn(cmd);
