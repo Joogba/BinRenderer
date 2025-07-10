@@ -24,18 +24,6 @@
     <ClCompile Include="GeometryGenerator.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Resources\MaterialRegistry.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Resources\MeshRegistry.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="PipelineState.h">
-      <Filter>헤더 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Resources\PSORegistry.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="UniformSystem.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -70,6 +58,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Core\RenderEnums.h">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Resources\RenderTargetPool.h">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -153,6 +144,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Resources\ShaderRegistry.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Resources\RenderTargetRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

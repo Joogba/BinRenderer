@@ -150,6 +150,7 @@
     <ClInclude Include="Core\RenderGraph.h" />
     <ClInclude Include="Core\RenderGraphBuilder.h" />
     <ClInclude Include="Core\RenderStates.h" />
+    <ClInclude Include="Resources\RenderTargetRegistry.h" />
     <ClInclude Include="Resources\ResourceManager.h" />
     <ClInclude Include="Resources\ShaderRegistry.h" />
     <ClInclude Include="Resources\SamplerRegistry.h" />
@@ -169,11 +170,8 @@
     <ClCompile Include="GeometryGenerator.cpp" />
     <ClCompile Include="Core\IRenderPass.h" />
     <ClCompile Include="Passes\LightingPass.cpp" />
-    <ClCompile Include="Resources\MaterialRegistry.cpp" />
     <ClCompile Include="MeshFactory.cpp" />
-    <ClCompile Include="Resources\MeshRegistry.cpp" />
-    <ClCompile Include="PipelineState.h" />
-    <ClCompile Include="Resources\PSORegistry.cpp" />
+    <ClCompile Include="Resources\RenderTargetPool.h" />
     <ClCompile Include="TestApp.cpp" />
     <ClCompile Include="TextureLoader.h" />
     <ClCompile Include="TransientBufferAllocator.h" />
