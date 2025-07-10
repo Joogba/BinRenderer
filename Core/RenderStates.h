@@ -50,6 +50,7 @@ namespace BinRenderer {
         uint8_t             StencilWriteMask;
         DepthStencilOpDesc  FrontFace;
         DepthStencilOpDesc  BackFace;
+
     };
 
    
@@ -59,7 +60,7 @@ namespace BinRenderer {
         bool     BlendEnable;
         Blend    SrcBlend;
         Blend    DestBlend;
-        BlendOp  BlendOp;
+        BlendOp  Blendop;
         Blend    SrcBlendAlpha;
         Blend    DestBlendAlpha;
         BlendOp  BlendOpAlpha;
@@ -75,6 +76,9 @@ namespace BinRenderer {
     
 
 
+   
+
+    // 샘플러 생성 파라미터
     struct SamplerDesc {
         FilterMode     filter;
         AddressMode    addressU;
@@ -83,9 +87,9 @@ namespace BinRenderer {
         ComparisonFunc comparison;
         float          minLOD;
         float          maxLOD;
-        float          mipLODBias;
-        uint32_t       maxAnisotropy;
-        float          borderColor[4];
+        float          mipLODBias;       // LOD 바이어스 (기본 0.0f)
+        uint32_t       maxAnisotropy;    // 최대 이방성 필터링 레벨 (기본 1)
+        float          borderColor[4];   // 보더 컬러 (Wrap=Border 모드 시 사용)
     };
 
     // 텍스처 생성 파라미터
@@ -117,19 +121,7 @@ namespace BinRenderer {
         Format         dsvFormat;
     };
 
-    // 샘플러 생성 파라미터
-    struct SamplerDesc {
-        FilterMode     filter;
-        AddressMode    addressU;
-        AddressMode    addressV;
-        AddressMode    addressW;
-        ComparisonFunc comparison;
-        float          minLOD;
-        float          maxLOD;
-        float          mipLODBias;       // LOD 바이어스 (기본 0.0f)
-        uint32_t       maxAnisotropy;    // 최대 이방성 필터링 레벨 (기본 1)
-        float          borderColor[4];   // 보더 컬러 (Wrap=Border 모드 시 사용)
-    };
+   
 
     struct ShaderDesc {
         ShaderStage stage;

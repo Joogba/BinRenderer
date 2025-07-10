@@ -35,6 +35,6 @@ namespace BinRenderer {
     using DepthStencilViewHandle = Handle<DSVHandleTag>;
     using SamplerHandle = Handle<SamplerHandleTag>;
     using ShaderHandle = Handle<ShaderHandleTag>;
-    };
+    
 
 } // namespace BinRenderer

@@ -15,14 +15,18 @@ using Microsoft::WRL::ComPtr;
         std::vector<uint8_t> vertexBuffer; // 바이너리 버퍼
         std::vector<uint32_t> indexBuffer;
 
-        uint32_t indexCount     = 0;
-        uint32_t vertexStride   = sizeof(Vertex); // 정점 하나의 크기(기본 Vertex)
-        uint32_t vertexOffset   = 0; // 버퍼 내 정점 시작 위치 (보통 0)
-        uint32_t indexOffset    = 0;
-        // 인스턴스 데이터 스트림
+        uint32_t vertexStride = 0;              // Vertex 크기 (예: sizeof(Vertex_PosNormal))
+        uint32_t vertexCount = 0;              // 정점 개수
+        uint32_t indexCount = 0;
+        uint32_t vertexOffset = 0;
+        uint32_t indexOffset = 0;
+
+        // 인스턴싱 지원
         std::vector<uint8_t> instanceBuffer;
-        uint32_t                 instanceStride = 0;
-        uint32_t                 instanceOffset = 0;
+        uint32_t instanceStride = 0;
+        uint32_t instanceCount = 0;
+
+        std::vector<InputElementDesc> inputLayout; 
     };
 
     class MeshRegistry {

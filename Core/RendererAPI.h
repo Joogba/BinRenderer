@@ -15,7 +15,6 @@ namespace BinRenderer {
 
 	
 
-	// 초기화 파라미터
 	struct InitParams {
 		void* windowHandle;
 		uint32_t width;
@@ -30,14 +29,12 @@ namespace BinRenderer {
 	public:
 		virtual ~RendererAPI() noexcept = default;
 
-		// 초기화/종료
 		virtual bool Init(const InitParams& params) = 0;
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual void BeginFrame() = 0;
 		virtual void EndFrame() = 0;
 		virtual void Present() = 0;
 
-		// 리소스 생성
 		virtual TextureHandle             CreateTexture(const TextureDesc& desc) = 0;
 		virtual RenderTargetViewHandle    CreateRTV(TextureHandle tex) = 0;
 		virtual ShaderResourceViewHandle  CreateSRV(TextureHandle tex) = 0;

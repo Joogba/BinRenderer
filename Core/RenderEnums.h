@@ -40,15 +40,7 @@ namespace BinRenderer {
     // API 타입 확장 대비
     enum class APIType { None, D3D11, Vulkan, OpenGL };
 
-    // Format
-    enum class Format {
-        Unknown,
-        R8G8B8A8_UNorm,
-        R32_Float,
-        R32G32B32_Float,
-        D24_UNorm_S8_UInt,
-        // ...등등
-    };
+    
 
     // Primitive Topology
     enum class PrimitiveTopology {
@@ -109,14 +101,6 @@ namespace BinRenderer {
         Back,
     };
 
-    // Shader Stage
-    enum class ShaderStage {
-        Vertex,
-        Pixel,
-        Geometry,
-        Compute,
-        // ...
-    };
 
     // Sampler
     enum class FilterMode {
@@ -147,7 +131,7 @@ namespace BinRenderer {
     // 래스터라이저 상태
     enum class FillMode {
         Wireframe = 2,
-        Solid = 3
+        Solid = 3,
     };
 
 }

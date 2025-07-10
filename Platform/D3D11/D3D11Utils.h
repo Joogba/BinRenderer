@@ -18,5 +18,5 @@ namespace Binrenderer::D3D11Utils
     D3D11_DEPTH_STENCIL_DESC ToD3D11DepthStencilDesc(const BinRenderer::DepthStencilState& ds);
     D3D11_RASTERIZER_DESC ToD3D11RasterizerDesc(const BinRenderer::RasterizerState& rs);
     std::vector<D3D11_INPUT_ELEMENT_DESC> ToD3D11InputLayout(
-        const std::vector<BinRenderer::InputElementDesc>& inElems)
+        const std::vector<BinRenderer::InputElementDesc>& inElems);
 }

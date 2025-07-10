@@ -1,16 +1,27 @@
 #pragma once
 #include "Core/Handle.h"
+#include "Core/RenderEnums.h"
 
 #include <unordered_map>
 #include <string>
+#include <cstdint>
 
 namespace BinRenderer {
 
-    struct Texture { /* ... */ };
+    struct TextureDesc
+    {
+        uint32_t width;
+        uint32_t height;
+        Format format;
+        //  mip, array, sampleCount, usage 등 추가
+        bool operator==(const TextureDesc& rhs) const {
+            return width == rhs.width && height == rhs.height && format == rhs.format;
+        }
+    };
 
     class TextureRegistry {
     public:
-        TextureHandle Register(const std::string& name, const Texture& tex) {
+        TextureHandle Register(const std::string& name, const TextureDesc& tex) {
             auto it = m_nameToIdx.find(name);
             if (it != m_nameToIdx.end()) return TextureHandle(it->second);
             TextureHandle handle(m_nextId++);
@@ -20,12 +31,12 @@ namespace BinRenderer {
             return handle;
         }
 
-        const Texture* Get(TextureHandle handle) const {
+        const TextureDesc* Get(TextureHandle handle) const {
             auto it = m_textures.find(handle.idx);
             return it != m_textures.end() ? &it->second : nullptr;
         }
 
-        const Texture* Get(const std::string& name) const {
+        const TextureDesc* Get(const std::string& name) const {
             auto it = m_nameToIdx.find(name);
             return it != m_nameToIdx.end() ? Get(TextureHandle(it->second)) : nullptr;
         }
@@ -42,9 +53,10 @@ namespace BinRenderer {
         }
 
     private:
-        std::unordered_map<uint32_t, Texture> m_textures;
+        std::unordered_map<uint32_t, TextureDesc> m_textures;
         std::unordered_map<std::string, uint32_t> m_nameToIdx;
         std::unordered_map<uint32_t, std::string> m_idxToName;
         uint32_t m_nextId = 1;
     };
+
 }
