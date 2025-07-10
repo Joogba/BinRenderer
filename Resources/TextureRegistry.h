@@ -6,6 +6,15 @@
 #include <string>
 #include <cstdint>
 
+namespace std {
+    template<>
+    struct std::hash <BinRenderer::TextureDesc> {
+        size_t operator()(const BinRenderer::TextureDesc& d) const {
+            return hash<uint32_t>()(d.width) ^ hash<uint32_t>()(d.height) ^ hash<uint32_t>()((uint32_t)d.format);
+        }
+    };
+}
+
 namespace BinRenderer {
 
     struct TextureDesc
