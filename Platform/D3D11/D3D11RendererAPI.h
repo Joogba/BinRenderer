@@ -1,16 +1,18 @@
 #pragma once
 
-#include "RendererAPI.h"
-#include "Handle.h"
-#include "RenderStates.h"
+#include "Core/RendererAPI.h"
+#include "Core/Handle.h"
+#include "Core/RenderStates.h"
+#include "Core/DrawQueue.h"
+#include "Core/DrawCommand.h"
+
 #include "PSORegistry.h"
 #include "SamplerRegistry.h"
 #include "MaterialSystem.h"
 #include "MeshRegistry.h"
 #include "TextureRegistry.h"
-#include "DrawQueue.h"
-#include "DrawCommand.h"
-#include "TransientBufferAllocator.h"
+
+#include "D3D11TransientBufferAllocator.h"
 #include "View.h"
 
 #include <d3d11.h>
@@ -51,6 +53,10 @@ namespace BinRenderer {
         void BindSampler(SamplerHandle sampler, uint32_t slot) override;
 
         void EnqueueDraw(const DrawCommand& cmd) override;
+
+        void DrawSingle(const DrawCommand& cmd) override;
+        void DrawInstanced(const DrawCommand& cmd, const std::vector<glm::mat4>& transforms, int count) override;
+
         void ExecuteDrawQueue() override;
         void BindFullScreenQuad() override;
         void DrawFullScreenQuad() override;

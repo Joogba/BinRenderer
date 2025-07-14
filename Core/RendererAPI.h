@@ -54,6 +54,9 @@ namespace BinRenderer {
 		// Draw 호출
 		virtual void EnqueueDraw(const DrawCommand& cmd) = 0;
 
+		virtual void DrawSingle(const DrawCommand& cmd) = 0;
+		virtual void DrawInstanced(const DrawCommand& cmd, const std::vector<glm::mat4>& transforms, int count) = 0;
+
 		virtual void ExecuteDrawQueue() = 0;
 		virtual void BindFullScreenQuad() = 0;
 		virtual void DrawFullScreenQuad() = 0;

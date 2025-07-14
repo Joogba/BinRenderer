@@ -15,9 +15,26 @@ namespace BinRenderer
         PSOHandle               psoHandle;
         glm::mat4               transform;
         uint64_t                sortKey = 0;
+    };
 
-        uint32_t                instanceCount = 1;
-        uint32_t                instanceOffset = 0;
-        std::vector<glm::mat4>  transforms;
+    struct InstancingKey {
+        PSOHandle pso;
+        MaterialHandle material;
+        MeshHandle mesh;
+        bool operator==(const InstancingKey& rhs) const {
+            return pso == rhs.pso && material == rhs.material && mesh == rhs.mesh;
+        }
+    };
+}
+
+namespace std {
+
+    template<>
+    struct hash<BinRenderer::InstancingKey> {
+        size_t operator()(const BinRenderer::InstancingKey& k) const {
+            return std::hash<uint16_t>()(k.pso.idx) ^
+                (std::hash<uint16_t>()(k.material.idx) << 1) ^
+                (std::hash<uint16_t>()(k.mesh.idx) << 2);
+        }
     };
 }

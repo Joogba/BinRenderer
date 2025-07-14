@@ -335,6 +335,16 @@ namespace BinRenderer {
 
     }
 
+    void D3D11RendererAPI::DrawSingle(const DrawCommand& cmd) {
+        // D3D11 파이프라인 세팅, 머티리얼, 메시, 트랜스폼 등 적용
+        // DrawIndexed, Draw 등 D3D11 명령 실행
+    }
+    void D3D11RendererAPI::DrawInstanced(const DrawCommand& cmd, const std::vector<glm::mat4>& transforms, int count) {
+        // 인스턴스 버퍼(TransientBufferAllocator 등) 할당/업로드
+        // IASetVertexBuffers(slot1, ...) 등
+        // DrawIndexedInstanced 등 명령 실행
+    }
+
     void D3D11RendererAPI::ExecuteDrawQueue()
     {
         m_drawQueue.flush([this](const DrawCommand& cmd)
