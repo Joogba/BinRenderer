@@ -70,6 +70,19 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
     auto cubeH = d3d->GetMeshRegistry()->Register(cubeMesh);
     auto planeH = d3d->GetMeshRegistry()->Register(planeMesh);
 
+    // [TestApp.cpp 혹은 RenderSystem::PrepareFrame 등에서]
+    staticBatcher.BuildBatches(meshRegistry);
+
+    // 정적 배칭 메시들(머티리얼별) 반복
+    for (const auto& [mat, batchMesh] : staticBatcher.GetBatchMeshes()) {
+        DrawCommand cmd;
+        cmd.meshHandle = batchMesh;
+        cmd.materialHandle = mat;
+        cmd.psoHandle = /* 해당 머티리얼에 맞는 PSO 핸들 */;
+        cmd.transform = glm::mat4(1.0f); // 이미 월드 변환 bake됨!
+        drawQueue.Submit(cmd);
+    }
+
     // 평면: y=0
     g_meshes.push_back({ planeH, XMMatrixIdentity() });
     // 큐브 몇 개 배치

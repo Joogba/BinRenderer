@@ -10,6 +10,8 @@
 namespace BinRenderer {
 
 using Microsoft::WRL::ComPtr;
+    
+    enum class MeshType { Static, BatchedStatic, Dynamic };
 
     struct Mesh { // TODO : Api 의존성 제거
         std::vector<uint8_t> vertexBuffer; // 바이너리 버퍼
@@ -27,6 +29,7 @@ using Microsoft::WRL::ComPtr;
         uint32_t instanceCount = 0;
 
         std::vector<InputElementDesc> inputLayout; 
+        MeshType meshType = MeshType::Dynamic;
     };
 
     class MeshRegistry {

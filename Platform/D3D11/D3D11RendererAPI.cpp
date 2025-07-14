@@ -1,6 +1,9 @@
 #include "D3D11RendererAPI.h"
-#include "PipelineState.h"
 #include "RendererAPI.h"
+
+#include "Resources/MaterialRegistry.h"
+#include "Resources/MeshRegistry.h"
+#include "Resources/PSORegistry.h"
 
 #include <cassert>
 #include <d3dcompiler.h>
@@ -338,11 +341,59 @@ namespace BinRenderer {
     void D3D11RendererAPI::DrawSingle(const DrawCommand& cmd) {
         // D3D11 파이프라인 세팅, 머티리얼, 메시, 트랜스폼 등 적용
         // DrawIndexed, Draw 등 D3D11 명령 실행
+        // 1. 리소스/PSO/머티리얼 등 핸들 → 실제 객체/상태로 변환
+        const Mesh* mesh = m_meshRegistry->Get(cmd.meshHandle);
+        const Material* material = m_materialRegistry->Get(cmd.materialHandle);
+        const D3D11PipelineState* pso = m_psoRegistry->Get(cmd.psoHandle);
+
+        // 2. 파이프라인, 셰이더, 상태 등 바인딩
+        m_context->IASetInputLayout(pso->inputLayout.Get());
+        m_context->VSSetShader(pso->vertexShader.Get(), nullptr, 0);
+        m_context->PSSetShader(pso->pixelShader.Get(), nullptr, 0);
+        // ... (hull, domain, geometry shader 등 필요시)
+        m_context->IASetPrimitiveTopology(pso->primitiveTopology);
+
+        // 3. 버퍼 바인딩
+        UINT stride = mesh->vertexStride;
+        UINT offset = mesh->vertexOffset;
+        m_context->IASetVertexBuffers(0, 1, mesh->vertexBuffer.GetAddressOf(), &stride, &offset);
+        m_context->IASetIndexBuffer(mesh->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+
+        // 4. 상수버퍼/머티리얼/텍스처/샘플러 바인딩(필요시)
+        // 예시: material->Apply(m_context, ...);
+
+        // 5. 드로우 호출
+        m_context->DrawIndexed(mesh->indexCount, 0, 0);
     }
     void D3D11RendererAPI::DrawInstanced(const DrawCommand& cmd, const std::vector<glm::mat4>& transforms, int count) {
         // 인스턴스 버퍼(TransientBufferAllocator 등) 할당/업로드
         // IASetVertexBuffers(slot1, ...) 등
         // DrawIndexedInstanced 등 명령 실행
+        const Mesh* mesh = m_meshRegistry->Get(cmd.meshHandle);
+        const Material* material = m_materialRegistry->Get(cmd.materialHandle);
+        const D3D11PipelineState* pso = m_psoRegistry->Get(cmd.psoHandle);
+
+        m_context->IASetInputLayout(pso->inputLayout.Get());
+        m_context->VSSetShader(pso->vertexShader.Get(), nullptr, 0);
+        m_context->PSSetShader(pso->pixelShader.Get(), nullptr, 0);
+        m_context->IASetPrimitiveTopology(pso->primitiveTopology);
+
+        UINT stride = mesh->vertexStride;
+        UINT offset = mesh->vertexOffset;
+        m_context->IASetVertexBuffers(0, 1, mesh->vertexBuffer.GetAddressOf(), &stride, &offset);
+        m_context->IASetIndexBuffer(mesh->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+
+        // 인스턴스 버퍼 바인딩 (필요시)
+        if (mesh->instanceBuffer && instanceCount > 1) {
+            UINT instanceStride = mesh->instanceStride;
+            UINT instanceOffset = mesh->instanceOffset;
+            ID3D11Buffer* instanceBuf = mesh->instanceBuffer.Get();
+            m_context->IASetVertexBuffers(1, 1, &instanceBuf, &instanceStride, &instanceOffset);
+        }
+
+        // 상수버퍼/머티리얼/텍스처/샘플러 바인딩(필요시)
+
+        m_context->DrawIndexedInstanced(mesh->indexCount, instanceCount, 0, 0, 0);
     }
 
     void D3D11RendererAPI::ExecuteDrawQueue()
