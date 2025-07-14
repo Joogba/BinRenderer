@@ -2,11 +2,37 @@
 #pragma once
 #include <unordered_map>
 #include <string>
+#include <functional>
+
 #include "Core/Handle.h"
 #include "Core/RenderEnums.h"
 #include "Core/RenderStates.h"
 
 namespace BinRenderer {
+
+    // 해시 결합 유틸리티
+    inline void HashCombine(size_t& seed, size_t value) {
+        seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+
+    inline bool operator==(const PSODesc& a, const PSODesc& b) {
+        return a.vertexShader == b.vertexShader &&
+            a.pixelShader == b.pixelShader &&
+            a.hullShader == b.hullShader &&
+            a.domainShader == b.domainShader &&
+            a.geometryShader == b.geometryShader &&
+            a.inputLayout == b.inputLayout &&
+            a.blendState == b.blendState &&
+            a.depthStencilState == b.depthStencilState &&
+            a.rasterizerState == b.rasterizerState &&
+            a.blendFactor == b.blendFactor &&
+            a.stencilRef == b.stencilRef &&
+            a.primitiveTopology == b.primitiveTopology &&
+            a.sampleMask == b.sampleMask &&
+            a.rtvFormats == b.rtvFormats &&
+            a.dsvFormat == b.dsvFormat &&
+            a.numRenderTargets == b.numRenderTargets;
+    }
 
     struct PSODesc 
     { 
@@ -37,6 +63,49 @@ namespace BinRenderer {
         uint32_t             numRenderTargets = 1;
         // 기타 확장 필요시 필드 추가!
     };
+
+    struct PSODescHash {
+        size_t operator()(const PSODesc& desc) const {
+            size_t h = 0;
+            // 셰이더 핸들 해시
+            HashCombine(h, std::hash<uint32_t>()(static_cast<uint32_t>(desc.vertexShader)));
+            HashCombine(h, std::hash<uint32_t>()(static_cast<uint32_t>(desc.pixelShader)));
+            HashCombine(h, std::hash<uint32_t>()(static_cast<uint32_t>(desc.hullShader)));
+            HashCombine(h, std::hash<uint32_t>()(static_cast<uint32_t>(desc.domainShader)));
+            HashCombine(h, std::hash<uint32_t>()(static_cast<uint32_t>(desc.geometryShader)));
+            // 입력 레이아웃
+            for (const auto& elem : desc.inputLayout) {
+                size_t elemHash = std::hash<std::string>()(elem.SemanticName);
+                HashCombine(elemHash, std::hash<uint32_t>()(elem.SemanticIndex));
+                HashCombine(elemHash, std::hash<int>()(static_cast<int>(elem.Format)));
+                HashCombine(elemHash, std::hash<uint32_t>()(elem.InputSlot));
+                HashCombine(elemHash, std::hash<uint32_t>()(elem.AlignedByteOffset));
+                HashCombine(elemHash, std::hash<uint32_t>()(elem.InputSlotClass));
+                HashCombine(elemHash, std::hash<uint32_t>()(elem.InstanceDataStepRate));
+                HashCombine(h, elemHash);
+            }
+            // 상태 해시
+            HashCombine(h, std::hash<int>()(static_cast<int>(desc.blendState.blendOp)));
+            HashCombine(h, std::hash<int>()(static_cast<int>(desc.depthStencilState.DepthFunc)));
+            HashCombine(h, std::hash<int>()(static_cast<int>(desc.rasterizerState.cullMode)));
+
+            // BlendFactor
+            for (auto v : desc.blendFactor)
+                HashCombine(h, std::hash<float>()(v));
+            HashCombine(h, std::hash<uint32_t>()(desc.stencilRef));
+            HashCombine(h, std::hash<int>()(static_cast<int>(desc.primitiveTopology)));
+            HashCombine(h, std::hash<uint32_t>()(desc.sampleMask));
+
+            // RenderTargetFormats
+            for (auto f : desc.rtvFormats)
+                HashCombine(h, std::hash<int>()(static_cast<int>(f)));
+            HashCombine(h, std::hash<int>()(static_cast<int>(desc.dsvFormat)));
+            HashCombine(h, std::hash<uint32_t>()(desc.numRenderTargets));
+            return h;
+        }
+    };
+
+
 
     class PSORegistry {
     public:

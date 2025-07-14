@@ -35,9 +35,9 @@ namespace BinRenderer {
 
     struct DepthStencilOpDesc {
         ComparisonFunc StencilFunc;
-        uint8_t        StencilPassOp;
-        uint8_t        StencilFailOp;
-        uint8_t        StencilDepthFailOp;
+        StencilOp        StencilPassOp;
+        StencilOp        StencilFailOp;
+        StencilOp        StencilDepthFailOp;
     };
 
     struct DepthStencilState {

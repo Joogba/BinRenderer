@@ -132,6 +132,7 @@
   <ItemGroup>
     <ClInclude Include="Core\FlagOps.h" />
     <ClInclude Include="Core\ITransientBufferAllocator.h" />
+    <ClInclude Include="Platform\D3D11\D3D11PipelineStateRegistry.h" />
     <ClInclude Include="Platform\D3D11\D3D11RenderTargetPool.h" />
     <ClInclude Include="Platform\D3D11\D3D11Utils.h" />
     <ClInclude Include="Passes\CompositePass.h" />
@@ -163,7 +164,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\RenderEnums.h" />
+    <ClCompile Include="Platform\D3D11\D3D11ConstantBufferAllocator.h" />
     <ClCompile Include="Platform\D3D11\D3D11RenderTargetPool.cpp" />
+    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.cpp" />
     <ClCompile Include="Platform\D3D11\D3D11Utils.cpp" />
     <ClCompile Include="Passes\CompositePass.cpp" />
     <ClCompile Include="Platform\D3D11\D3D11RendererAPI.cpp" />
@@ -174,10 +177,11 @@
     <ClCompile Include="Core\IRenderPass.h" />
     <ClCompile Include="Passes\LightingPass.cpp" />
     <ClCompile Include="MeshFactory.cpp" />
+    <ClCompile Include="Platform\D3D11\D3D11VertexBufferAllocator.h" />
     <ClCompile Include="Resources\RenderTargetPool.h" />
     <ClCompile Include="TestApp.cpp" />
     <ClCompile Include="TextureLoader.h" />
-    <ClCompile Include="TransientBufferAllocator.h" />
+    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.h" />
     <ClCompile Include="UniformSystem.cpp" />
   </ItemGroup>
   <ItemGroup>

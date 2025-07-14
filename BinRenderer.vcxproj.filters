@@ -33,7 +33,7 @@
     <ClCompile Include="MeshFactory.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="TransientBufferAllocator.h">
+    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.h">
       <Filter>헤더 파일</Filter>
     </ClCompile>
     <ClCompile Include="TextureLoader.h">
@@ -64,6 +64,15 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Platform\D3D11\D3D11RenderTargetPool.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\D3D11\D3D11VertexBufferAllocator.h">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\D3D11\D3D11ConstantBufferAllocator.h">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -156,6 +165,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Core\ITransientBufferAllocator.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform\D3D11\D3D11PipelineStateRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
