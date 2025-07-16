@@ -75,6 +75,12 @@
     <ClCompile Include="Platform\D3D11\D3D11ConstantBufferAllocator.h">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Core\StaticBatcher.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RenderManager.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h">
@@ -168,6 +174,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Platform\D3D11\D3D11PipelineStateRegistry.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\StaticBatcher.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RenderManager.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

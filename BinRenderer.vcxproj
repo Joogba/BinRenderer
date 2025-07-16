@@ -132,6 +132,8 @@
   <ItemGroup>
     <ClInclude Include="Core\FlagOps.h" />
     <ClInclude Include="Core\ITransientBufferAllocator.h" />
+    <ClInclude Include="Core\RenderManager.h" />
+    <ClInclude Include="Core\StaticBatcher.h" />
     <ClInclude Include="Platform\D3D11\D3D11PipelineStateRegistry.h" />
     <ClInclude Include="Platform\D3D11\D3D11RenderTargetPool.h" />
     <ClInclude Include="Platform\D3D11\D3D11Utils.h" />
@@ -164,6 +166,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\RenderEnums.h" />
+    <ClCompile Include="Core\RenderManager.cpp" />
+    <ClCompile Include="Core\StaticBatcher.cpp" />
     <ClCompile Include="Platform\D3D11\D3D11ConstantBufferAllocator.h" />
     <ClCompile Include="Platform\D3D11\D3D11RenderTargetPool.cpp" />
     <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.cpp" />
