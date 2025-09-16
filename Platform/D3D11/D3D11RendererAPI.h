@@ -6,13 +6,13 @@
 #include "Core/DrawQueue.h"
 #include "Core/DrawCommand.h"
 
-#include "PSORegistry.h"
-#include "SamplerRegistry.h"
-#include "MaterialSystem.h"
-#include "MeshRegistry.h"
-#include "TextureRegistry.h"
+#include "Resources/PSORegistry.h"
+#include "Resources/SamplerRegistry.h"
+#include "Resources/MeshRegistry.h"
+#include "Resources/TextureRegistry.h"
 
 #include "D3D11TransientBufferAllocator.h"
+#include "D3D11ResourceRegistry.h"
 #include "View.h"
 
 #include <d3d11.h>
@@ -81,37 +81,16 @@ namespace BinRenderer {
         DirectX::XMMATRIX   m_proj = DirectX::XMMatrixIdentity();
         DirectX::XMMATRIX   m_viewProj = DirectX::XMMatrixIdentity();
 
-        // 뷰 rtv / dsv / viewport 관리
-        std::unordered_map<uint8_t, View>   m_views;
-
-        // 드로우 큐
-        DrawQueue   m_drawQueue;
 
         // Resource registries
-        std::unordered_map<TextureHandle, Microsoft::WRL::ComPtr<ID3D11Texture2D>>                      m_textures;
         std::unordered_map<RenderTargetViewHandle, Microsoft::WRL::ComPtr<ID3D11RenderTargetView>>      m_rtvs;
         std::unordered_map<ShaderResourceViewHandle, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>>  m_srvs;
         std::unordered_map<DepthStencilViewHandle, Microsoft::WRL::ComPtr<ID3D11DepthStencilView>>      m_dsvs;
 
-        std::unique_ptr<PSORegistry>                m_psoRegistry;
-        std::unique_ptr<SamplerRegistry>            m_samplerRegistry;
-        std::unique_ptr<MeshRegistry>               m_meshRegistry;
-        std::unique_ptr<MaterialRegistry>           m_materialRegistry;
-        std::unique_ptr<TextureRegistry>            m_textureRegistry;
-        std::unique_ptr<SamplerRegistry>            m_samplerRegistry;
-        std::unique_ptr<TransientBufferAllocator>   m_transientVB;
-        std::unique_ptr<TransientBufferAllocator>   m_transientIB;
+        std::unique_ptr<D3D11TransientBufferAllocator>   m_transientVB;
+        std::unique_ptr<D3D11TransientBufferAllocator>   m_transientIB;
 
-        // Named lookups for render graph
-        std::unordered_map<std::string, RenderTargetViewHandle>   m_namedRTVs;
-        std::unordered_map<std::string, DepthStencilViewHandle>   m_namedDSVs;
-        std::unordered_map<std::string, ShaderResourceViewHandle> m_namedSRVs;
 
-        // Handle counters
-        uint32_t m_nextTexH = 1;
-        uint32_t m_nextRTVH = 1;
-        uint32_t m_nextSRVH = 1;
-        uint32_t m_nextDSVH = 1;
 
         Microsoft::WRL::ComPtr<ID3D11DepthStencilState>   m_depthStencilState;
 

@@ -6,27 +6,9 @@
 #include <string>
 #include <cstdint>
 
-namespace std {
-    template<>
-    struct std::hash <BinRenderer::TextureDesc> {
-        size_t operator()(const BinRenderer::TextureDesc& d) const {
-            return hash<uint32_t>()(d.width) ^ hash<uint32_t>()(d.height) ^ hash<uint32_t>()((uint32_t)d.format);
-        }
-    };
-}
+
 
 namespace BinRenderer {
-
-    struct TextureDesc
-    {
-        uint32_t width;
-        uint32_t height;
-        Format format;
-        //  mip, array, sampleCount, usage 등 추가
-        bool operator==(const TextureDesc& rhs) const {
-            return width == rhs.width && height == rhs.height && format == rhs.format;
-        }
-    };
 
     class TextureRegistry {
     public:
@@ -68,4 +50,13 @@ namespace BinRenderer {
         uint32_t m_nextId = 1;
     };
 
+}
+
+namespace std {
+    template<>
+    struct std::hash <BinRenderer::TextureDesc> {
+        size_t operator()(const BinRenderer::TextureDesc& d) const {
+            return hash<uint32_t>()(d.width) ^ hash<uint32_t>()(d.height) ^ hash<uint32_t>()((uint32_t)d.format);
+        }
+    };
 }

@@ -62,7 +62,6 @@ namespace BinRenderer {
 
             // (1) 정적 배칭 → (2) 자동 인스턴싱
             PerformStaticBatching();
-            PerformAutoInstancing();
 
             // (3) RenderGraph 실행, 인스턴싱 된 DrawCommand 전달
             if (m_renderGraph) {
@@ -70,8 +69,13 @@ namespace BinRenderer {
             }
             else {
                 // RenderGraph 없이 직접 드로우
-                for (const auto& cmd : m_instancedCommands)
-                    m_api->DrawSingle(cmd);
+                for (const auto& cmd : m_instancedCommands) {
+                    // 인스턴싱 여부에 따라
+                    if (cmd.instanceCount > 1)
+                        m_api->DrawInstanced(cmd, ); // 인스턴스 transform 등 인자
+                    else
+                        m_api->DrawSingle(cmd);
+                }
             }
 
 

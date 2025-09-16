@@ -102,10 +102,12 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -130,12 +132,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Core\Buffer.h" />
     <ClInclude Include="Core\FlagOps.h" />
     <ClInclude Include="Core\ITransientBufferAllocator.h" />
     <ClInclude Include="Core\RenderManager.h" />
+    <ClInclude Include="Core\ResourceDesc.h" />
     <ClInclude Include="Core\StaticBatcher.h" />
+    <ClInclude Include="Math\MathUtility.h" />
+    <ClInclude Include="Math\MatrixUtil.h" />
+    <ClInclude Include="Math\Plane.h" />
+    <ClInclude Include="Math\VectorUtil.h" />
+    <ClInclude Include="pch.h" />
     <ClInclude Include="Platform\D3D11\D3D11PipelineStateRegistry.h" />
     <ClInclude Include="Platform\D3D11\D3D11RenderTargetPool.h" />
+    <ClInclude Include="Platform\D3D11\D3D11ResourceRegistry.h" />
     <ClInclude Include="Platform\D3D11\D3D11Utils.h" />
     <ClInclude Include="Passes\CompositePass.h" />
     <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h" />
@@ -160,11 +171,15 @@
     <ClInclude Include="Resources\ShaderRegistry.h" />
     <ClInclude Include="Resources\SamplerRegistry.h" />
     <ClInclude Include="Resources\TextureRegistry.h" />
+    <ClInclude Include="Samples\01-cubes\CubeSample.h" />
+    <ClInclude Include="Scene\Light\Light.h" />
     <ClInclude Include="UniformSystem.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="View.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="Scene\Camera.cpp" />
     <ClCompile Include="Core\RenderEnums.h" />
     <ClCompile Include="Core\RenderManager.cpp" />
     <ClCompile Include="Core\StaticBatcher.cpp" />
@@ -183,6 +198,9 @@
     <ClCompile Include="MeshFactory.cpp" />
     <ClCompile Include="Platform\D3D11\D3D11VertexBufferAllocator.h" />
     <ClCompile Include="Resources\RenderTargetPool.h" />
+    <ClCompile Include="Samples\01-cubes\CubeSamples.cpp" />
+    <ClCompile Include="Samples\ISampleApp.h" />
+    <ClCompile Include="Samples\main.cpp" />
     <ClCompile Include="TestApp.cpp" />
     <ClCompile Include="TextureLoader.h" />
     <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.h" />

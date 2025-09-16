@@ -53,13 +53,6 @@ void CubeSample::Render()
     m_drawQueue.Clear();
     m_drawQueue.Submit(cmd);
 
-    // 2. Flush로 드로우 호출 (인스턴싱 등 자동 처리) 
-    m_drawQueue.Flush([&](const BinRenderer::DrawCommand& dc, const std::vector<glm::mat4>& transforms, size_t count) {
-        if (count > 1)
-            m_renderer->DrawInstanced(dc, transforms, count);
-        else
-            m_renderer->DrawSingle(dc);
-        });
 }
 
 void CubeSample::Shutdown()

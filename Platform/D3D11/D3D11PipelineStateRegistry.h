@@ -4,15 +4,26 @@
 #include <memory>
 
 #include "Resources/PSORegistry.h"
-#include "D3D11Utils.h
+#include "D3D11Utils.h"
 
 namespace BinRenderer
 {
+
     struct D3D11PipelineState {
         ID3D11InputLayout* inputLayout = nullptr;
-        ID3D11VertexShader* vs = nullptr;
-        ID3D11PixelShader* ps = nullptr;
-        // ... 등등 ...
+        ID3D11VertexShader* vertexShader = nullptr;
+        ID3D11PixelShader* pixelShader = nullptr;
+        ID3D11HullShader* hullShader = nullptr;
+        ID3D11DomainShader* domainShader = nullptr;
+        ID3D11GeometryShader* geometryShader = nullptr;
+        ID3D11BlendState* blendState = nullptr;
+        float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        UINT sampleMask = 0xFFFFFFFF;
+        ID3D11DepthStencilState* depthStencilState = nullptr;
+        UINT stencilRef = 0;
+        ID3D11RasterizerState* rasterizerState = nullptr;
+        D3D11_PRIMITIVE_TOPOLOGY primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
+		// 기타 필요한 상태들
     };
 
     std::unique_ptr<D3D11PipelineState> CreatePipelineState(
