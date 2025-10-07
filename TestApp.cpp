@@ -1,13 +1,26 @@
 #include <windows.h>
 #include <vector>
 #include <DirectXMath.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include "MeshFactory.h"
 #include "D3D11RendererAPI.h"
 #include "DeferredRenderer.h"
 #include "Vertex.h"
+#include "Scene/Light/LightData.h"
 
 using namespace BinRenderer;
 using namespace DirectX;
+
+namespace
+{
+    glm::mat4 XMMatrixToGlm(const XMMATRIX& mat)
+    {
+        XMFLOAT4X4 temp;
+        XMStoreFloat4x4(&temp, mat);
+        return glm::transpose(glm::make_mat4(&temp.m[0][0]));
+    }
+}
 
 // 간단한 FPS 카메라 컨트롤
 struct Camera {
@@ -22,12 +35,6 @@ struct Camera {
     XMMATRIX GetProj() const { return XMMatrixPerspectiveFovLH(fov, aspect, zn, zf); }
 };
 
-// 라이트 정보
-struct Light {
-    XMFLOAT3 pos;
-    XMFLOAT3 color;
-};
-
 // 전역
 HWND            g_hWnd = nullptr;
 UINT            g_width = 1280;
@@ -35,7 +42,7 @@ UINT            g_height = 720;
 DeferredRenderer g_renderer;
 Camera           g_camera;
 std::vector<Light>   g_lights;
-std::vector<std::pair<MeshHandle, XMMATRIX>> g_meshes;
+std::vector<std::pair<MeshHandle, glm::mat4>> g_meshes;
 
 // 윈도우 프로시저
 LRESULT CALLBACK WndProc(HWND h, UINT msg, WPARAM w, LPARAM l) {
@@ -70,34 +77,23 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
     auto cubeH = d3d->GetMeshRegistry()->Register(cubeMesh);
     auto planeH = d3d->GetMeshRegistry()->Register(planeMesh);
 
-    // [TestApp.cpp 혹은 RenderSystem::PrepareFrame 등에서]
-    staticBatcher.BuildBatches(meshRegistry);
-
-    // 정적 배칭 메시들(머티리얼별) 반복
-    for (const auto& [mat, batchMesh] : staticBatcher.GetBatchMeshes()) {
-        DrawCommand cmd;
-        cmd.meshHandle = batchMesh;
-        cmd.materialHandle = mat;
-        cmd.psoHandle = /* 해당 머티리얼에 맞는 PSO 핸들 */;
-        cmd.transform = glm::mat4(1.0f); // 이미 월드 변환 bake됨!
-        drawQueue.Submit(cmd);
-    }
+    // TODO: 정적 배칭 사용 시 RenderManager 를 통해 처리
 
     // 평면: y=0
-    g_meshes.push_back({ planeH, XMMatrixIdentity() });
+    g_meshes.push_back({ planeH, XMMatrixToGlm(XMMatrixIdentity()) });
     // 큐브 몇 개 배치
     for (int x = -2; x <= 2; x += 2)
         for (int z = -2; z <= 2; z += 2) {
             XMMATRIX t = XMMatrixTranslation(float(x * 2), 1.0f, float(z * 2));
-            g_meshes.push_back({ cubeH, t });
+            g_meshes.push_back({ cubeH, XMMatrixToGlm(t) });
         }
 
     // 여러 포인트 라이트
     g_lights = {
-        {{+5,5,-5},{1,0,0}},
-        {{-5,5,-5},{0,1,0}},
-        {{+5,5,+5},{0,0,1}},
-        {{-5,5,+5},{1,1,0}}
+        {glm::vec3(+5.0f, 5.0f, -5.0f), 1.0f, glm::vec3(1.0f, 0.0f, 0.0f), 1.0f},
+        {glm::vec3(-5.0f, 5.0f, -5.0f), 1.0f, glm::vec3(0.0f, 1.0f, 0.0f), 1.0f},
+        {glm::vec3(+5.0f, 5.0f, +5.0f), 1.0f, glm::vec3(0.0f, 0.0f, 1.0f), 1.0f},
+        {glm::vec3(-5.0f, 5.0f, +5.0f), 1.0f, glm::vec3(1.0f, 1.0f, 0.0f), 1.0f}
     };
 
     // 5) 메시 루프
@@ -112,18 +108,21 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
         // 간단히 카메라 고정, 라이트도 업데이트 없음
 
         // Submit 각 DrawCommand
+        const glm::mat4 view = XMMatrixToGlm(g_camera.GetView());
+        const glm::mat4 proj = XMMatrixToGlm(g_camera.GetProj());
+
         for (auto& [mh, mat] : g_meshes) {
             DrawCommand cmd;
             cmd.meshHandle = mh;
             cmd.materialHandle = MaterialHandle::Invalid; // DeferredRenderer 내부에서 GBufferPass가 PSO만 사용
             cmd.psoHandle = PSOHandle::Invalid;      // 실제 PSO는 패스가 바인딩
-            cmd.transform = mat * g_camera.GetView() * g_camera.GetProj();
+            cmd.transform = proj * view * mat;
             g_renderer.Submit(cmd);
         }
 
         // 테스트용: 라이트 정보를 LightingPass에 올리기
         //   (LightingPass 내부에 uniform layout에 맞춰 SetUniform 호출)
-        g_renderer.SetLights(g_lights.data(), (uint32_t)g_lights.size());
+        g_renderer.SetLights(g_lights.data(), static_cast<uint32_t>(g_lights.size()));
 
         // 렌더 프레임
         g_renderer.RenderFrame();

@@ -1,8 +1,10 @@
 #pragma once
 #include "IRenderPass.h"
 #include "RendererAPI.h"
+#include "Scene/Light/LightData.h"
 
 #include <wrl/client.h>
+#include <vector>
 
 namespace BinRenderer
 {
@@ -16,9 +18,13 @@ namespace BinRenderer
 
         void Execute(RendererAPI* rhi, const PassResources& res) override;
 
+        void SetLights(const Light* lights, uint32_t count);
+
     private:
         PSOHandle     m_pso;
         SamplerHandle m_sampler;
+
+        std::vector<Light> m_lights;
 
         static inline const char* kSRV_Normal = "GBuffer_Normal";
         static inline const char* kSRV_Albedo = "GBuffer_Albedo";

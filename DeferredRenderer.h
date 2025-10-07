@@ -7,6 +7,7 @@
 #include "Passes/GBufferPass.h"
 #include "Passes/LightingPass.h"
 #include "Passes/CompositePass.h"
+#include "Scene/Light/LightData.h"
 #include "Core/RenderStates.h"
 
 #include <memory>
@@ -35,7 +36,7 @@ namespace BinRenderer
         RendererAPI* GetCore() const { return m_core.get(); }
 
         // light pass 에 라이트 정보 전달
-        void SetLight(const std::vector<Light>& lights);
+        void SetLights(const Light* lights, uint32_t count);
 
     private:
         // 실제 렌더링 구현체 (초기에는 D3D11RendererAPI)

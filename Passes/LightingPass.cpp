@@ -32,7 +32,6 @@ namespace BinRenderer
         return true;
     }
 
-
     void LightingPass::Declare(RenderGraphBuilder& builder)
     {
         builder.ReadTexture(kSRV_Normal);
@@ -74,4 +73,15 @@ namespace BinRenderer
         rhi->DrawFullScreenQuad();
     }
 
-}
+    void LightingPass::SetLights(const Light* lights, uint32_t count)
+    {
+        if (lights == nullptr || count == 0)
+        {
+            m_lights.clear();
+            return;
+        }
+
+        m_lights.assign(lights, lights + count);
+    }
+
+} // namespace BinRenderer

@@ -61,10 +61,13 @@ namespace BinRenderer
         // Pass 자체(PSO, 샘플러)는 재생성할 필요 없음
     }
 
-    void DeferredRenderer::SetLight(const std::vector<Light>& lights)
+    void DeferredRenderer::SetLights(const Light* lights, uint32_t count)
     {
-        auto* lp = static_cast<LightingPass>(m_lightingPass.get());
-        lp->SetLights(lights.data(), (uint32_t)lights.size());
+        auto* lp = static_cast<LightingPass*>(m_lightingPass.get());
+        if (lp)
+        {
+            lp->SetLights(lights, count);
+        }
     }
 
     void DeferredRenderer::setupPasses()
