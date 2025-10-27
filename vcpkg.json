@@ -1,0 +1,21 @@
+{
+  "dependencies": [
+    "glfw3",
+    "assimp",
+    "glm",
+    "spirv-reflect",
+    "stb",
+    {
+      "name": "tracy",
+      "features": [ "on-demand" ]
+    },
+    {
+      "name": "imgui",
+      "features": [ "wchar32" ]
+    },
+    {
+      "name": "ktx",
+      "features": [ "tools", "vulkan" ]
+    }
+  ]
+}

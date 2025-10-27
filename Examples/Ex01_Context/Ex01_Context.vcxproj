@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{f6ce4a41-8656-42a3-877b-16eb815e1064}</ProjectGuid>
-    <RootNamespace>BinRenderer</RootNamespace>
+    <ProjectGuid>{9347f786-83ee-460f-a1e6-92c403d828c4}</ProjectGuid>
+    <RootNamespace>Ex01Context</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -40,7 +40,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -96,8 +96,6 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -105,18 +103,14 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%VULKAN_SDK%\include;$(ProjectDir)</AdditionalIncludeDirectories>
-      <PrecompiledHeader>Create</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(SolutionDir);%VULKAN_SDK%\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -130,104 +124,11 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="Vulkan\DescriptorPool.h" />
-    <ClInclude Include="Vulkan\CommandBuffer.h" />
-    <ClInclude Include="Vulkan\Context.h" />
-    <ClInclude Include="Core\Buffer.h" />
-    <ClInclude Include="Core\FlagOps.h" />
-    <ClInclude Include="Core\ITransientBufferAllocator.h" />
-    <ClInclude Include="Core\RenderManager.h" />
-    <ClInclude Include="Core\ResourceDesc.h" />
-    <ClInclude Include="Core\StaticBatcher.h" />
-    <ClInclude Include="Math\MathUtility.h" />
-    <ClInclude Include="Math\MatrixUtil.h" />
-    <ClInclude Include="Math\Plane.h" />
-    <ClInclude Include="Math\VectorUtil.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="Platform\D3D11\D3D11PipelineStateRegistry.h" />
-    <ClInclude Include="Platform\D3D11\D3D11RenderTargetPool.h" />
-    <ClInclude Include="Platform\D3D11\D3D11ResourceRegistry.h" />
-    <ClInclude Include="Platform\D3D11\D3D11Utils.h" />
-    <ClInclude Include="Passes\CompositePass.h" />
-    <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h" />
-    <ClInclude Include="DeferredRenderer.h" />
-    <ClInclude Include="Core\DrawQueue.h" />
-    <ClInclude Include="Passes\GBufferPass.h" />
-    <ClInclude Include="GeometryGenerator.h" />
-    <ClInclude Include="Core\Handle.h" />
-    <ClInclude Include="Passes\LightingPass.h" />
-    <ClInclude Include="Resources\MaterialRegistry.h" />
-    <ClInclude Include="MeshData.h" />
-    <ClInclude Include="MeshFactory.h" />
-    <ClInclude Include="Resources\MeshRegistry.h" />
-    <ClInclude Include="Core\PassResources.h" />
-    <ClInclude Include="Resources\PSORegistry.h" />
-    <ClInclude Include="Core\RendererAPI.h" />
-    <ClInclude Include="Core\RenderGraph.h" />
-    <ClInclude Include="Core\RenderGraphBuilder.h" />
-    <ClInclude Include="Core\RenderStates.h" />
-    <ClInclude Include="Resources\RenderTargetRegistry.h" />
-    <ClInclude Include="Resources\ResourceManager.h" />
-    <ClInclude Include="Resources\ShaderRegistry.h" />
-    <ClInclude Include="Resources\SamplerRegistry.h" />
-    <ClInclude Include="Resources\TextureRegistry.h" />
-    <ClInclude Include="Samples\01-cubes\CubeSample.h" />
-    <ClInclude Include="Scene\Light\Light.h" />
-    <ClInclude Include="UniformSystem.h" />
-    <ClInclude Include="Vertex.h" />
-    <ClInclude Include="View.h" />
-    <ClInclude Include="Vulkan\Logger.h" />
-    <ClInclude Include="Vulkan\VulkanTools.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Vulkan\DescriptorPool.cpp" />
-    <ClCompile Include="Vulkan\CommandBuffer.cpp" />
-    <ClCompile Include="Vulkan\Context.cpp" />
-    <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Scene\Camera.cpp" />
-    <ClCompile Include="Core\RenderEnums.h" />
-    <ClCompile Include="Core\RenderManager.cpp" />
-    <ClCompile Include="Core\StaticBatcher.cpp" />
-    <ClCompile Include="Platform\D3D11\D3D11ConstantBufferAllocator.h" />
-    <ClCompile Include="Platform\D3D11\D3D11RenderTargetPool.cpp" />
-    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.cpp" />
-    <ClCompile Include="Platform\D3D11\D3D11Utils.cpp" />
-    <ClCompile Include="Passes\CompositePass.cpp" />
-    <ClCompile Include="Platform\D3D11\D3D11RendererAPI.cpp" />
-    <ClCompile Include="DeferredRenderer.cpp" />
-    <ClCompile Include="Core\DrawCommand.h" />
-    <ClCompile Include="Passes\GBufferPass.cpp" />
-    <ClCompile Include="GeometryGenerator.cpp" />
-    <ClCompile Include="Core\IRenderPass.h" />
-    <ClCompile Include="Passes\LightingPass.cpp" />
-    <ClCompile Include="MeshFactory.cpp" />
-    <ClCompile Include="Platform\D3D11\D3D11VertexBufferAllocator.h" />
-    <ClCompile Include="Resources\RenderTargetPool.h" />
-    <ClCompile Include="Samples\01-cubes\CubeSamples.cpp" />
-    <ClCompile Include="Samples\ISampleApp.h" />
-    <ClCompile Include="Samples\main.cpp" />
-    <ClCompile Include="TestApp.cpp" />
-    <ClCompile Include="TextureLoader.h" />
-    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.h" />
-    <ClCompile Include="UniformSystem.cpp" />
-    <ClCompile Include="Vulkan\Logger.cpp" />
-    <ClCompile Include="Vulkan\VulkanTools.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Basic.hlsl">
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VSMain</EntryPointName>
-    </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\..\Users\tjdwn\Downloads\checker.png" />
+    <ClCompile Include="..\..\..\BinRendererTest\ContextTest.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
