@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -39,4 +39,4 @@ namespace BinRenderer {
         float pad[3] = { 0.0f, 0.0f, 0.0f }; // 16바이트 정렬
     };
 
-} // namespace BinCore
+} // namespace BinRenderer

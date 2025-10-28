@@ -1,21 +1,21 @@
-#include "GeometryGenerator.h"
+﻿#include "GeometryGenerator.h"
 #include <cmath>
 
 namespace BinRenderer {
 
     MeshData GeometryGenerator::MakeSquare(float scale,
-        const Vector2& texScale) {
+        const glm::vec2& texScale) {
         MeshData meshData;
         meshData.vertices.reserve(4);
 
-        Vector3 positions[4] = {
+        glm::vec3 positions[4] = {
             { -1.0f,  1.0f, 0.0f },
             {  1.0f,  1.0f, 0.0f },
             {  1.0f, -1.0f, 0.0f },
             { -1.0f, -1.0f, 0.0f }
         };
-        Vector3 normal = { 0.0f, 0.0f, -1.0f };
-        Vector2 uvs[4] = {
+        glm::vec3 normal = { 0.0f, 0.0f, -1.0f };
+        glm::vec2 uvs[4] = {
             { 0.0f, 0.0f },
             { 1.0f, 0.0f },
             { 1.0f, 1.0f },
@@ -37,7 +37,7 @@ namespace BinRenderer {
     MeshData GeometryGenerator::MakeSquareGrid(int numSlices,
         int numStacks,
         float scale,
-        const Vector2& texScale) {
+        const glm::vec2& texScale) {
         MeshData meshData;
         float dx = 2.0f / numSlices;
         float dy = 2.0f / numStacks;
@@ -48,10 +48,10 @@ namespace BinRenderer {
             for (int i = 0; i <= numSlices; ++i) {
                 float x = -1.0f + dx * i;
                 Vertex v;
-                v.position = Vector3(x, y, 0.0f) * scale;
-                v.normalModel = { 0.0f, 0.0f, -1.0f };
-                v.texcoord = Vector2((x + 1.0f) * 0.5f, (y + 1.0f) * 0.5f) * texScale;
-                v.tangentModel = { 1.0f, 0.0f, 0.0f };
+                v.position = glm::vec3(x, y, 0.0f) * scale;
+                v.normalModel = glm::vec3(0.0f, 0.0f, -1.0f);
+                v.texcoord = glm::vec2((x + 1.0f) * 0.5f, (y + 1.0f) * 0.5f) * texScale;
+                v.tangentModel = glm::vec3(1.0f, 0.0f, 0.0f);
                 meshData.vertices.push_back(v);
             }
         }

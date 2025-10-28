@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <d3d11.h>
 #include <wrl/client.h>
@@ -7,7 +7,7 @@
 
 namespace BinRenderer {
 
-    // ÆÄÀÏ °æ·Î(wstring)¿¡¼­ SRV »ý¼º
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½(wstring)ï¿½ï¿½ï¿½ï¿½ SRV ï¿½ï¿½ï¿½ï¿½
     inline Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> LoadTexture(
         ID3D11Device* device,
         const std::wstring& filePath
@@ -19,13 +19,13 @@ namespace BinRenderer {
             srv.GetAddressOf()
         );
         if (FAILED(hr)) {
-            // ·Î±ë ¶Ç´Â ¿¹¿Ü Ã³¸® ¿©±â¿¡ Ãß°¡
+            // ï¿½Î±ï¿½ ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ ï¿½ï¿½ï¿½â¿¡ ï¿½ß°ï¿½
             return nullptr;
         }
         return srv;
     }
 
-    // string ¹öÀü ¿À¹ö·Îµå
+    // string ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Îµï¿½
     inline Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> LoadTexture(
         ID3D11Device* device,
         const std::string& filePath

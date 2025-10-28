@@ -1,11 +1,10 @@
-#pragma once
+﻿#pragma once
 #include <unordered_map>
 #include <string>
 #include "Core/Handle.h"
+#include "Core/RenderStates.h"
 
 namespace BinRenderer {
-
-    struct SamplerDesc { /* ... */ };
 
     class SamplerRegistry {
     public:
@@ -13,7 +12,7 @@ namespace BinRenderer {
             auto it = m_nameToIdx.find(name);
             if (it != m_nameToIdx.end()) return SamplerHandle(it->second);
             SamplerHandle handle(m_nextId++);
-            m_samplers.emplace(handle.idx, desc);
+            m_samplers.insert({handle.idx, desc});
             m_nameToIdx[name] = handle.idx;
             m_idxToName[handle.idx] = name;
             return handle;

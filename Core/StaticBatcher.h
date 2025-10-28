@@ -1,8 +1,9 @@
-#pragma once
+﻿#pragma once
 #include <vector>
 #include <unordered_map>
 #include <glm/glm.hpp>
 
+#include "Core/Vertex.h"
 #include "Resources/MeshRegistry.h"
 #include "Resources/MaterialRegistry.h" 
 

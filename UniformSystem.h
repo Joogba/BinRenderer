@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -8,7 +8,7 @@
 
 namespace BinRenderer {
 
-	// bgfx¿Í À¯»çÇÑ ¹Ì¸® Á¤ÀÇµÈ À¯´ÏÆû Å¸ÀÔ
+	// bgfxï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½Çµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½
 	enum class PredefinedUniformType : uint8_t
 	{
 		View,
@@ -58,7 +58,7 @@ namespace BinRenderer {
         void Set(const std::string& name, const void* data, uint32_t size);
         const void* GetRawData() const { return m_buffer.data(); }
         uint32_t GetSize() const { return static_cast<uint32_t>(m_buffer.size()); }
-        // Submit ½ÃÁ¡¿¡ ÀÚµ¿À¸·Î Ã¤¿öÁÖ´Â ÇÔ¼ö
+        // Submit ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ Ã¤ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½Ô¼ï¿½
         void ApplyPredefined(PredefinedUniformType type, const void* data, uint32_t size);
 
     private:

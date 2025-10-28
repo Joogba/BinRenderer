@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "IRenderPass.h"
 #include "RenderGraphBuilder.h"
 #include "PassResources.h"
@@ -66,9 +66,6 @@ namespace BinRenderer {
             }
         }
 
-        void Execute(const std::vector<DrawCommand>& cmds, RendererAPI* api, RenderManager* mgr) {
-            // 패스별로 cmds 분기/필터링 & api 호출 or mgr의 트랜지언트 버퍼 등 활용
-        }
 
     private:
         RendererAPI* m_rhi;

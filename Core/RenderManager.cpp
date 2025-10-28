@@ -1,11 +1,13 @@
-#include "RenderManager.h"
+﻿#include "RenderManager.h"
+#include "RenderGraph.h"
 
 namespace BinRenderer {
 
     RenderManager::RenderManager(RendererAPI* api, RenderGraph* renderGraph, ResourceManager* resMgr)
-        : m_api(api), m_renderGraph(renderGraph), m_resourceMgr(resMgr),
+        : m_api(api), m_renderGraph(renderGraph), m_resourceMgr(resMgr)
     {
     }
+
 
     RenderManager::~RenderManager() {
         Stop();
@@ -63,21 +65,10 @@ namespace BinRenderer {
             // (1) 정적 배칭 → (2) 자동 인스턴싱
             PerformStaticBatching();
 
-            // (3) RenderGraph 실행, 인스턴싱 된 DrawCommand 전달
+            // RenderGraph 단순 실행 - DrawCommand 전달 불필요!
             if (m_renderGraph) {
-                m_renderGraph->Execute(m_instancedCommands, m_api, this);
+                m_renderGraph->Execute(); // 단순 호출
             }
-            else {
-                // RenderGraph 없이 직접 드로우
-                for (const auto& cmd : m_instancedCommands) {
-                    // 인스턴싱 여부에 따라
-                    if (cmd.instanceCount > 1)
-                        m_api->DrawInstanced(cmd, ); // 인스턴스 transform 등 인자
-                    else
-                        m_api->DrawSingle(cmd);
-                }
-            }
-
 
             std::swap(m_writeIndex, m_readIndex);
             m_queues[m_writeIndex].Clear();

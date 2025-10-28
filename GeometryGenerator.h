@@ -1,14 +1,11 @@
-// GeometryGenerator.h
+﻿// GeometryGenerator.h
 #pragma once
 
 #include <vector>
-#include <directxtk/SimpleMath.h>
+#include <glm/glm.hpp>
 #include "MeshData.h"
 
 namespace BinRenderer {
-
-    using DirectX::SimpleMath::Vector2;
-    using DirectX::SimpleMath::Vector3;
 
     class GeometryGenerator {
     public:
@@ -16,7 +13,7 @@ namespace BinRenderer {
         // scale: size multiplier, texScale: UV scale
         static MeshData MakeSquare(
             float scale = 1.0f,
-            const Vector2& texScale = Vector2(1.0f, 1.0f));
+            const glm::vec2& texScale = glm::vec2(1.0f, 1.0f));
 
         // Creates a grid of quads on the XY plane
         // numSlices, numStacks: subdivisions, scale: size, texScale: UV scale
@@ -24,9 +21,9 @@ namespace BinRenderer {
             int numSlices,
             int numStacks,
             float scale = 1.0f,
-            const Vector2& texScale = Vector2(1.0f, 1.0f));
+            const glm::vec2& texScale = glm::vec2(1.0f, 1.0f));
 
-        // Additional generators (MakeSphere, MakeCylinder, etc.) omitted
+        // Additional generators (MakeSphere, MakeCylinder, etc.) can be added here
     };
 
-} // namespace BinCore
+} // namespace BinRenderer

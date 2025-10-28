@@ -1,6 +1,7 @@
-#pragma once
+﻿#pragma once
 #include "Core/Handle.h"
 #include "Core/RenderEnums.h"
+#include "Core/RenderStates.h"
 
 #include <unordered_map>
 #include <string>
@@ -21,7 +22,6 @@ namespace BinRenderer {
             m_idxToName[handle.idx] = name;
             return handle;
         }
-
         const TextureDesc* Get(TextureHandle handle) const {
             auto it = m_textures.find(handle.idx);
             return it != m_textures.end() ? &it->second : nullptr;

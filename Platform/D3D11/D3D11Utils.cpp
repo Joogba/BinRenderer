@@ -1,4 +1,4 @@
-#include "D3D11Utils.h"
+﻿#include "D3D11Utils.h"
 #include <d3dcompiler.h>
 
 namespace BinRenderer::D3D11Utils {

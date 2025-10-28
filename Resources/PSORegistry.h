@@ -1,4 +1,4 @@
-// PSORegistry.h
+﻿// PSORegistry.h
 #pragma once
 #include <unordered_map>
 #include <string>
@@ -10,10 +10,7 @@
 
 namespace BinRenderer {
 
-    // 해시 결합 유틸리티
-    inline void HashCombine(size_t& seed, size_t value) {
-        seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-    }
+    
 
     inline bool operator==(const PSODesc& a, const PSODesc& b) {
         return a.vertexShader == b.vertexShader &&

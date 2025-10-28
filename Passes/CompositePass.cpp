@@ -1,4 +1,5 @@
 ﻿#include "CompositePass.h"
+#include "Core/FlagOps.h"
 #include <array>
 #include <cfloat>
 
@@ -6,13 +7,9 @@ namespace BinRenderer {
 
     bool CompositePass::Initialize(RendererAPI* rhi)
     {
+        // TODO: 실제 셰이더 로딩 및 PSO 생성
         PSODesc desc{};
-        desc.name = "Composite";
-        desc.vsFile = "shaders/Composite.hlsl";
-        desc.vsEntry = "VSQuad";
-        desc.psFile = "shaders/Composite.hlsl";
-        desc.psEntry = "PSMain";
-        // TODO : inputElements, states description
+        // desc에는 셰이더 핸들을 직접 설정해야 함
         m_pso = rhi->CreatePipelineState(desc);
 
         SamplerDesc sd{};
@@ -34,22 +31,17 @@ namespace BinRenderer {
 
     void CompositePass::Declare(RenderGraphBuilder& builder)
     {
-       
         builder.ReadTexture(kSRV_Lighting);
         builder.ReadTexture(kSRV_Albedo);
-
-       
         builder.ImportBackbuffer(kRT_BackBuffer);
     }
 
     void CompositePass::Execute(RendererAPI* rhi, const PassResources& res)
     {
-        
         auto srvLight = res.GetSRV(kSRV_Lighting);
         auto srvAlbedo = res.GetSRV(kSRV_Albedo);
         auto rtvBB = res.GetRTV(kRT_BackBuffer);
 
-       
         rhi->BindPipelineState(m_pso);
         rhi->BindRenderTargets(&rtvBB, 1, {});
         rhi->BindSampler(m_sampler, 0);
@@ -57,7 +49,6 @@ namespace BinRenderer {
         rhi->BindShaderResource(0, srvLight);
         rhi->BindShaderResource(1, srvAlbedo);
 
-    
         rhi->BindFullScreenQuad();
         rhi->DrawFullScreenQuad();
     }

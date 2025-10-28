@@ -1,4 +1,4 @@
-#include "UniformSystem.h"
+ï»¿#include "UniformSystem.h"
 #include <cstring>
 #include <cassert>
 
@@ -44,7 +44,7 @@ namespace BinRenderer {
 	}
 
 	void UniformSet::ApplyPredefined(PredefinedUniformType type, const void* data, uint32_t size) {
-		// layout¿¡ ¿¹¾àµÈ predefined ¸ñ·Ï Áß¿¡¼­ ÀÏÄ¡ÇÏ´Â Å¸ÀÔ Ã£±â
+		// layoutï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ predefined ï¿½ï¿½ï¿½ ï¿½ß¿ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½Ï´ï¿½ Å¸ï¿½ï¿½ Ã£ï¿½ï¿½
 		for (const auto& pi : m_layout->GetPredefineds()) {
 			if (pi.type == type) {
 				assert(size <= pi.size);

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Core/RendererAPI.h"
 #include "Core/Handle.h"
@@ -76,7 +76,7 @@ namespace BinRenderer {
         Microsoft::WRL::ComPtr<ID3D11Buffer>           m_fsIB;
         Microsoft::WRL::ComPtr<ID3D11InputLayout>      m_fsIL;
 
-        // 뷰 카메라
+        // 뷰 카메라 (추후 카메라 클래스로 대체)
         DirectX::XMMATRIX   m_view = DirectX::XMMatrixIdentity();
         DirectX::XMMATRIX   m_proj = DirectX::XMMatrixIdentity();
         DirectX::XMMATRIX   m_viewProj = DirectX::XMMatrixIdentity();

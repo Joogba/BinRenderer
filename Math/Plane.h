@@ -1,6 +1,9 @@
 #pragma once
+
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/glm.hpp>
-#include <glm/gtc/epsilon.hpp>    
+#include <glm/gtc/epsilon.hpp>
 #include <glm/gtx/norm.hpp>       
 
 namespace Math
@@ -40,13 +43,13 @@ namespace Math
             return glm::dot(n, v);
         }
 
-        // Dot product with point (평면 방정식 결과)
+        // Dot product with point (plane equation result)
         float DotCoord(const glm::vec3& p) const
         {
             return glm::dot(n, p) + d;
         }
 
-        // 점이 평면 위에 있는지(부동소수점 오차 고려)
+        // Check if point is on plane (considering floating point tolerance)
         bool IsOnPlane(const glm::vec3& p, float epsilon = 1e-5f) const
         {
             return glm::abs(DotCoord(p)) < epsilon;

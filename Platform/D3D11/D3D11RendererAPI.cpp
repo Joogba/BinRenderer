@@ -1,4 +1,4 @@
-#include "D3D11RendererAPI.h"
+﻿#include "D3D11RendererAPI.h"
 #include "Core/RendererAPI.h"
 
 #include "Resources/MaterialRegistry.h"

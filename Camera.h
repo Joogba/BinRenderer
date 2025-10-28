@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef FORCEINLINE
+#define FORCEINLINE inline
+#endif
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_access.hpp>
 #include <array>
@@ -55,7 +59,7 @@ namespace Camera
 		};
 
 		static std::map<int32_t, Camera*> CameraMap;
-		// force inline으로 변경 고려
+		// Consider changing to force inline
 		FORCEINLINE static void AddCamera(int32_t id, Camera* camera)
 		{
 			CameraMap[id] = camera;
@@ -75,7 +79,7 @@ namespace Camera
 		{
 			if (CameraMap.empty())
 				return nullptr;
-			return GetCamera(0); // 첫 번째 카메라를 메인 카메라로 간주
+			return GetCamera(0); // First camera is considered main camera
 		}
 		FORCEINLINE static Camera* CreateCamera(int32_t id, ECameraType type = ECameraType::PERSPECTIVE)
 		{
@@ -116,7 +120,7 @@ namespace Camera
 			OutCamera->width = static_cast<int32_t>(width);
 			OutCamera->height = static_cast<int32_t>(height);
 			OutCamera->isPerspectiveProjection = isPerspective;
-			// View and Projection matrix 생성
+			// Create View and Projection matrix
 			/*OutCamera->ViewMatrix = CameraUtil::CreateViewMatrix(pos, target, up);
 			switch (OutCamera->Type)
 			{
@@ -164,15 +168,15 @@ namespace Camera
 
 		FORCEINLINE glm::vec3 GetForwardVector() const
 		{
-			return glm::vec3(glm::column(View, 2));
+			return glm::vec3(glm::column(view, 2));
 		}
 		FORCEINLINE glm::vec3 GetUpVector() const
 		{
-			return glm::vec3(glm::column(View, 1));
+			return glm::vec3(glm::column(view, 1));
 		}
 		FORCEINLINE glm::vec3 GetRightVector() const
 		{
-			return glm::vec3(glm::column(View, 0));
+			return glm::vec3(glm::column(view, 0));
 		}
 		FORCEINLINE void MoveShift(float dist)
 		{
@@ -199,7 +203,7 @@ namespace Camera
 
 			pos = glm::vec3(M * glm::vec4(pos, 1.0f));
 			target = glm::vec3(M * glm::vec4(target, 0.0f));
-			up = glm::vec3(M * glm::vec4(up, 0.0f));   // 방향벡터는 w=0로 회전만 적용
+			up = glm::vec3(M * glm::vec4(up, 0.0f));   // Direction vector uses w=0 for rotation only
 		}
 		FORCEINLINE void RotateForwardAxis(float radian)
 		{
@@ -255,8 +259,8 @@ namespace Camera
 				const float d = glm::dot(pos, i.n) - i.d + radius;
 				if (d < 0.0f)
 				{
-					if(glm::dot(dir, i.n) <= 0.0f) // 방향이 평면의 법선과 같은 방향이거나 반대 방향일 때
-						return false; // 카메라가 평면의 뒤쪽에 위치
+					if(glm::dot(dir, i.n) <= 0.0f) // When direction is same or opposite to plane normal
+						return false; // Camera is behind the plane
 				}
 			}
 			return true;
@@ -279,7 +283,7 @@ namespace Camera
 		glm::vec3 up;
 
 		glm::vec3 eulerAngle = glm::vec3(0.0f, 0.0f, 0.0f); // Pitch, Yaw, Roll
-		float distance = 300.0f; // 카메라와 타겟 사이의 거리
+		float distance = 300.0f; // Distance between camera and target
 
 		glm::mat4x4 view;
 		glm::mat4x4 projection;
@@ -298,8 +302,8 @@ namespace Camera
 		int32_t width = 0;
 		int32_t height = 0;
 
-	}
-};
+	};
+} // namespace Camera
 
 namespace CameraUtil
 {

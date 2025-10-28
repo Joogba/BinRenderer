@@ -1,4 +1,4 @@
-#include "D3D11TransientBufferAllocator.h"
+﻿#include "D3D11TransientBufferAllocator.h"
 
 namespace BinRenderer {
 

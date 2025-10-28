@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Core/Handle.h"
 #include <unordered_map>
@@ -10,12 +10,19 @@
 
 namespace BinRenderer {
 
-    
     class Material {
     public:
         Material(PSOHandle pso, std::shared_ptr<UniformLayout> layout)
             : m_pso(pso), m_uniformSet(std::make_unique<UniformSet>(layout)) {
         }
+
+        // Move constructor와 assignment 명시적으로 정의
+        Material(Material&&) noexcept = default;
+        Material& operator=(Material&&) noexcept = default;
+
+        // Copy는 삭제
+        Material(const Material&) = delete;
+        Material& operator=(const Material&) = delete;
 
         PSOHandle GetPSO() const { return m_pso; }
         UniformSet& GetUniformSet() { return *m_uniformSet; }
@@ -52,14 +59,24 @@ namespace BinRenderer {
 
     class MaterialRegistry {
     public:
-        MaterialHandle Register(const std::string& name, const Material& mat) {
+        // Register 메서드를 Material을 직접 생성하도록 변경
+        MaterialHandle Register(const std::string& name, PSOHandle pso, std::shared_ptr<UniformLayout> layout) {
             auto it = m_nameToIdx.find(name);
             if (it != m_nameToIdx.end()) return MaterialHandle(it->second);
+            
             MaterialHandle handle(m_nextId++);
-            m_materials.emplace(handle.idx, mat);
+            // piecewise_construct를 사용하여 in-place 생성
+            m_materials.emplace(std::piecewise_construct,
+                std::forward_as_tuple(handle.idx),
+                std::forward_as_tuple(pso, layout));
             m_nameToIdx[name] = handle.idx;
             m_idxToName[handle.idx] = name;
             return handle;
+        }
+
+        Material* Get(MaterialHandle handle) {
+            auto it = m_materials.find(handle.idx);
+            return it != m_materials.end() ? &it->second : nullptr;
         }
 
         const Material* Get(MaterialHandle handle) const {

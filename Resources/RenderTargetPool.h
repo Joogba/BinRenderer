@@ -1,7 +1,8 @@
-#pragma once
+﻿#pragma once
 
 #include "Core/Handle.h"
 #include "TextureRegistry.h"
+#include "Core/RenderStates.h"
 
 namespace BinRenderer {
     class RenderTargetPool {

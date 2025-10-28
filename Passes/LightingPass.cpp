@@ -1,18 +1,17 @@
-#include "LightingPass.h"
+﻿#include "LightingPass.h"
 #include "Core/RendererAPI.h"
 #include "Core/FlagOps.h"
+#include <cfloat>
 
 namespace BinRenderer
 {
     bool LightingPass::Initialize(RendererAPI* rhi)
     {
+        // TODO: 실제 셰이더 로딩 및 PSO 생성
+        // 현재는 기본 PSO만 생성
         PSODesc desc{};
-        desc.name = "Lighting";
-        desc.vsFile = "shaders/Lighting.hlsl";
-        desc.vsEntry = "VSQuad";
-        desc.psFile = "shaders/Lighting.hlsl";
-        desc.psEntry = "PSMain";
-        // TODO : (inputElements, rasterizerState, depthStencilState, blendState desc)
+        // desc에는 셰이더 핸들을 직접 설정해야 함
+        // 지금은 임시로 빈 PSO 생성
         m_pso = rhi->CreatePipelineState(desc);
 
         SamplerDesc sd{};
@@ -32,7 +31,6 @@ namespace BinRenderer
         return true;
     }
 
-
     void LightingPass::Declare(RenderGraphBuilder& builder)
     {
         builder.ReadTexture(kSRV_Normal);
@@ -44,7 +42,7 @@ namespace BinRenderer
             uint32_t(builder.GetWidth()),
             uint32_t(builder.GetHeight()),
             Format::RGBA32_FLOAT,
-            uint32_t(BindFlags::Bind_RenderTarget | BindFlags::Bind_ShaderResource)
+            uint32_t(BindFlags::Bind_RenderTarget) | uint32_t(BindFlags::Bind_ShaderResource)
         };
         builder.DeclareRenderTarget(kRT_Lighting, td);
     }
@@ -72,6 +70,15 @@ namespace BinRenderer
 
         rhi->BindFullScreenQuad();
         rhi->DrawFullScreenQuad();
+    }
+
+    void LightingPass::SetLights(const Light* lights, uint32_t count)
+    {
+        m_lights.clear();
+        m_lights.reserve(count);
+        for (uint32_t i = 0; i < count; ++i) {
+            m_lights.push_back(lights[i]);
+        }
     }
 
 }

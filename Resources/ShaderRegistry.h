@@ -1,11 +1,10 @@
-#pragma once
+﻿#pragma once
 #include <unordered_map>
 #include <string>
 #include "Core/Handle.h"
+#include "Core/RenderStates.h"
 
 namespace BinRenderer {
-
-    struct ShaderDesc { /* ... */ };
 
     class ShaderRegistry {
     public:

@@ -1,6 +1,6 @@
-
+﻿
 #pragma once
-#include "IRenderPass.h"
+#include "Core/IRenderPass.h"
 #include <wrl/client.h>
 #include <d3d11.h>
 

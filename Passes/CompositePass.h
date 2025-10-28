@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "IRenderPass.h"
+#include "Core/IRenderPass.h"
 
 namespace BinRenderer {
 

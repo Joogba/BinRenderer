@@ -1,4 +1,4 @@
-#include "D3D11RenderTargetPool.h"
+﻿#include "D3D11RenderTargetPool.h"
 namespace BinRenderer {
 
     D3D11RenderTargetPool::D3D11RenderTargetPool(ID3D11Device* device)

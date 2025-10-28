@@ -1,8 +1,7 @@
-#pragma once
+﻿#pragma once
 #include "DrawQueue.h"
 #include "DrawCommand.h"
 #include "RendererAPI.h"
-#include "RenderGraph.h"
 #include "Resources/ResourceManager.h" // 예시
 #include "StaticBatcher.h"
 
@@ -15,6 +14,7 @@
 #include <unordered_map>
 
 namespace BinRenderer {
+	class RenderGraph;
 
     class RenderManager {
     public:

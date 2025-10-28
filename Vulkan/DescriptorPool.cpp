@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿
 #include "DescriptorPool.h"
 #include "Logger.h"
 #include <unordered_map>

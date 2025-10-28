@@ -109,7 +109,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>%VULKAN_SDK%\include;$(ProjectDir)</AdditionalIncludeDirectories>
-      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -150,13 +150,22 @@
     <ClInclude Include="Math\MatrixUtil.h" />
     <ClInclude Include="Math\Plane.h" />
     <ClInclude Include="Math\VectorUtil.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="Platform\D3D11\D3D11PipelineStateRegistry.h" />
-    <ClInclude Include="Platform\D3D11\D3D11RenderTargetPool.h" />
-    <ClInclude Include="Platform\D3D11\D3D11ResourceRegistry.h" />
-    <ClInclude Include="Platform\D3D11\D3D11Utils.h" />
+    <ClInclude Include="Platform\D3D11\D3D11PipelineStateRegistry.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="Platform\D3D11\D3D11RenderTargetPool.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="Platform\D3D11\D3D11ResourceRegistry.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="Platform\D3D11\D3D11Utils.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Passes\CompositePass.h" />
-    <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h" />
+    <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="DeferredRenderer.h" />
     <ClInclude Include="Core\DrawQueue.h" />
     <ClInclude Include="Passes\GBufferPass.h" />
@@ -165,7 +174,7 @@
     <ClInclude Include="Passes\LightingPass.h" />
     <ClInclude Include="Resources\MaterialRegistry.h" />
     <ClInclude Include="MeshData.h" />
-    <ClInclude Include="MeshFactory.h" />
+    <ClInclude Include="Resources\MeshFactory.h" />
     <ClInclude Include="Resources\MeshRegistry.h" />
     <ClInclude Include="Core\PassResources.h" />
     <ClInclude Include="Resources\PSORegistry.h" />
@@ -178,10 +187,9 @@
     <ClInclude Include="Resources\ShaderRegistry.h" />
     <ClInclude Include="Resources\SamplerRegistry.h" />
     <ClInclude Include="Resources\TextureRegistry.h" />
-    <ClInclude Include="Samples\01-cubes\CubeSample.h" />
     <ClInclude Include="Scene\Light\Light.h" />
     <ClInclude Include="UniformSystem.h" />
-    <ClInclude Include="Vertex.h" />
+    <ClInclude Include="Core\Vertex.h" />
     <ClInclude Include="View.h" />
     <ClInclude Include="Vulkan\Logger.h" />
     <ClInclude Include="Vulkan\VulkanTools.h" />
@@ -190,32 +198,41 @@
     <ClCompile Include="Vulkan\DescriptorPool.cpp" />
     <ClCompile Include="Vulkan\CommandBuffer.cpp" />
     <ClCompile Include="Vulkan\Context.cpp" />
-    <ClCompile Include="pch.cpp" />
     <ClCompile Include="Scene\Camera.cpp" />
     <ClCompile Include="Core\RenderEnums.h" />
     <ClCompile Include="Core\RenderManager.cpp" />
     <ClCompile Include="Core\StaticBatcher.cpp" />
-    <ClCompile Include="Platform\D3D11\D3D11ConstantBufferAllocator.h" />
-    <ClCompile Include="Platform\D3D11\D3D11RenderTargetPool.cpp" />
-    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.cpp" />
-    <ClCompile Include="Platform\D3D11\D3D11Utils.cpp" />
+    <ClCompile Include="Platform\D3D11\D3D11ConstantBufferAllocator.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Platform\D3D11\D3D11RenderTargetPool.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Platform\D3D11\D3D11Utils.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Passes\CompositePass.cpp" />
-    <ClCompile Include="Platform\D3D11\D3D11RendererAPI.cpp" />
+    <ClCompile Include="Platform\D3D11\D3D11RendererAPI.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="DeferredRenderer.cpp" />
     <ClCompile Include="Core\DrawCommand.h" />
     <ClCompile Include="Passes\GBufferPass.cpp" />
     <ClCompile Include="GeometryGenerator.cpp" />
     <ClCompile Include="Core\IRenderPass.h" />
     <ClCompile Include="Passes\LightingPass.cpp" />
-    <ClCompile Include="MeshFactory.cpp" />
-    <ClCompile Include="Platform\D3D11\D3D11VertexBufferAllocator.h" />
+    <ClCompile Include="Resources\MeshFactory.cpp" />
+    <ClCompile Include="Platform\D3D11\D3D11VertexBufferAllocator.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Resources\RenderTargetPool.h" />
-    <ClCompile Include="Samples\01-cubes\CubeSamples.cpp" />
-    <ClCompile Include="Samples\ISampleApp.h" />
-    <ClCompile Include="Samples\main.cpp" />
-    <ClCompile Include="TestApp.cpp" />
     <ClCompile Include="TextureLoader.h" />
-    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.h" />
+    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="UniformSystem.cpp" />
     <ClCompile Include="Vulkan\Logger.cpp" />
     <ClCompile Include="Vulkan\VulkanTools.cpp" />

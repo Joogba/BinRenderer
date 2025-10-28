@@ -1,3 +1,4 @@
+﻿#pragma once
 #include "RendererAPI.h"
 #include "RenderGraphBuilder.h"
 #include "PassResources.h"
@@ -16,7 +17,5 @@ namespace BinRenderer
 
         virtual void Execute(RendererAPI* rhi, const PassResources& res) = 0;
     };
-
-
 
 }

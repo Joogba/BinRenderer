@@ -1,4 +1,4 @@
-// 버텍스 , 인스턴스, 인덱스등 사용가능
+﻿// 버텍스 , 인스턴스, 인덱스등 사용가능
 #pragma once
 #include "Core/ITransientBufferAllocator.h"
 #include <d3d11.h>

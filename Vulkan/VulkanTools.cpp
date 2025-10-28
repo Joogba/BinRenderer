@@ -1,4 +1,4 @@
-#include "VulkanTools.h"
+﻿#include "VulkanTools.h"
 #include "Logger.h"
 #include <unordered_map>
 

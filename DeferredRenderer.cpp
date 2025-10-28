@@ -1,5 +1,4 @@
-
-#include "DeferredRenderer.h"
+﻿#include "DeferredRenderer.h"
 
 namespace BinRenderer
 {
@@ -63,22 +62,35 @@ namespace BinRenderer
 
     void DeferredRenderer::SetLight(const std::vector<Light>& lights)
     {
-        auto* lp = static_cast<LightingPass>(m_lightingPass.get());
-        lp->SetLights(lights.data(), (uint32_t)lights.size());
+        if (m_lightingPass) {
+            // LightingPass에 SetLights 메서드가 있다면 호출
+            // m_lightingPass->SetLights(lights.data(), static_cast<uint32_t>(lights.size()));
+            
+            // 현재 LightingPass에 SetLights가 없으므로 주석 처리
+            // TODO: LightingPass에 라이트 설정 메서드 추가 필요
+        }
     }
 
     void DeferredRenderer::setupPasses()
     {
-        m_gbufferPass = std::make_unique<GBufferPass>();
-        m_lightingPass = std::make_unique<LightingPass>();
-        m_compositePass = std::make_unique<CompositePass>();
+        // unique_ptr로 생성 후 raw pointer 저장 및 RenderGraph로 이동
+        auto gbufferPass = std::make_unique<GBufferPass>();
+        auto lightingPass = std::make_unique<LightingPass>();
+        auto compositePass = std::make_unique<CompositePass>();
 
+        // raw pointer 저장 (RenderGraph로 이동하기 전)
+        m_gbufferPass = gbufferPass.get();
+        m_lightingPass = lightingPass.get();
+        m_compositePass = compositePass.get();
+
+        // Initialize
         m_gbufferPass->Initialize(m_core.get());
         m_lightingPass->Initialize(m_core.get());
         m_compositePass->Initialize(m_core.get());
 
-        m_graph->AddPass(std::move(m_gbufferPass));
-        m_graph->AddPass(std::move(m_lightingPass));
-        m_graph->AddPass(std::move(m_compositePass));
+        // RenderGraph로 소유권 이전
+        m_graph->AddPass(std::move(gbufferPass));
+        m_graph->AddPass(std::move(lightingPass));
+        m_graph->AddPass(std::move(compositePass));
     }
 } // namespace BinRenderer

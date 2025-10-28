@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "VulkanTools.h"
 #include "Logger.h"

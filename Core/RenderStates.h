@@ -1,9 +1,12 @@
-#pragma once
+﻿#pragma once
 
 #include "Core/RenderEnums.h"
+#include "Core/Handle.h"
 
 #include <cstdint>
 #include <string>
+#include <array>
+#include <vector>
 
 namespace BinRenderer {
 
@@ -11,11 +14,22 @@ namespace BinRenderer {
     struct InputElementDesc {
         const char* SemanticName;
         uint32_t    SemanticIndex;
-        Format      Format;
+        Format      format;
         uint32_t    InputSlot;
         uint32_t    AlignedByteOffset;
         uint32_t    InputSlotClass;      // 0: per-vertex, 1: per-instance
         uint32_t    InstanceDataStepRate;
+        
+        // 비교 연산자 추가
+        bool operator==(const InputElementDesc& other) const {
+            return SemanticIndex == other.SemanticIndex
+                && format == other.format
+                && InputSlot == other.InputSlot
+                && AlignedByteOffset == other.AlignedByteOffset
+                && InputSlotClass == other.InputSlotClass
+                && InstanceDataStepRate == other.InstanceDataStepRate
+                && strcmp(SemanticName, other.SemanticName) == 0;
+        }
     };
 
     
@@ -30,6 +44,17 @@ namespace BinRenderer {
         bool     depthClipEnable;
         bool     scissorEnable;
         bool     multisampleEnable;
+        bool operator==(const RasterizerState& other) const {
+            return fillMode == other.fillMode &&
+                cullMode == other.cullMode &&
+                frontCounterClockwise == other.frontCounterClockwise &&
+                depthBias == other.depthBias &&
+                depthBiasClamp == other.depthBiasClamp &&
+                slopeScaledDepthBias == other.slopeScaledDepthBias &&
+                depthClipEnable == other.depthClipEnable &&
+                scissorEnable == other.scissorEnable &&
+                multisampleEnable == other.multisampleEnable;
+        }
     };
 
     
@@ -39,6 +64,13 @@ namespace BinRenderer {
         StencilOp        StencilPassOp;
         StencilOp        StencilFailOp;
         StencilOp        StencilDepthFailOp;
+
+        bool operator==(const DepthStencilOpDesc& other) const {
+            return StencilFunc == other.StencilFunc &&
+                   StencilPassOp == other.StencilPassOp &&
+                   StencilFailOp == other.StencilFailOp &&
+                   StencilDepthFailOp == other.StencilDepthFailOp;
+        }
     };
 
     struct DepthStencilState {
@@ -52,20 +84,40 @@ namespace BinRenderer {
         DepthStencilOpDesc  FrontFace;
         DepthStencilOpDesc  BackFace;
 
+        bool operator==(const DepthStencilState& other) const {
+            return DepthEnable == other.DepthEnable &&
+                   DepthWriteMask == other.DepthWriteMask &&
+                   DepthFunc == other.DepthFunc &&
+                   StencilEnable == other.StencilEnable &&
+                   StencilReadMask == other.StencilReadMask &&
+                   StencilWriteMask == other.StencilWriteMask &&
+                   FrontFace == other.FrontFace &&
+                   BackFace == other.BackFace;
+        }
     };
 
    
 
 
     struct RenderTargetBlendDesc {
-        bool     BlendEnable;
-        Blend    SrcBlend;
-        Blend    DestBlend;
-        BlendOp  Blendop;
-        Blend    SrcBlendAlpha;
-        Blend    DestBlendAlpha;
-        BlendOp  BlendOpAlpha;
-        uint8_t  RenderTargetWriteMask;
+        bool     blendEnable;
+        Blend    srcBlend;
+        Blend    destBlend;
+        BlendOp  blendOp;
+        Blend    srcBlendAlpha;
+        Blend    destBlendAlpha;
+        BlendOp  blendOpAlpha;
+        uint8_t  renderTargetWriteMask;
+        bool operator==(const RenderTargetBlendDesc& other) const {
+            return blendEnable == other.blendEnable &&
+                srcBlend == other.srcBlend &&
+                destBlend == other.destBlend &&
+                blendOp == other.blendOp &&
+                srcBlendAlpha == other.srcBlendAlpha &&
+                destBlendAlpha == other.destBlendAlpha &&
+                blendOpAlpha == other.blendOpAlpha &&
+                renderTargetWriteMask == other.renderTargetWriteMask;
+        }
     };
 
     struct BlendState {
@@ -99,6 +151,14 @@ namespace BinRenderer {
         uint32_t height;
         Format   format;
         uint32_t bindFlags;  // BindFlags 조합
+
+        // 비교 연산자 추가
+        bool operator==(const TextureDesc& other) const {
+            return width == other.width
+                && height == other.height
+                && format == other.format
+                && bindFlags == other.bindFlags;
+        }
     };
 
     // 파이프라인 상태 생성 파라미터
@@ -115,12 +175,12 @@ namespace BinRenderer {
         std::vector<InputElementDesc> inputLayout;
 
         // 상태 객체(플랫폼 독립 구조체)
-        BlendState         blendState;
+        RenderTargetBlendDesc         blendState;
         DepthStencilState  depthStencilState;
         RasterizerState    rasterizerState;
 
         // 파라미터(플랫폼 독립)
-        std::array<float, 4> blendFactor = { 1.0f, 1.0f, 1.0f, 1.0f };
+        std::array<float,4> blendFactor = { 1.0f, 1.0f, 1.0f, 1.0f };
         uint32_t            stencilRef = 0;
         PrimitiveTopology   primitiveTopology = PrimitiveTopology::TriangleList;
         uint32_t            sampleMask = 0xFFFFFFFF;
@@ -131,6 +191,11 @@ namespace BinRenderer {
         uint32_t             numRenderTargets = 1;
         // 기타 확장 필요시 필드 추가!
     };
+
+    // 해시 결합 유틸리티
+    inline void HashCombine(size_t& seed, size_t value) {
+        seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
 
     struct PSODescHash {
         size_t operator()(const PSODesc& desc) const {
@@ -145,7 +210,7 @@ namespace BinRenderer {
             for (const auto& elem : desc.inputLayout) {
                 size_t elemHash = std::hash<std::string>()(elem.SemanticName);
                 HashCombine(elemHash, std::hash<uint32_t>()(elem.SemanticIndex));
-                HashCombine(elemHash, std::hash<int>()(static_cast<int>(elem.Format)));
+                HashCombine(elemHash, std::hash<int>()(static_cast<int>(elem.format)));
                 HashCombine(elemHash, std::hash<uint32_t>()(elem.InputSlot));
                 HashCombine(elemHash, std::hash<uint32_t>()(elem.AlignedByteOffset));
                 HashCombine(elemHash, std::hash<uint32_t>()(elem.InputSlotClass));
@@ -183,12 +248,12 @@ namespace BinRenderer {
         std::string name;
     };
 
-    struct MaterialDesc {
-        std::string name;
-        PSOHandle psoHandle; // 파이프라인 상태 오브젝트 핸들
-        std::vector<TextureHandle> textureBindings; // 텍스처 바인딩
-        std::vector<TextureHandle> samplerBindings; // 샘플러 바인딩
-        UniformSet uniformSet; // 유니폼 세트
-	};
+ //   struct MaterialDesc {
+ //       std::string name;
+ //       PSOHandle psoHandle; // 파이프라인 상태 오브젝트 핸들
+ //       std::vector<TextureHandle> textureBindings; // 텍스처 바인딩
+ //       std::vector<TextureHandle> samplerBindings; // 샘플러 바인딩
+ //       UniformSet uniformSet; // 유니폼 세트
+	//};
 
 } // namespace BinRenderer

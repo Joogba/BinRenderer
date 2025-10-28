@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Context.h"
 #include "Logger.h"
 #include <cassert>
@@ -808,7 +807,7 @@ namespace BinRenderer
                 pipelineCache_ = VK_NULL_HANDLE;
             }
 
-            std:set<VkCommandPool> uniquePools;
+            std::set<VkCommandPool> uniquePools;
             if (graphicsCommandPool_ != VK_NULL_HANDLE) {
                 uniquePools.insert(graphicsCommandPool_);
             }
@@ -886,5 +885,5 @@ namespace BinRenderer
                 exitWithMessage("Failed to get transfer queue");
             }
         }
-    }
-}
+    } // namespace Vulkan
+} // namespace BinRenderer

@@ -1,15 +1,16 @@
-
-#pragma once
+﻿#pragma once
 
 #include "Core/RendererAPI.h"
 #include "Core/DrawCommand.h"
 #include "Core/RenderGraph.h"
+#include "Core/IRenderPass.h"
 #include "Passes/GBufferPass.h"
 #include "Passes/LightingPass.h"
 #include "Passes/CompositePass.h"
 #include "Core/RenderStates.h"
 
 #include <memory>
+#include <vector>
 
 namespace BinRenderer
 {
@@ -40,12 +41,12 @@ namespace BinRenderer
     private:
         // 실제 렌더링 구현체 (초기에는 D3D11RendererAPI)
         std::unique_ptr<BinRenderer::RendererAPI> m_core;
-        std::unique_ptr<RenderGraph>                m_graph;      // RenderGraph 실행 엔진
+        std::unique_ptr<RenderGraph> m_graph;      // RenderGraph 실행 엔진
 
         // Deferred 파이프라인을 구성하는 3개 패스
-        std::unique_ptr<IRenderPass> m_gbufferPass;
-        std::unique_ptr<IRenderPass> m_lightingPass;
-        std::unique_ptr<IRenderPass> m_compositePass;
+        GBufferPass* m_gbufferPass = nullptr;
+        LightingPass* m_lightingPass = nullptr;
+        CompositePass* m_compositePass = nullptr;
 
         uint32_t m_width = 0;
         uint32_t m_height = 0;

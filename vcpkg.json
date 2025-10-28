@@ -5,6 +5,7 @@
     "glm",
     "spirv-reflect",
     "stb",
+    "directxtk",
     {
       "name": "tracy",
       "features": [ "on-demand" ]

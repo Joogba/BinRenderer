@@ -27,10 +27,7 @@
     <ClCompile Include="UniformSystem.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="TestApp.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshFactory.cpp">
+    <ClCompile Include="Resources\MeshFactory.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.h">
@@ -81,19 +78,7 @@
     <ClCompile Include="Core\RenderManager.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Samples\ISampleApp.h">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Samples\main.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Samples\01-cubes\CubeSamples.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="Scene\Camera.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="pch.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\Context.cpp">
@@ -140,13 +125,13 @@
     <ClInclude Include="UniformSystem.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Vertex.h">
+    <ClInclude Include="Core\Vertex.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="MeshData.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="MeshFactory.h">
+    <ClInclude Include="Resources\MeshFactory.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="View.h">
@@ -212,9 +197,6 @@
     <ClInclude Include="Core\RenderManager.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Samples\01-cubes\CubeSample.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="Platform\D3D11\D3D11ResourceRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -231,9 +213,6 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Math\Plane.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="pch.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Math\VectorUtil.h">
