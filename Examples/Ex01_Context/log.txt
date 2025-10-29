@@ -38,6 +38,8 @@ Available instance layers:
   VK_LAYER_NV_present
   VK_LAYER_OBS_HOOK
   VK_LAYER_OW_OBS_HOOK
+  VK_LAYER_OW_OBS_HOOK
+  VK_LAYER_OW_OVERLAY
   VK_LAYER_OW_OVERLAY
   VK_LAYER_RENDERDOC_Capture
   VK_LAYER_ROCKSTAR_GAMES_social_club
@@ -81,3 +83,4 @@ Descriptor indexing features supported:
   runtimeDescriptorArray: YES
   descriptorBindingVariableDescriptorCount: YES
 DescriptorPoolSize.txt not found, will create pools on-demand
+Successfully saved processed image to: output.jpg

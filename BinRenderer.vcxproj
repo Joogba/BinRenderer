@@ -137,6 +137,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Vulkan\BarrierHelper.h" />
+    <ClInclude Include="Vulkan\Image2D.h" />
     <ClInclude Include="Vulkan\DescriptorPool.h" />
     <ClInclude Include="Vulkan\CommandBuffer.h" />
     <ClInclude Include="Vulkan\Context.h" />
@@ -192,9 +194,15 @@
     <ClInclude Include="Core\Vertex.h" />
     <ClInclude Include="View.h" />
     <ClInclude Include="Vulkan\Logger.h" />
+    <ClInclude Include="Vulkan\MappedBuffer.h" />
+    <ClInclude Include="Vulkan\Resource.h" />
+    <ClInclude Include="Vulkan\ResourceBinding.h" />
+    <ClInclude Include="Vulkan\Sampler.h" />
     <ClInclude Include="Vulkan\VulkanTools.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Vulkan\BarrierHelper.cpp" />
+    <ClCompile Include="Vulkan\Image2D.cpp" />
     <ClCompile Include="Vulkan\DescriptorPool.cpp" />
     <ClCompile Include="Vulkan\CommandBuffer.cpp" />
     <ClCompile Include="Vulkan\Context.cpp" />
@@ -235,6 +243,10 @@
     </ClCompile>
     <ClCompile Include="UniformSystem.cpp" />
     <ClCompile Include="Vulkan\Logger.cpp" />
+    <ClCompile Include="Vulkan\MappedBuffer.cpp" />
+    <ClCompile Include="Vulkan\Resource.cpp" />
+    <ClCompile Include="Vulkan\ResourceBinding.cpp" />
+    <ClCompile Include="Vulkan\Sampler.cpp" />
     <ClCompile Include="Vulkan\VulkanTools.cpp" />
   </ItemGroup>
   <ItemGroup>
