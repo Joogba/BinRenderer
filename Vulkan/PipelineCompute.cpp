@@ -38,4 +38,4 @@ void Pipeline::createCompute()
     printLog("Successfully created compute pipeline\n");
 }
 
-} // namespace hlab
+} // namespace BinRenderer::Vulkan

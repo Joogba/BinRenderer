@@ -91,7 +91,10 @@
     <ClCompile Include="ContextTest.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="PipelineFactoryTest.cpp" />
+    <ClCompile Include="PipelineFactoryTest.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="SwapchainTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\BinRenderer.vcxproj">

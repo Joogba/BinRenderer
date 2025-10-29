@@ -203,8 +203,10 @@
     <ClInclude Include="Vulkan\Sampler.h" />
     <ClInclude Include="Vulkan\Shader.h" />
     <ClInclude Include="Vulkan\ShaderManager.h" />
+    <ClInclude Include="Vulkan\Swapchain.h" />
     <ClInclude Include="Vulkan\Vertex.h" />
     <ClInclude Include="Vulkan\VulkanTools.h" />
+    <ClInclude Include="Vulkan\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Vulkan\BarrierHelper.cpp" />
@@ -258,8 +260,10 @@
     <ClCompile Include="Vulkan\Sampler.cpp" />
     <ClCompile Include="Vulkan\Shader.cpp" />
     <ClCompile Include="Vulkan\ShaderManager.cpp" />
+    <ClCompile Include="Vulkan\Swapchain.cpp" />
     <ClCompile Include="Vulkan\Vertex.cpp" />
     <ClCompile Include="Vulkan\VulkanTools.cpp" />
+    <ClCompile Include="Vulkan\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Basic.hlsl">
