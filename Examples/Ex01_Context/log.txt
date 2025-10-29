@@ -83,4 +83,12 @@ Descriptor indexing features supported:
   runtimeDescriptorArray: YES
   descriptorBindingVariableDescriptorCount: YES
 DescriptorPoolSize.txt not found, will create pools on-demand
-Successfully saved processed image to: output.jpg
+
+=== Shader Manager Binding Information ===
+Pipeline 'triangle': 0 sets
+==========================================
+
+ShaderManager: Created 0 unique layout(s)
+Creating graphics pipeline from config: triangle
+Successfully created graphics pipeline: triangle
+Successfully saved rendered triangle to: output.jpg
