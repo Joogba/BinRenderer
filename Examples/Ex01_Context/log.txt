@@ -43,8 +43,6 @@ Available instance layers:
   VK_LAYER_NV_present
   VK_LAYER_OBS_HOOK
   VK_LAYER_OW_OBS_HOOK
-  VK_LAYER_OW_OBS_HOOK
-  VK_LAYER_OW_OVERLAY
   VK_LAYER_OW_OVERLAY
   VK_LAYER_RENDERDOC_Capture
   VK_LAYER_ROCKSTAR_GAMES_social_club
@@ -100,3 +98,25 @@ Available Present Modes: 5
 Selected Present Mode: VK_PRESENT_MODE_MAILBOX_KHR
 Designed Num of Swapchain Images: 3
 Added VK_IMAGE_USAGE_STORAGE_BIT to swapchain
+Current working directory: C:\Projects\BinRenderer\Examples\Ex01_Context
+
+=== Shader Manager Binding Information ===
+Pipeline 'gui': 1 sets
+  Set 0: 1 bindings
+    Binding 0: name='fontSampler', set=0, binding=0, writeonly=false, layout=SHADER_READ_ONLY_OPTIMAL, access=SHADER_READ, stage=FRAGMENT_SHADER
+==========================================
+
+ShaderManager: Created 1 unique layout(s)
+  Layout 0 (0xf000000000f): 1 binding(s), used by:
+    - Pipeline 'gui', Set 0
+    Binding 0: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
+Creating graphics pipeline from config: gui
+Successfully created graphics pipeline: gui
+Saved descriptor pool statistics to DescriptorPoolSize.txt
+
+=== DescriptorPool 할당 통계 ===
+생성된 총 풀 수: 1
+할당된 총 세트 수: 1
+  COMBINED_IMAGE_SAMPLER: 1
+============================================
+

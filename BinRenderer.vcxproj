@@ -139,6 +139,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Vulkan\BarrierHelper.h" />
     <ClInclude Include="Vulkan\DescriptorSet.h" />
+    <ClInclude Include="Vulkan\GuiRenderer.h" />
     <ClInclude Include="Vulkan\Image2D.h" />
     <ClInclude Include="Vulkan\DescriptorPool.h" />
     <ClInclude Include="Vulkan\CommandBuffer.h" />
@@ -198,6 +199,7 @@
     <ClInclude Include="Vulkan\MappedBuffer.h" />
     <ClInclude Include="Vulkan\Pipeline.h" />
     <ClInclude Include="Vulkan\PipelineConfig.h" />
+    <ClInclude Include="Vulkan\PushConstants.h" />
     <ClInclude Include="Vulkan\Resource.h" />
     <ClInclude Include="Vulkan\ResourceBinding.h" />
     <ClInclude Include="Vulkan\Sampler.h" />
@@ -211,6 +213,7 @@
   <ItemGroup>
     <ClCompile Include="Vulkan\BarrierHelper.cpp" />
     <ClCompile Include="Vulkan\DescriptorSet.cpp" />
+    <ClCompile Include="Vulkan\GuiRenderer.cpp" />
     <ClCompile Include="Vulkan\Image2D.cpp" />
     <ClCompile Include="Vulkan\DescriptorPool.cpp" />
     <ClCompile Include="Vulkan\CommandBuffer.cpp" />
@@ -255,6 +258,7 @@
     <ClCompile Include="Vulkan\MappedBuffer.cpp" />
     <ClCompile Include="Vulkan\Pipeline.cpp" />
     <ClCompile Include="Vulkan\PipelineCompute.cpp" />
+    <ClCompile Include="Vulkan\PushConstants.cpp" />
     <ClCompile Include="Vulkan\Resource.cpp" />
     <ClCompile Include="Vulkan\ResourceBinding.cpp" />
     <ClCompile Include="Vulkan\Sampler.cpp" />

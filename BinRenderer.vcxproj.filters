@@ -138,6 +138,12 @@
     <ClCompile Include="Vulkan\Swapchain.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Vulkan\GuiRenderer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\PushConstants.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h">
@@ -321,6 +327,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Vulkan\Swapchain.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\GuiRenderer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\PushConstants.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
