@@ -85,7 +85,8 @@ Descriptor indexing features supported:
   descriptorBindingPartiallyBound: YES
   runtimeDescriptorArray: YES
   descriptorBindingVariableDescriptorCount: YES
-DescriptorPoolSize.txt not found, will create pools on-demand
+Found DescriptorPoolSize.txt, loading previous statistics...
+Created initial pool with 4 sets and 2 descriptor types
 Selected Surface Format: R8G8B8A8_UNORM
 Selected Color Space: VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
 Swapchain Storage Bit Support: YES
@@ -98,25 +99,38 @@ Available Present Modes: 5
 Selected Present Mode: VK_PRESENT_MODE_MAILBOX_KHR
 Designed Num of Swapchain Images: 3
 Added VK_IMAGE_USAGE_STORAGE_BIT to swapchain
-Current working directory: C:\Projects\BinRenderer\Examples\Ex01_Context
 
 === Shader Manager Binding Information ===
 Pipeline 'gui': 1 sets
   Set 0: 1 bindings
     Binding 0: name='fontSampler', set=0, binding=0, writeonly=false, layout=SHADER_READ_ONLY_OPTIMAL, access=SHADER_READ, stage=FRAGMENT_SHADER
+Pipeline 'sky': 2 sets
+  Set 0: 2 bindings
+    Binding 0: name='sceneData', set=0, binding=0, writeonly=false, layout=UNDEFINED, access=SHADER_READ, stage=VERTEX_SHADER
+    Binding 1: name='skyOptions', set=0, binding=1, writeonly=false, layout=UNDEFINED, access=SHADER_READ, stage=FRAGMENT_SHADER
+  Set 1: 3 bindings
+    Binding 0: name='prefilteredMap', set=1, binding=0, writeonly=false, layout=SHADER_READ_ONLY_OPTIMAL, access=SHADER_READ, stage=FRAGMENT_SHADER
+    Binding 1: name='irradianceMap', set=1, binding=1, writeonly=false, layout=SHADER_READ_ONLY_OPTIMAL, access=SHADER_READ, stage=FRAGMENT_SHADER
+    Binding 2: name='brdfLut', set=1, binding=2, writeonly=false, layout=SHADER_READ_ONLY_OPTIMAL, access=SHADER_READ, stage=FRAGMENT_SHADER
 ==========================================
 
-ShaderManager: Created 1 unique layout(s)
-  Layout 0 (0xf000000000f): 1 binding(s), used by:
+ShaderManager: Created 3 unique layout(s)
+  Layout 0 (0x120000000012): 3 binding(s), used by:
+    - Pipeline 'sky', Set 1
+    Binding 0: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
+    Binding 1: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
+    Binding 2: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
+  Layout 1 (0x130000000013): 2 binding(s), used by:
+    - Pipeline 'sky', Set 0
+    Binding 0: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
+    Binding 1: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
+  Layout 2 (0x140000000014): 1 binding(s), used by:
     - Pipeline 'gui', Set 0
     Binding 0: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
 Creating graphics pipeline from config: gui
 Successfully created graphics pipeline: gui
-Saved descriptor pool statistics to DescriptorPoolSize.txt
-
-=== DescriptorPool 할당 통계 ===
-생성된 총 풀 수: 1
-할당된 총 세트 수: 1
-  COMBINED_IMAGE_SAMPLER: 1
-============================================
-
+Current working directory: C:\Projects\BinRenderer\Examples\Ex01_Context
+Creating graphics pipeline from config: sky
+Successfully created graphics pipeline: sky
+[ERROR] [-464217071][VUID-vkDestroyBuffer-buffer-00922] : vkDestroyBuffer(): can't be called on VkBuffer 0x480000000048 that is currently in use by VkCommandBuffer 0x2686445b380.
+The Vulkan spec states: All submitted commands that refer to buffer, either directly or via a VkBufferView, must have completed execution (https://vulkan.lunarg.com/doc/view/1.4.321.1/windows/antora/spec/latest/chapters/resources.html#VUID-vkDestroyBuffer-buffer-00922)

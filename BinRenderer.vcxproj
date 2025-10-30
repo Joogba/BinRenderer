@@ -138,6 +138,7 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Vulkan\BarrierHelper.h" />
+    <ClInclude Include="Vulkan\Camera.h" />
     <ClInclude Include="Vulkan\DescriptorSet.h" />
     <ClInclude Include="Vulkan\GuiRenderer.h" />
     <ClInclude Include="Vulkan\Image2D.h" />
@@ -212,6 +213,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Vulkan\BarrierHelper.cpp" />
+    <ClCompile Include="Vulkan\Camera.cpp" />
     <ClCompile Include="Vulkan\DescriptorSet.cpp" />
     <ClCompile Include="Vulkan\GuiRenderer.cpp" />
     <ClCompile Include="Vulkan\Image2D.cpp" />

@@ -1,0 +1,2 @@
+diffuse 만들 때도 outputLUT.png를 덮어쓰기 때문에 specular 용인지 확인해야 합니다.
+

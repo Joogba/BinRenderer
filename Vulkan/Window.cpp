@@ -85,7 +85,7 @@ GLFWwindow* Window::createWindow()
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
     GLFWwindow* window =
-        glfwCreateWindow(windowWidth, windowHeight, "Honglab Vulkan", nullptr, nullptr);
+        glfwCreateWindow(windowWidth, windowHeight, "BinRenderer Vulkan", nullptr, nullptr);
 
     if (!window) {
         glfwTerminate();
