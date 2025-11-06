@@ -1,0 +1,34 @@
+{
+  "renderNodes": [
+    {
+      "pipelineNames": [ "shadowMap" ],
+      "colorAttachments": [],
+      "depthAttachment": "shadowMap",
+      "stencilAttachment": ""
+    },
+    {
+      "pipelineNames": [ "pbrDeferred" ],
+      "colorAttachments": [ "gAlbedo", "gNormal", "gPosition", "gMaterial" ],
+      "depthAttachment": "depthStencil",
+      "stencilAttachment": "depthStencil"
+    },
+    {
+      "pipelineNames": [ "sky" ],
+      "colorAttachments": [ "floatColor1" ],
+      "depthAttachment": "depthStencil",
+      "stencilAttachment": "depthStencil"
+    },
+    {
+      "pipelineNames": [ "deferredLighting" ],
+      "colorAttachments": [],
+      "depthAttachment": "",
+      "stencilAttachment": ""
+    },
+    {
+      "pipelineNames": [ "post" ],
+      "colorAttachments": [ "swapchain" ],
+      "depthAttachment": "",
+      "stencilAttachment": ""
+    }
+  ]
+}

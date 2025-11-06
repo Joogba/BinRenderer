@@ -363,3 +363,11 @@ MigrationBackup/
 FodyWeavers.xsd
 
 vcpkg_installed/
+
+
+# Large asset files - Download separately (see README.md)
+assets/models/AmazonLumberyardBistroMorganMcGuire/
+assets/characters/Leonard/*.fbx
+
+# Optional: All large binary cache files
+*.bin

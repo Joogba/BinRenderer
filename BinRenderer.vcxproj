@@ -46,7 +46,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -105,7 +105,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;%(PreprocessorDefinitions);TRACY_ENABLE;TRACY_ON_DEMAND;TRACY_NO_CALLSTACK;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);GLFW_INCLUDE_VULKAN;GLM_ENABLE_EXPERIMENTAL;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>%VULKAN_SDK%\include;$(ProjectDir)</AdditionalIncludeDirectories>
@@ -118,6 +118,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Lib>
+      <AdditionalDependencies>vulkan-1.lib;</AdditionalDependencies>
+    </Lib>
+    <Lib>
+      <AdditionalLibraryDirectories>%VULKAN_SDK%\lib;</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -125,8 +131,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);TRACY_ENABLE;TRACY_ON_DEMAND;TRACY_NO_CALLSTACK;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);GLFW_INCLUDE_VULKAN;GLM_ENABLE_EXPERIMENTAL;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>%VULKAN_SDK%\include;$(ProjectDir)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,12 +143,23 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalDependencies>vulkan-1.lib;</AdditionalDependencies>
+    </Lib>
+    <Lib>
+      <AdditionalLibraryDirectories>%VULKAN_SDK%\lib;</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Camera.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="Vulkan\Animation.h" />
+    <ClInclude Include="Vulkan\Application.h" />
     <ClInclude Include="Vulkan\BarrierHelper.h" />
     <ClInclude Include="Vulkan\Camera.h" />
     <ClInclude Include="Vulkan\DescriptorSet.h" />
+    <ClInclude Include="Vulkan\GpuTimer.h" />
     <ClInclude Include="Vulkan\GuiRenderer.h" />
     <ClInclude Include="Vulkan\Image2D.h" />
     <ClInclude Include="Vulkan\DescriptorPool.h" />
@@ -157,19 +177,24 @@
     <ClInclude Include="Math\VectorUtil.h" />
     <ClInclude Include="Platform\D3D11\D3D11PipelineStateRegistry.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Platform\D3D11\D3D11RenderTargetPool.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Platform\D3D11\D3D11ResourceRegistry.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Platform\D3D11\D3D11Utils.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Passes\CompositePass.h" />
     <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="DeferredRenderer.h" />
     <ClInclude Include="Core\DrawQueue.h" />
@@ -198,47 +223,69 @@
     <ClInclude Include="View.h" />
     <ClInclude Include="Vulkan\Logger.h" />
     <ClInclude Include="Vulkan\MappedBuffer.h" />
+    <ClInclude Include="Vulkan\Material.h" />
+    <ClInclude Include="Vulkan\Mesh.h" />
+    <ClInclude Include="Vulkan\Model.h" />
+    <ClInclude Include="Vulkan\ModelLoader.h" />
+    <ClInclude Include="Vulkan\ModelNode.h" />
     <ClInclude Include="Vulkan\Pipeline.h" />
     <ClInclude Include="Vulkan\PipelineConfig.h" />
     <ClInclude Include="Vulkan\PushConstants.h" />
+    <ClInclude Include="Vulkan\Renderer.h" />
+    <ClInclude Include="Vulkan\RenderGraph.h" />
     <ClInclude Include="Vulkan\Resource.h" />
     <ClInclude Include="Vulkan\ResourceBinding.h" />
     <ClInclude Include="Vulkan\Sampler.h" />
     <ClInclude Include="Vulkan\Shader.h" />
     <ClInclude Include="Vulkan\ShaderManager.h" />
+    <ClInclude Include="Vulkan\Skeleton.h" />
+    <ClInclude Include="Vulkan\StorageBuffer.h" />
     <ClInclude Include="Vulkan\Swapchain.h" />
+    <ClInclude Include="Vulkan\TextureManager.h" />
+    <ClInclude Include="Vulkan\TracyProfiler.h" />
     <ClInclude Include="Vulkan\Vertex.h" />
+    <ClInclude Include="Vulkan\ViewFrustum.h" />
     <ClInclude Include="Vulkan\VulkanTools.h" />
     <ClInclude Include="Vulkan\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Vulkan\Animation.cpp" />
+    <ClCompile Include="Vulkan\Application.cpp" />
     <ClCompile Include="Vulkan\BarrierHelper.cpp" />
     <ClCompile Include="Vulkan\Camera.cpp" />
     <ClCompile Include="Vulkan\DescriptorSet.cpp" />
+    <ClCompile Include="Vulkan\GpuTimer.cpp" />
     <ClCompile Include="Vulkan\GuiRenderer.cpp" />
     <ClCompile Include="Vulkan\Image2D.cpp" />
     <ClCompile Include="Vulkan\DescriptorPool.cpp" />
     <ClCompile Include="Vulkan\CommandBuffer.cpp" />
     <ClCompile Include="Vulkan\Context.cpp" />
-    <ClCompile Include="Scene\Camera.cpp" />
+    <ClCompile Include="Scene\Camera.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Core\RenderEnums.h" />
     <ClCompile Include="Core\RenderManager.cpp" />
     <ClCompile Include="Core\StaticBatcher.cpp" />
     <ClCompile Include="Platform\D3D11\D3D11ConstantBufferAllocator.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Platform\D3D11\D3D11RenderTargetPool.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Platform\D3D11\D3D11Utils.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Passes\CompositePass.cpp" />
     <ClCompile Include="Platform\D3D11\D3D11RendererAPI.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="DeferredRenderer.cpp" />
     <ClCompile Include="Core\DrawCommand.h" />
@@ -249,25 +296,40 @@
     <ClCompile Include="Resources\MeshFactory.cpp" />
     <ClCompile Include="Platform\D3D11\D3D11VertexBufferAllocator.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Resources\RenderTargetPool.h" />
     <ClCompile Include="TextureLoader.h" />
     <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="UniformSystem.cpp" />
     <ClCompile Include="Vulkan\Logger.cpp" />
     <ClCompile Include="Vulkan\MappedBuffer.cpp" />
+    <ClCompile Include="Vulkan\Material.cpp" />
+    <ClCompile Include="Vulkan\Mesh.cpp" />
+    <ClCompile Include="Vulkan\Model.cpp" />
+    <ClCompile Include="Vulkan\ModelLoader.cpp" />
+    <ClCompile Include="Vulkan\ModelNode.cpp" />
     <ClCompile Include="Vulkan\Pipeline.cpp" />
     <ClCompile Include="Vulkan\PipelineCompute.cpp" />
+    <ClCompile Include="Vulkan\PipelineConfig.cpp" />
     <ClCompile Include="Vulkan\PushConstants.cpp" />
+    <ClCompile Include="Vulkan\Renderer.cpp" />
+    <ClCompile Include="Vulkan\RenderGraph.cpp" />
     <ClCompile Include="Vulkan\Resource.cpp" />
     <ClCompile Include="Vulkan\ResourceBinding.cpp" />
     <ClCompile Include="Vulkan\Sampler.cpp" />
     <ClCompile Include="Vulkan\Shader.cpp" />
     <ClCompile Include="Vulkan\ShaderManager.cpp" />
+    <ClCompile Include="Vulkan\Skeleton.cpp" />
+    <ClCompile Include="Vulkan\StorageBuffer.cpp" />
     <ClCompile Include="Vulkan\Swapchain.cpp" />
+    <ClCompile Include="Vulkan\TextureManager.cpp" />
+    <ClCompile Include="Vulkan\TracyProfiler.cpp" />
     <ClCompile Include="Vulkan\Vertex.cpp" />
+    <ClCompile Include="Vulkan\ViewFrustum.cpp" />
     <ClCompile Include="Vulkan\VulkanTools.cpp" />
     <ClCompile Include="Vulkan\Window.cpp" />
   </ItemGroup>
@@ -275,6 +337,8 @@
     <FxCompile Include="Basic.hlsl">
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VSMain</EntryPointName>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">VSMain</EntryPointName>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

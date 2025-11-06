@@ -61,7 +61,7 @@ bool Window::isMinimized() const
 GLFWwindow* Window::createWindow()
 {
     constexpr float aspectRatio = 16.0f / 9.0f; // Use floating-point division
-    constexpr float outRatio = 0.8f;            // 모니터 해상도의 80%로 윈도우 생성
+    constexpr float outRatio = 0.9f;            // 모니터 해상도의 80%로 윈도우 생성
 
     if (!glfwInit()) {
         exitWithMessage("GLFW not initialized");

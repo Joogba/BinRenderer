@@ -16,6 +16,9 @@
     <Filter Include="소스 파일\SkyBox">
       <UniqueIdentifier>{24b4f2d9-b465-4ed6-9218-e8b0eb4bd99b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\PBR">
+      <UniqueIdentifier>{ba3ad4ac-4474-4cce-9220-680442568cdc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ContextTest.cpp">
@@ -39,10 +42,16 @@
     <ClCompile Include="SkyBoxExample.cpp">
       <Filter>소스 파일\SkyBox</Filter>
     </ClCompile>
+    <ClCompile Include="PBRTest.cpp">
+      <Filter>소스 파일\PBR</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SkyBoxExample.h">
       <Filter>소스 파일\SkyBox</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="RenderGraph.json" />
   </ItemGroup>
 </Project>

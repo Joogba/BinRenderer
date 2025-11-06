@@ -35,7 +35,6 @@ GuiRenderer::GuiRenderer(Context& ctx, ShaderManager& shaderManager, VkFormat co
     io.FontGlobalScale = scale_;
 
     {
-        // const string fontFileName = "../../assets/Roboto-Medium.ttf"; // English font
         const string fontFileName =
             "../../assets/Noto_Sans_KR/static/NotoSansKR-SemiBold.ttf"; // Korean Font
 
@@ -43,16 +42,18 @@ GuiRenderer::GuiRenderer(Context& ctx, ShaderManager& shaderManager, VkFormat co
         int texWidth, texHeight;
         ImGuiIO& io = ImGui::GetIO();
 
+        // 기본 영문 범위와 한글 범위를 모두 포함하여 로드
         ImFontConfig config;
         config.MergeMode = false;
-
-        io.Fonts->AddFontFromFileTTF(fontFileName.c_str(), 16.0f * scale_, &config,
-                                     io.Fonts->GetGlyphRangesDefault());
-
-        config.MergeMode = true;
-
-        io.Fonts->AddFontFromFileTTF(fontFileName.c_str(), 16.0f * scale_, &config,
-                                     io.Fonts->GetGlyphRangesKorean());
+        
+        // 영문 + 한글을 모두 포함하는 범위 생성
+        ImVector<ImWchar> ranges;
+        ImFontGlyphRangesBuilder builder;
+        builder.AddRanges(io.Fonts->GetGlyphRangesDefault());  // 영문, 숫자, 기호
+        builder.AddRanges(io.Fonts->GetGlyphRangesKorean());   // 한글
+        builder.BuildRanges(&ranges);
+        
+        io.Fonts->AddFontFromFileTTF(fontFileName.c_str(), 16.0f * scale_, &config, ranges.Data);
 
         io.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
         if (!fontData) {
