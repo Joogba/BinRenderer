@@ -457,5 +457,6 @@
   <ItemGroup>
     <None Include="docs\ResourceHandleSystem.md" />
     <None Include="docs\ResourceHandleSystemProgress.md" />
+    <None Include="docs\Phase2_CompletionGuide.md" />
   </ItemGroup>
 </Project>

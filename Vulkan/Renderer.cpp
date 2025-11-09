@@ -148,7 +148,7 @@ void Renderer::createUniformBuffers()
 
     // Initialize uniform buffer map with proper keys
     const vector<string> bufferNames = {"sceneData", "skyOptions",  "options",
-                                        "boneData",  "postOptions", "ssaoOptions"};
+      "boneData",  "postOptions", "ssaoOptions"};
 
     for (const auto& name : bufferNames) {
         perFrameUniformBuffers_[name].clear();
@@ -157,36 +157,92 @@ void Renderer::createUniformBuffers()
 
     // Create uniform buffers for each type and frame
     for (uint32_t i = 0; i < kMaxFramesInFlight_; ++i) {
-        // Scene uniform buffers
-        auto sceneBuffer = std::make_unique<MappedBuffer>(ctx_);
-        sceneBuffer->createUniformBuffer(sceneUBO_);
-        perFrameUniformBuffers_["sceneData"].emplace_back(std::move(sceneBuffer));
+// 🆕 NEW SYSTEM: Register with ResourceRegistry
+        {
+            auto sceneBuffer = std::make_unique<MappedBuffer>(ctx_);
+   sceneBuffer->createUniformBuffer(sceneUBO_);
+            resourceHandles_.sceneData[i] = resourceRegistry_.registerBuffer(
+   std::format("sceneData_{}", i),
+      std::move(sceneBuffer)
+  );
+}
 
-        // Options uniform buffers
-        auto optionsBuffer = std::make_unique<MappedBuffer>(ctx_);
-        optionsBuffer->createUniformBuffer(optionsUBO_);
-        perFrameUniformBuffers_["options"].emplace_back(std::move(optionsBuffer));
+        {
+   auto optionsBuffer = std::make_unique<MappedBuffer>(ctx_);
+optionsBuffer->createUniformBuffer(optionsUBO_);
+    resourceHandles_.options[i] = resourceRegistry_.registerBuffer(
+      std::format("options_{}", i),
+       std::move(optionsBuffer)
+      );
+        }
+
+     {
+       auto skyOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
+  skyOptionsBuffer->createUniformBuffer(skyOptionsUBO_);
+            resourceHandles_.skyOptions[i] = resourceRegistry_.registerBuffer(
+    std::format("skyOptions_{}", i),
+           std::move(skyOptionsBuffer)
+            );
+}
+
+        {
+     auto postOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
+            postOptionsBuffer->createUniformBuffer(postOptionsUBO_);
+            resourceHandles_.postOptions[i] = resourceRegistry_.registerBuffer(
+      std::format("postOptions_{}", i),
+      std::move(postOptionsBuffer)
+     );
+    }
+
+        {
+            auto ssaoOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
+            ssaoOptionsBuffer->createUniformBuffer(ssaoOptionsUBO_);
+resourceHandles_.ssaoOptions[i] = resourceRegistry_.registerBuffer(
+         std::format("ssaoOptions_{}", i),
+      std::move(ssaoOptionsBuffer)
+       );
+        }
+
+    {
+            auto boneDataBuffer = std::make_unique<MappedBuffer>(ctx_);
+ boneDataBuffer->createUniformBuffer(boneDataUBO_);
+     resourceHandles_.boneData[i] = resourceRegistry_.registerBuffer(
+       std::format("boneData_{}", i),
+          std::move(boneDataBuffer)
+);
+        }
+
+        // ❌ OLD SYSTEM (keep for backward compatibility - will be removed in Phase 4)
+        // Scene uniform buffers
+        auto sceneBufferOld = std::make_unique<MappedBuffer>(ctx_);
+ sceneBufferOld->createUniformBuffer(sceneUBO_);
+        perFrameUniformBuffers_["sceneData"].emplace_back(std::move(sceneBufferOld));
+
+  // Options uniform buffers
+  auto optionsBufferOld = std::make_unique<MappedBuffer>(ctx_);
+optionsBufferOld->createUniformBuffer(optionsUBO_);
+        perFrameUniformBuffers_["options"].emplace_back(std::move(optionsBufferOld));
 
         // Sky options uniform buffers
-        auto skyOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
-        skyOptionsBuffer->createUniformBuffer(skyOptionsUBO_);
-        perFrameUniformBuffers_["skyOptions"].emplace_back(std::move(skyOptionsBuffer));
+      auto skyOptionsBufferOld = std::make_unique<MappedBuffer>(ctx_);
+        skyOptionsBufferOld->createUniformBuffer(skyOptionsUBO_);
+        perFrameUniformBuffers_["skyOptions"].emplace_back(std::move(skyOptionsBufferOld));
 
         // Post options uniform buffers
-        auto postOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
-        postOptionsBuffer->createUniformBuffer(postOptionsUBO_);
-        perFrameUniformBuffers_["postOptions"].emplace_back(std::move(postOptionsBuffer));
+        auto postOptionsBufferOld = std::make_unique<MappedBuffer>(ctx_);
+        postOptionsBufferOld->createUniformBuffer(postOptionsUBO_);
+        perFrameUniformBuffers_["postOptions"].emplace_back(std::move(postOptionsBufferOld));
 
         // SSAO options uniform buffers
-        auto ssaoOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
-        ssaoOptionsBuffer->createUniformBuffer(ssaoOptionsUBO_);
-        perFrameUniformBuffers_["ssaoOptions"].emplace_back(std::move(ssaoOptionsBuffer));
+        auto ssaoOptionsBufferOld = std::make_unique<MappedBuffer>(ctx_);
+        ssaoOptionsBufferOld->createUniformBuffer(ssaoOptionsUBO_);
+        perFrameUniformBuffers_["ssaoOptions"].emplace_back(std::move(ssaoOptionsBufferOld));
 
         // Bone data uniform buffers
-        auto boneDataBuffer = std::make_unique<MappedBuffer>(ctx_);
-        boneDataBuffer->createUniformBuffer(boneDataUBO_);
-        perFrameUniformBuffers_["boneData"].emplace_back(std::move(boneDataBuffer));
-    }
+  auto boneDataBufferOld = std::make_unique<MappedBuffer>(ctx_);
+        boneDataBufferOld->createUniformBuffer(boneDataUBO_);
+        perFrameUniformBuffers_["boneData"].emplace_back(std::move(boneDataBufferOld));
+  }
 }
 
 void Renderer::update(Camera& camera, vector<unique_ptr<Model>>& models, uint32_t currentFrame,
@@ -666,47 +722,118 @@ getFormatSize(selectedHDRFormat_));
         // G-buffer usage flags (similar to floatColor but without storage bit since they're render
         // targets)
         VkImageUsageFlags gBufferUsage =
-            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
             VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-        imageBuffers_["gAlbedo"] = std::make_unique<Image2D>(ctx_);
+ // ✅ Initialize first (prevents nullptr crash)
+imageBuffers_["gAlbedo"] = std::make_unique<Image2D>(ctx_);
         imageBuffers_["gNormal"] = std::make_unique<Image2D>(ctx_);
-        imageBuffers_["gPosition"] = std::make_unique<Image2D>(ctx_);
+imageBuffers_["gPosition"] = std::make_unique<Image2D>(ctx_);
         imageBuffers_["gMaterial"] = std::make_unique<Image2D>(ctx_);
 
-        // Create gAlbedo buffer (Albedo RGB + Metallic A)
+        // 🆕 Create G-Buffer using ResourceRegistry (NEW SYSTEM)
+        {
+      auto gAlbedo = std::make_unique<Image2D>(ctx_);
+      gAlbedo->createImage(albedoFormat, swapchainWidth, swapchainHeight, 
+ VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
+                VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
+         gAlbedo->setSampler(samplerLinearClamp_.handle());
+   resourceHandles_.gAlbedo = resourceRegistry_.registerImage(
+    "gAlbedo", std::move(gAlbedo)
+ );
+        }
+   
+      {
+          auto gNormal = std::make_unique<Image2D>(ctx_);
+            gNormal->createImage(normalFormat, swapchainWidth, swapchainHeight,
+         VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
+           VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
+            gNormal->setSampler(samplerLinearClamp_.handle());
+   resourceHandles_.gNormal = resourceRegistry_.registerImage(
+        "gNormal", std::move(gNormal)
+     );
+ }
+        
+        {
+     auto gPosition = std::make_unique<Image2D>(ctx_);
+   gPosition->createImage(positionFormat, swapchainWidth, swapchainHeight,
+                VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
+          VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
+            gPosition->setSampler(samplerLinearClamp_.handle());
+          resourceHandles_.gPosition = resourceRegistry_.registerImage(
+       "gPosition", std::move(gPosition)
+            );
+  }
+        
+        {
+        auto gMaterial = std::make_unique<Image2D>(ctx_);
+         gMaterial->createImage(materialFormat, swapchainWidth, swapchainHeight,
+   VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
+           VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
+gMaterial->setSampler(samplerLinearClamp_.handle());
+      resourceHandles_.gMaterial = resourceRegistry_.registerImage(
+   "gMaterial", std::move(gMaterial)
+            );
+        }
+
+        // ❌ OLD SYSTEM (keep for backward compatibility - will be removed in Phase 4)
+ // Create gAlbedo buffer (Albedo RGB + Metallic A)
         imageBuffers_["gAlbedo"]->createImage(
-            albedoFormat, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
+         albedoFormat, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
             VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
         imageBuffers_["gAlbedo"]->setSampler(samplerLinearClamp_.handle());
 
         // Create gNormal buffer (World Normal RGB + Roughness A)
         imageBuffers_["gNormal"]->createImage(
-            normalFormat, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
-            VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
+        normalFormat, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
+   VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
         imageBuffers_["gNormal"]->setSampler(samplerLinearClamp_.handle());
 
-        // Create gPosition buffer (World Position RGB + Depth A)
+     // Create gPosition buffer (World Position RGB + Depth A)
         imageBuffers_["gPosition"]->createImage(
             positionFormat, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
-            VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
+    VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
         imageBuffers_["gPosition"]->setSampler(samplerLinearClamp_.handle());
 
-        // Create gMaterial buffer (AO R + Emissive Intensity G + Material ID B + Unused A)
-        imageBuffers_["gMaterial"]->createImage(
-            materialFormat, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
-            VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
+    // Create gMaterial buffer (AO R + Emissive Intensity G + Material ID B + Unused A)
+      imageBuffers_["gMaterial"]->createImage(
+     materialFormat, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
+ VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
         imageBuffers_["gMaterial"]->setSampler(samplerLinearClamp_.handle());
 
         printLog("G-buffer creation complete");
+
     }
 
     {
         TRACY_CPU_SCOPE("createDepthAndShadowBuffers");
 
-        imageBuffers_["depthStencil"] = std::make_unique<Image2D>(ctx_);
-        imageBuffers_["shadowMap"] = std::make_unique<Image2D>(ctx_);
-        // Create depth buffer (no MSAA)
+   // ✅ Initialize first (prevents nullptr crash)
+   imageBuffers_["depthStencil"] = std::make_unique<Image2D>(ctx_);
+  imageBuffers_["shadowMap"] = std::make_unique<Image2D>(ctx_);
+
+        // 🆕 Create Depth/Shadow using ResourceRegistry (NEW SYSTEM)
+        {
+         auto depthStencil = std::make_unique<Image2D>(ctx_);
+          depthStencil->createDepthBuffer(swapchainWidth, swapchainHeight);
+            depthStencil->setSampler(samplerLinearClamp_.handle());
+  resourceHandles_.depthStencil = resourceRegistry_.registerImage(
+          "depthStencil", std::move(depthStencil)
+            );
+        }
+        
+        {
+          uint32_t shadowMapSize = 2048 * 2;
+    auto shadowMap = std::make_unique<Image2D>(ctx_);
+     shadowMap->createShadow(shadowMapSize, shadowMapSize);
+     shadowMap->setSampler(samplerShadow_.handle());
+            resourceHandles_.shadowMap = resourceRegistry_.registerImage(
+      "shadowMap", std::move(shadowMap)
+            );
+        }
+
+        // ❌ OLD SYSTEM (keep for backward compatibility - will be removed in Phase 4)
+   // Create depth buffer (no MSAA)
         imageBuffers_["depthStencil"]->createDepthBuffer(swapchainWidth, swapchainHeight);
 
         // Create shadow map

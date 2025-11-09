@@ -348,6 +348,7 @@
     <Image Include="..\..\Users\tjdwn\Downloads\checker.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="docs\Phase2_CompletionGuide.md" />
     <None Include="docs\ResourceHandleSystem.md" />
     <None Include="docs\ResourceHandleSystemProgress.md" />
   </ItemGroup>
