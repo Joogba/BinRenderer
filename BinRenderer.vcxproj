@@ -235,6 +235,8 @@
     <ClInclude Include="Vulkan\RenderGraph.h" />
     <ClInclude Include="Vulkan\Resource.h" />
     <ClInclude Include="Vulkan\ResourceBinding.h" />
+    <ClInclude Include="Vulkan\ResourceHandle.h" />
+    <ClInclude Include="Vulkan\ResourceRegistry.h" />
     <ClInclude Include="Vulkan\Sampler.h" />
     <ClInclude Include="Vulkan\Shader.h" />
     <ClInclude Include="Vulkan\ShaderManager.h" />
@@ -320,6 +322,7 @@
     <ClCompile Include="Vulkan\RenderGraph.cpp" />
     <ClCompile Include="Vulkan\Resource.cpp" />
     <ClCompile Include="Vulkan\ResourceBinding.cpp" />
+    <ClCompile Include="Vulkan\ResourceRegistry.cpp" />
     <ClCompile Include="Vulkan\Sampler.cpp" />
     <ClCompile Include="Vulkan\Shader.cpp" />
     <ClCompile Include="Vulkan\ShaderManager.cpp" />
@@ -343,6 +346,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\Users\tjdwn\Downloads\checker.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="docs\ResourceHandleSystem.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

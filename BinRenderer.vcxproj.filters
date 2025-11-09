@@ -195,6 +195,9 @@
     <ClCompile Include="Vulkan\ViewFrustum.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Vulkan\ResourceRegistry.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h">
@@ -434,6 +437,12 @@
     <ClInclude Include="Vulkan\ViewFrustum.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\ResourceHandle.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\ResourceRegistry.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Basic.hlsl">
@@ -444,5 +453,8 @@
     <Image Include="..\..\Users\tjdwn\Downloads\checker.png">
       <Filter>리소스 파일</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="docs\ResourceHandleSystem.md" />
   </ItemGroup>
 </Project>
