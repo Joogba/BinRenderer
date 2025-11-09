@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Camera.h"
 #include "DescriptorSet.h"
@@ -13,6 +13,7 @@
 #include "RenderGraph.h"
 #include "ShaderManager.h"
 #include "TextureManager.h"
+#include "ResourceRegistry.h" // 🆕 Add ResourceRegistry
 #include <glm/glm.hpp>
 #include <vector>
 #include <functional>
@@ -176,6 +177,37 @@ class Renderer
 
     Context& ctx_;
     ShaderManager& shaderManager_;
+    
+    // 🆕 Resource Registry for handle-based resource management
+    ResourceRegistry resourceRegistry_;
+    
+    // 🆕 Named handles for quick access
+    struct ResourceHandles {
+    // Textures
+        ImageHandle depthStencil;
+      ImageHandle floatColor1;
+  ImageHandle floatColor2;
+        ImageHandle shadowMap;
+   ImageHandle prefilteredMap;
+ ImageHandle irradianceMap;
+        ImageHandle brdfLut;
+        
+  // G-Buffer
+        ImageHandle gAlbedo;
+        ImageHandle gNormal;
+        ImageHandle gPosition;
+        ImageHandle gMaterial;
+
+        // Per-frame buffers (indexed by frame)
+        vector<BufferHandle> sceneData;      // [kMaxFramesInFlight]
+        vector<BufferHandle> skyOptions;     // [kMaxFramesInFlight]
+        vector<BufferHandle> options;        // [kMaxFramesInFlight]
+        vector<BufferHandle> boneData;       // [kMaxFramesInFlight]
+vector<BufferHandle> postOptions;    // [kMaxFramesInFlight]
+        vector<BufferHandle> ssaoOptions;    // [kMaxFramesInFlight]
+    };
+    
+    ResourceHandles resourceHandles_;
 
     // Per frame uniform buffers
     SceneUniform sceneUBO_{};
@@ -183,12 +215,14 @@ class Renderer
     OptionsUniform optionsUBO_{};
     BoneDataUniform boneDataUBO_{};
     PostOptionsUBO postOptionsUBO_{};
-    SsaoOptionsUBO ssaoOptionsUBO_{};
+  SsaoOptionsUBO ssaoOptionsUBO_{};
 
+    // ❌ DEPRECATED - Will be replaced by ResourceRegistry
     // Resources - Consolidated uniform buffers using map structure
     unordered_map<string, vector<unique_ptr<MappedBuffer>>> perFrameUniformBuffers_;
     // Keys: "sceneData", "skyOptions", "options", "boneData", "postOptions", "ssaoOptions"
 
+    // ❌ DEPRECATED - Will be replaced by ResourceRegistry
     // Resources - Consolidated image buffers using map structure
     unordered_map<string, unique_ptr<Image2D>> imageBuffers_;
     // Keys: "depthStencil", "floatColor1", "floatColor2", "shadowMap", "prefilteredMap",

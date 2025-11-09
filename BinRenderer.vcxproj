@@ -349,6 +349,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="docs\ResourceHandleSystem.md" />
+    <None Include="docs\ResourceHandleSystemProgress.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

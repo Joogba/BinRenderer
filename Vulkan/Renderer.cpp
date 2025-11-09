@@ -1,4 +1,4 @@
-#include "Renderer.h"
+﻿#include "Renderer.h"
 #include "Logger.h"
 #include "TracyProfiler.h" // Add Tracy macros wrapper
 #include <stb_image.h>
@@ -9,7 +9,9 @@ Renderer::Renderer(Context& ctx, ShaderManager& shaderManager, const uint32_t& k
                    const string& kAssetsPathPrefix, const string& kShaderPathPrefix_,
                    vector<unique_ptr<Model>>& models, VkFormat outColorFormat, VkFormat depthFormat,
                    uint32_t swapChainWidth, uint32_t swapChainHeight)
-    : ctx_(ctx), shaderManager_(shaderManager), kMaxFramesInFlight_(kMaxFramesInFlight),
+    : ctx_(ctx), shaderManager_(shaderManager), 
+      resourceRegistry_(ctx), // 🆕 Initialize ResourceRegistry
+   kMaxFramesInFlight_(kMaxFramesInFlight),
       kAssetsPathPrefix_(kAssetsPathPrefix), kShaderPathPrefix_(kShaderPathPrefix_),
       samplerShadow_(ctx), samplerLinearRepeat_(ctx), samplerLinearClamp_(ctx),
       samplerAnisoRepeat_(ctx), samplerAnisoClamp_(ctx),
@@ -18,14 +20,14 @@ Renderer::Renderer(Context& ctx, ShaderManager& shaderManager, const uint32_t& k
     TRACY_CPU_SCOPE("Renderer::Constructor");
 
     {
-        TRACY_CPU_SCOPE("Create Pipelines");
-        createPipelines(outColorFormat, depthFormat);
+   TRACY_CPU_SCOPE("Create Pipelines");
+   createPipelines(outColorFormat, depthFormat);
     }
 
     {
         TRACY_CPU_SCOPE("Create Textures");
         createTextures(swapChainWidth, swapChainHeight);
-    }
+  }
 
     {
         TRACY_CPU_SCOPE("Create Uniform Buffers");
@@ -41,12 +43,12 @@ Renderer::Renderer(Context& ctx, ShaderManager& shaderManager, const uint32_t& k
         }
 
         materialBuffer_ = std::make_unique<StorageBuffer>(ctx_, allMaterials.data(),
-                                                     sizeof(MaterialUBO) * allMaterials.size());
-    }
+         sizeof(MaterialUBO) * allMaterials.size());
+  }
 
     {
         TRACY_CPU_SCOPE("Setup Descriptor Sets");
-        // ... existing descriptor set creation code ...
+     // ... existing descriptor set creation code ...
         unordered_map<string, vector<string>> descriptorSetNames; // TODO: move to script
         descriptorSetNames["shadowMap"] = {"sceneOptions"};
         descriptorSetNames["pbrDeferred"] = {"sceneOptions", "material"};
@@ -520,7 +522,7 @@ void Renderer::createTextures(uint32_t swapchainWidth, uint32_t swapchainHeight)
     TRACY_CPU_SCOPE("Renderer::createTextures");
 
     {
-        TRACY_CPU_SCOPE("createSamplers");
+   TRACY_CPU_SCOPE("createSamplers");
         samplerLinearRepeat_.createLinearRepeat();
         samplerLinearClamp_.createLinearClamp();
         samplerAnisoRepeat_.createAnisoRepeat();
@@ -528,15 +530,13 @@ void Renderer::createTextures(uint32_t swapchainWidth, uint32_t swapchainHeight)
         samplerShadow_.createShadow();
     }
 
-    // Initialize image buffers (simplified - no MSAA)
-    const vector<string> imageNames = {"depthStencil", "floatColor1",    "floatColor2",
-                                       "shadowMap",    "prefilteredMap", "irradianceMap",
-                                       "brdfLut",      "gAlbedo",        "gNormal",
-                                       "gPosition",    "gMaterial"};
-
-    for (const auto& name : imageNames) {
-        imageBuffers_[name] = std::make_unique<Image2D>(ctx_);
-    }
+    // 🆕 Initialize per-frame buffer vectors
+    resourceHandles_.sceneData.resize(kMaxFramesInFlight_);
+    resourceHandles_.skyOptions.resize(kMaxFramesInFlight_);
+    resourceHandles_.options.resize(kMaxFramesInFlight_);
+    resourceHandles_.boneData.resize(kMaxFramesInFlight_);
+    resourceHandles_.postOptions.resize(kMaxFramesInFlight_);
+    resourceHandles_.ssaoOptions.resize(kMaxFramesInFlight_);
 
     {
         TRACY_CPU_SCOPE("loadIBLTextures");
@@ -548,43 +548,97 @@ void Renderer::createTextures(uint32_t swapchainWidth, uint32_t swapchainHeight)
         printLog("  Irradiance: {}", path + "diffuseLambertian.ktx2");
         printLog("  BRDF LUT: {}", path + "outputLUT.png");
 
-        // Load prefiltered environment map (cubemap for specular reflections)
+ // 🆕 Load prefiltered environment map using ResourceRegistry
+        {
+ auto prefilteredMap = std::make_unique<Image2D>(ctx_);
+            prefilteredMap->createTextureFromKtx2(path + "specularGGX.ktx2", true);
+   prefilteredMap->setSampler(samplerLinearRepeat_.handle());
+          resourceHandles_.prefilteredMap = resourceRegistry_.registerImage(
+   "prefilteredMap", std::move(prefilteredMap)
+   );
+      }
+
+        // 🆕 Load irradiance map
+        {
+     auto irradianceMap = std::make_unique<Image2D>(ctx_);
+   irradianceMap->createTextureFromKtx2(path + "diffuseLambertian.ktx2", true);
+          irradianceMap->setSampler(samplerLinearRepeat_.handle());
+            resourceHandles_.irradianceMap = resourceRegistry_.registerImage(
+     "irradianceMap", std::move(irradianceMap)
+  );
+        }
+
+        // 🆕 Load BRDF lookup table
+        {
+  auto brdfLut = std::make_unique<Image2D>(ctx_);
+  brdfLut->createTextureFromImage(path + "outputLUT.png", false, false);
+            brdfLut->setSampler(samplerLinearClamp_.handle());
+            resourceHandles_.brdfLut = resourceRegistry_.registerImage(
+    "brdfLut", std::move(brdfLut)
+    );
+     }
+        
+      // ❌ DEPRECATED: Keep old map for backward compatibility (temporary)
+        imageBuffers_["prefilteredMap"] = std::make_unique<Image2D>(ctx_);
+        imageBuffers_["irradianceMap"] = std::make_unique<Image2D>(ctx_);
+        imageBuffers_["brdfLut"] = std::make_unique<Image2D>(ctx_);
         imageBuffers_["prefilteredMap"]->createTextureFromKtx2(path + "specularGGX.ktx2", true);
         imageBuffers_["prefilteredMap"]->setSampler(samplerLinearRepeat_.handle());
-
-        // Load irradiance map (cubemap for diffuse lighting)
-        imageBuffers_["irradianceMap"]->createTextureFromKtx2(path + "diffuseLambertian.ktx2",
-                                                              true);
+        imageBuffers_["irradianceMap"]->createTextureFromKtx2(path + "diffuseLambertian.ktx2", true);
         imageBuffers_["irradianceMap"]->setSampler(samplerLinearRepeat_.handle());
-
-        // Load BRDF lookup table (2D texture)
         imageBuffers_["brdfLut"]->createTextureFromImage(path + "outputLUT.png", false, false);
         imageBuffers_["brdfLut"]->setSampler(samplerLinearClamp_.handle());
     }
 
     {
-        TRACY_CPU_SCOPE("createHDRRenderTargets");
-        // Create HDR render targets with selected format
-        printLog("Creating HDR render targets:");
+     TRACY_CPU_SCOPE("createHDRRenderTargets");
+      // Create HDR render targets with selected format
+      printLog("Creating HDR render targets:");
         printLog("  Format: {} ({} bytes/pixel)", vkFormatToString(selectedHDRFormat_),
-                 getFormatSize(selectedHDRFormat_));
+getFormatSize(selectedHDRFormat_));
 
         // Log memory usage analysis
         logHDRMemoryUsage(swapchainWidth, swapchainHeight);
 
         // Storage color buffers for compute shaders and post-processing
-        VkImageUsageFlags storageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-                                         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT |
-                                         VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
-                                         VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    VkImageUsageFlags storageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+    VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT |
+    VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+            VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
+        // 🆕 Create floatColor1 using ResourceRegistry
+     {
+        auto floatColor1 = std::make_unique<Image2D>(ctx_);
+         floatColor1->createImage(
+       selectedHDRFormat_, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT,
+     storageUsage, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
+   floatColor1->setSampler(samplerLinearClamp_.handle());
+         resourceHandles_.floatColor1 = resourceRegistry_.registerImage(
+    "floatColor1", std::move(floatColor1)
+      );
+    }
+
+        // 🆕 Create floatColor2
+        {
+         auto floatColor2 = std::make_unique<Image2D>(ctx_);
+            floatColor2->createImage(
+       selectedHDRFormat_, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT,
+     storageUsage, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
+            floatColor2->setSampler(samplerLinearClamp_.handle());
+    resourceHandles_.floatColor2 = resourceRegistry_.registerImage(
+            "floatColor2", std::move(floatColor2)
+            );
+        }
+  
+        // ❌ DEPRECATED: Keep old map for backward compatibility
+        imageBuffers_["floatColor1"] = std::make_unique<Image2D>(ctx_);
+        imageBuffers_["floatColor2"] = std::make_unique<Image2D>(ctx_);
         imageBuffers_["floatColor1"]->createImage(
-            selectedHDRFormat_, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT,
-            storageUsage, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
-
+       selectedHDRFormat_, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT,
+ storageUsage, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
         imageBuffers_["floatColor2"]->createImage(
             selectedHDRFormat_, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT,
-            storageUsage, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
+    storageUsage, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
     }
 
     {
@@ -615,6 +669,11 @@ void Renderer::createTextures(uint32_t swapchainWidth, uint32_t swapchainHeight)
             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
             VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
+        imageBuffers_["gAlbedo"] = std::make_unique<Image2D>(ctx_);
+        imageBuffers_["gNormal"] = std::make_unique<Image2D>(ctx_);
+        imageBuffers_["gPosition"] = std::make_unique<Image2D>(ctx_);
+        imageBuffers_["gMaterial"] = std::make_unique<Image2D>(ctx_);
+
         // Create gAlbedo buffer (Albedo RGB + Metallic A)
         imageBuffers_["gAlbedo"]->createImage(
             albedoFormat, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
@@ -644,6 +703,9 @@ void Renderer::createTextures(uint32_t swapchainWidth, uint32_t swapchainHeight)
 
     {
         TRACY_CPU_SCOPE("createDepthAndShadowBuffers");
+
+        imageBuffers_["depthStencil"] = std::make_unique<Image2D>(ctx_);
+        imageBuffers_["shadowMap"] = std::make_unique<Image2D>(ctx_);
         // Create depth buffer (no MSAA)
         imageBuffers_["depthStencil"]->createDepthBuffer(swapchainWidth, swapchainHeight);
 
