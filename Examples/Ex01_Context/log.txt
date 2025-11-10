@@ -41,10 +41,7 @@ Available instance layers:
   VK_LAYER_NV_optimus
   VK_LAYER_NV_present
   VK_LAYER_OBS_HOOK
-  VK_LAYER_OW_OBS_HOOK
-  VK_LAYER_OW_OVERLAY
   VK_LAYER_RENDERDOC_Capture
-  VK_LAYER_ROCKSTAR_GAMES_social_club
   VK_LAYER_VALVE_steam_fossilize
   VK_LAYER_VALVE_steam_overlay
 
@@ -170,38 +167,38 @@ Pipeline 'post': 1 sets
 
     Binding 1 is variable-length array (count=512)
 ShaderManager: Created 8 unique layout(s)
-  Layout 0 (0x2552d1a01e0): 3 binding(s), used by:
+  Layout 0 (0x21d59787970): 3 binding(s), used by:
     - Pipeline 'post', Set 0
     Binding 0: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=FRAGMENT
     Binding 2: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
-  Layout 1 (0x2552d1a0360): 3 binding(s), used by:
+  Layout 1 (0x21d597886f0): 3 binding(s), used by:
     - Pipeline 'shadowMap', Set 0
     - Pipeline 'pbrForward', Set 0
     - Pipeline 'pbrDeferred', Set 0
     Binding 0: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
     Binding 2: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
-  Layout 2 (0x2552d19fa60): 2 binding(s), used by:
+  Layout 2 (0x21d59788870): 2 binding(s), used by:
     - Pipeline 'pbrForward', Set 1
     - Pipeline 'pbrDeferred', Set 1
     Binding 0: type=STORAGE_BUFFER, count=1, stages=FRAGMENT
     Binding 1: type=COMBINED_IMAGE_SAMPLER, count=512, stages=FRAGMENT
-  Layout 3 (0x2552d1a04e0): 2 binding(s), used by:
+  Layout 3 (0x21d597871f0): 2 binding(s), used by:
     - Pipeline 'sky', Set 0
     Binding 0: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
-  Layout 4 (0x2552d1a0660): 1 binding(s), used by:
+  Layout 4 (0x21d597889f0): 1 binding(s), used by:
     - Pipeline 'pbrForward', Set 3
     - Pipeline 'gui', Set 0
     Binding 0: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
-  Layout 5 (0x2552d1a0960): 3 binding(s), used by:
+  Layout 5 (0x21d597874f0): 3 binding(s), used by:
     - Pipeline 'pbrForward', Set 2
     - Pipeline 'sky', Set 1
     Binding 0: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
     Binding 1: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
     Binding 2: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
-  Layout 6 (0x2552d1a0c60): 14 binding(s), used by:
+  Layout 6 (0x21d59788b70): 14 binding(s), used by:
     - Pipeline 'deferredLighting', Set 0
     Binding 0: type=UNIFORM_BUFFER, count=1, stages=COMPUTE
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=COMPUTE
@@ -217,7 +214,7 @@ ShaderManager: Created 8 unique layout(s)
     Binding 11: type=COMBINED_IMAGE_SAMPLER, count=1, stages=COMPUTE
     Binding 12: type=COMBINED_IMAGE_SAMPLER, count=1, stages=COMPUTE
     Binding 13: type=COMBINED_IMAGE_SAMPLER, count=1, stages=COMPUTE
-  Layout 7 (0x2552d6d54f0): 5 binding(s), used by:
+  Layout 7 (0x21d59787670): 5 binding(s), used by:
     - Pipeline 'ssao', Set 0
     Binding 0: type=UNIFORM_BUFFER, count=1, stages=COMPUTE
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=COMPUTE
@@ -239,7 +236,7 @@ Loaded embedded texture 4 (2048x2048) with linear format
 Successfully loaded model: ../../assets/models/DamagedHelmet.glb
   Meshes: 1
   Materials: 2
-  Loading time: 136 ms
+  Loading time: 150 ms
 No animations found in model 'Helmet'
 ResourceRegistry initialized
 ? Selected HDR format: B10G11R11_UFLOAT_PACK32 (4 bytes/pixel, FLOAT, 50% memory vs RGBA16F)
@@ -275,13 +272,33 @@ HDR Memory Analysis:
   Memory savings: 50.0%
   Quality: ? GOOD - B10G11R11 excellent for HDR with memory savings
 DEBUG: Registered image resource 'floatColor1' with handle 4
+?? floatColor1 registered: handle.value = 4
 DEBUG: Registered image resource 'floatColor2' with handle 5
+?? floatColor2 registered: handle.value = 5
 Creating G-buffer textures for deferred rendering:
   gAlbedo: R8G8B8A8_UNORM (4 bytes/pixel)
   gNormal: UNKNOWN_FORMAT(97) (8 bytes/pixel)
   gPosition: UNKNOWN_FORMAT(109) (16 bytes/pixel)
   gMaterial: R8G8B8A8_UNORM (4 bytes/pixel)
+DEBUG: Registered image resource 'gAlbedo' with handle 6
+DEBUG: Registered image resource 'gNormal' with handle 7
+DEBUG: Registered image resource 'gPosition' with handle 8
+DEBUG: Registered image resource 'gMaterial' with handle 9
 G-buffer creation complete
+DEBUG: Registered image resource 'depthStencil' with handle 10
+DEBUG: Registered image resource 'shadowMap' with handle 11
+DEBUG: Registered buffer 'sceneData_0' with handle 1
+DEBUG: Registered buffer 'options_0' with handle 2
+DEBUG: Registered buffer 'skyOptions_0' with handle 3
+DEBUG: Registered buffer 'postOptions_0' with handle 4
+DEBUG: Registered buffer 'ssaoOptions_0' with handle 5
+DEBUG: Registered buffer 'boneData_0' with handle 6
+DEBUG: Registered buffer 'sceneData_1' with handle 7
+DEBUG: Registered buffer 'options_1' with handle 8
+DEBUG: Registered buffer 'skyOptions_1' with handle 9
+DEBUG: Registered buffer 'postOptions_1' with handle 10
+DEBUG: Registered buffer 'ssaoOptions_1' with handle 11
+DEBUG: Registered buffer 'boneData_1' with handle 12
 Pipeline 'shadowMap': No write-only image binding found for dimension determination
 Allocating descriptor set with variable count: 512
 Pipeline 'pbrDeferred': No write-only image binding found for dimension determination

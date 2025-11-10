@@ -54,4 +54,7 @@
   <ItemGroup>
     <None Include="RenderGraph.json" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="log.txt" />
+  </ItemGroup>
 </Project>
