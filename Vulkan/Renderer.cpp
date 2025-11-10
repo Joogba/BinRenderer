@@ -146,11 +146,9 @@ namespace BinRenderer::Vulkan {
 	{
 		TRACY_CPU_SCOPE("Renderer::createUniformBuffers");
 
-		const VkDevice device = ctx_.device();
-
-		// Create uniform buffers for each type and frame
+		// 🆕 NEW SYSTEM: Register all uniform buffers with ResourceRegistry
 		for (uint32_t i = 0; i < kMaxFramesInFlight_; ++i) {
-			// ✅ NEW SYSTEM: Register with ResourceRegistry
+			// Scene data
 			{
 				auto sceneBuffer = std::make_unique<MappedBuffer>(ctx_);
 				sceneBuffer->createUniformBuffer(sceneUBO_);
@@ -160,6 +158,7 @@ namespace BinRenderer::Vulkan {
 				);
 			}
 
+			// Options
 			{
 				auto optionsBuffer = std::make_unique<MappedBuffer>(ctx_);
 				optionsBuffer->createUniformBuffer(optionsUBO_);
@@ -169,6 +168,7 @@ namespace BinRenderer::Vulkan {
 				);
 			}
 
+			// Sky options
 			{
 				auto skyOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
 				skyOptionsBuffer->createUniformBuffer(skyOptionsUBO_);
@@ -178,6 +178,7 @@ namespace BinRenderer::Vulkan {
 				);
 			}
 
+			// Post options
 			{
 				auto postOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
 				postOptionsBuffer->createUniformBuffer(postOptionsUBO_);
@@ -187,6 +188,7 @@ namespace BinRenderer::Vulkan {
 				);
 			}
 
+			// SSAO options
 			{
 				auto ssaoOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
 				ssaoOptionsBuffer->createUniformBuffer(ssaoOptionsUBO_);
@@ -196,6 +198,7 @@ namespace BinRenderer::Vulkan {
 				);
 			}
 
+			// Bone data
 			{
 				auto boneDataBuffer = std::make_unique<MappedBuffer>(ctx_);
 				boneDataBuffer->createUniformBuffer(boneDataUBO_);
@@ -205,6 +208,9 @@ namespace BinRenderer::Vulkan {
 				);
 			}
 		}
+		
+		printLog("✅ Created {} uniform buffer types × {} frames = {} total buffers",
+			6, kMaxFramesInFlight_, 6 * kMaxFramesInFlight_);
 	}
 
 	void Renderer::update(Camera& camera, vector<unique_ptr<Model>>& models, uint32_t currentFrame,
@@ -236,33 +242,27 @@ namespace BinRenderer::Vulkan {
 		{
 			TRACY_CPU_SCOPE("Update Uniform Buffers");
 
-			// ✅ NEW SYSTEM: Use ResourceRegistry with Handles
-			// Update scene data
+			// 🆕 NEW SYSTEM: Use ResourceRegistry with Handles
 			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.sceneData[currentFrame])) {
 				buffer->updateFromCpuData();
 			}
 
-			// Update options
 			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.options[currentFrame])) {
 				buffer->updateFromCpuData();
 			}
 
-			// Update sky options
 			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.skyOptions[currentFrame])) {
 				buffer->updateFromCpuData();
 			}
 
-			// Update post options
 			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.postOptions[currentFrame])) {
 				buffer->updateFromCpuData();
 			}
 
-			// Update SSAO options
 			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.ssaoOptions[currentFrame])) {
 				buffer->updateFromCpuData();
 			}
 
-			// Update bone data
 			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.boneData[currentFrame])) {
 				buffer->updateFromCpuData();
 			}
@@ -308,7 +308,7 @@ namespace BinRenderer::Vulkan {
 			lastHasAnimation = hasAnyAnimation;
 		}
 
-		// ✅ NEW SYSTEM: Update via Handle
+		// 🆕 NEW SYSTEM: Update via Handle
 		if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.boneData[currentFrame])) {
 			buffer->updateFromCpuData();
 		}
@@ -367,6 +367,10 @@ namespace BinRenderer::Vulkan {
 								{0.0f, 0.0f, 0.5f, 0.0f}));
 						}
 					}
+					else {
+						// ⚠️ Resource not found - should not happen!
+						printLog("ERROR: Color target '{}' not found in ResourceRegistry!", colorTarget);
+					}
 				}
 			}
 
@@ -396,6 +400,10 @@ namespace BinRenderer::Vulkan {
 								VK_ATTACHMENT_LOAD_OP_CLEAR, 1.0f);
 						}
 					}
+					else {
+						// ⚠️ Resource not found - should not happen!
+						printLog("ERROR: Depth attachment '{}' not found in ResourceRegistry!", renderNode.depthAttachment);
+					}
 
 					renderingInfo.pDepthAttachment = &depthAttachment;
 				}
@@ -411,13 +419,17 @@ namespace BinRenderer::Vulkan {
 			uint32_t width = uint32_t(viewport.width);
 			uint32_t height = uint32_t(viewport.height);
 			if (!mainTarget.empty()) {
-				// ✅ NEW SYSTEM: Use Handle for width/height
+				// 🆕 NEW SYSTEM: Use Handle for width/height
 				ImageHandle handle = getImageHandleByName(mainTarget);
 				Image2D* image = resourceRegistry_.getResourceAs<Image2D>(handle);
 
 				if (image) {
 					width = image->width();
 					height = image->height();
+				}
+				else {
+					// ⚠️ Resource not found - use default viewport dimensions
+					printLog("WARNING: Main target '{}' not found, using default viewport dimensions", mainTarget);
 				}
 			}
 
@@ -618,7 +630,7 @@ namespace BinRenderer::Vulkan {
 			printLog("  Irradiance: {}", path + "diffuseLambertian.ktx2");
 			printLog("  BRDF LUT: {}", path + "outputLUT.png");
 
-			// ✅ Load prefiltered environment map using ResourceRegistry
+			// 🆕 Load prefiltered environment map using ResourceRegistry
 			{
 				auto prefilteredMap = std::make_unique<Image2D>(ctx_);
 				prefilteredMap->createTextureFromKtx2(path + "specularGGX.ktx2", true);
@@ -628,7 +640,7 @@ namespace BinRenderer::Vulkan {
 				);
 			}
 
-			// ✅ Load irradiance map
+			// 🆕 Load irradiance map
 			{
 				auto irradianceMap = std::make_unique<Image2D>(ctx_);
 				irradianceMap->createTextureFromKtx2(path + "diffuseLambertian.ktx2", true);
@@ -638,7 +650,7 @@ namespace BinRenderer::Vulkan {
 				);
 			}
 
-			// ✅ Load BRDF lookup table
+			// 🆕 Load BRDF lookup table
 			{
 				auto brdfLut = std::make_unique<Image2D>(ctx_);
 				brdfLut->createTextureFromImage(path + "outputLUT.png", false, false);
@@ -647,6 +659,8 @@ namespace BinRenderer::Vulkan {
 					"brdfLut", std::move(brdfLut)
 				);
 			}
+			
+			printLog("✅ IBL textures loaded successfully");
 		}
 
 		{
@@ -665,7 +679,7 @@ namespace BinRenderer::Vulkan {
 				VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
 				VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-			// ✅ Create floatColor1 using ResourceRegistry
+			// 🆕 Create floatColor1 using ResourceRegistry
 			{
 				auto floatColor1 = std::make_unique<Image2D>(ctx_);
 				floatColor1->createImage(
@@ -677,7 +691,7 @@ namespace BinRenderer::Vulkan {
 				);
 			}
 
-			// ✅ Create floatColor2
+			// 🆕 Create floatColor2
 			{
 				auto floatColor2 = std::make_unique<Image2D>(ctx_);
 				floatColor2->createImage(
@@ -688,6 +702,8 @@ namespace BinRenderer::Vulkan {
 					"floatColor2", std::move(floatColor2)
 				);
 			}
+			
+			printLog("✅ HDR render targets created successfully");
 		}
 
 		{
@@ -712,13 +728,12 @@ namespace BinRenderer::Vulkan {
 			printLog("  gMaterial: {} ({} bytes/pixel)", vkFormatToString(materialFormat),
 				getFormatSize(materialFormat));
 
-			// G-buffer usage flags (similar to floatColor but without storage bit since they're render
-			// targets)
+			// G-buffer usage flags
 			VkImageUsageFlags gBufferUsage =
 				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
 				VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-			// ✅ Create G-Buffer using ResourceRegistry
+			// 🆕 Create G-Buffer using ResourceRegistry
 			{
 				auto gAlbedo = std::make_unique<Image2D>(ctx_);
 				gAlbedo->createImage(albedoFormat, swapchainWidth, swapchainHeight,
@@ -763,13 +778,13 @@ namespace BinRenderer::Vulkan {
 				);
 			}
 
-			printLog("G-buffer creation complete");
+			printLog("✅ G-buffer creation complete");
 		}
 
 		{
 			TRACY_CPU_SCOPE("createDepthAndShadowBuffers");
 
-			// ✅ Create Depth/Shadow using ResourceRegistry
+			// 🆕 Create Depth/Shadow using ResourceRegistry
 			{
 				auto depthStencil = std::make_unique<Image2D>(ctx_);
 				depthStencil->createDepthBuffer(swapchainWidth, swapchainHeight);
@@ -788,11 +803,278 @@ namespace BinRenderer::Vulkan {
 					"shadowMap", std::move(shadowMap)
 				);
 			}
+			
+			printLog("✅ Depth and shadow buffers created successfully");
+		}
+		
+		printLog("✅ All textures and render targets created successfully");
+	}
+
+	// Format selection function with proper priority: float formats first, R8G8B8A8 last
+	VkFormat Renderer::selectOptimalHDRFormat(bool needsAlpha, bool fullPrecision)
+	{
+		TRACY_CPU_SCOPE("Renderer::selectOptimalHDRFormat");
+
+		vector<VkFormat> candidateFormats;
+
+		if (!needsAlpha && !fullPrecision) {
+			// Memory-efficient HDR formats (no alpha, moderate precision)
+			candidateFormats = {
+				VK_FORMAT_B10G11R11_UFLOAT_PACK32, // 4 bytes - 50% savings, packed float (correct
+				// format)
+VK_FORMAT_R16G16B16_SFLOAT,        // 6 bytes - 25% savings, half precision
+VK_FORMAT_R16G16B16A16_SFLOAT,     // 8 bytes - standard HDR with alpha
+VK_FORMAT_R32G32B32A32_SFLOAT,        // 12 bytes - full precision RGB
+// R8G8B8A8_UNORM is LAST - not a float format, poor for HDR
+VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
+			};
+		}
+		else if (!fullPrecision) {
+			// Standard HDR with alpha channel
+			candidateFormats = {
+				VK_FORMAT_R16G16B16A16_SFLOAT, // 8 bytes - standard HDR
+				VK_FORMAT_R32G32B32A32_SFLOAT, // 16 bytes - full precision
+				// R8G8B8A8_UNORM is LAST - not suitable for HDR
+				VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
+			};
+		}
+		else {
+			// Full precision required
+			candidateFormats = {
+				VK_FORMAT_R32G32B32A32_SFLOAT, // 16 bytes - full precision
+				VK_FORMAT_R32G32B32_SFLOAT,    // 12 bytes - full precision RGB
+				VK_FORMAT_R16G16B16A16_SFLOAT, // 8 bytes - half precision fallback
+				// R8G8B8A8_UNORM is LAST - inadequate for full precision HDR
+				VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, emergency fallback
+			};
+		}
+
+		// Test each format for compatibility (float formats first, R8G8B8A8 last)
+		for (size_t i = 0; i < candidateFormats.size(); ++i) {
+			VkFormat format = candidateFormats[i];
+
+			if (isFormatSuitableForHDR(format)) {
+				string formatType = (format == VK_FORMAT_R8G8B8A8_UNORM) ? "NON-FLOAT" : "FLOAT";
+				float memoryRatio = static_cast<float>(getFormatSize(format)) / 8.0f; // vs RGBA16F
+
+				printLog("✓ Selected HDR format: {} ({} bytes/pixel, {}, {:.0f}% memory vs RGBA16F)",
+					vkFormatToString(format), getFormatSize(format), formatType,
+					memoryRatio * 100.0f);
+
+				// Warn if we fell back to non-float format
+				if (format == VK_FORMAT_R8G8B8A8_UNORM) {
+					printLog("⚠️ WARNING: Using R8G8B8A8_UNORM for HDR - limited dynamic range!");
+					printLog("  Consider using float formats for better HDR quality");
+				}
+
+				return format;
+			}
+			else {
+				string formatType = (format == VK_FORMAT_R8G8B8A8_UNORM) ? "NON-FLOAT" : "FLOAT";
+				printLog("✗ Format {} ({}) not supported, trying next...", vkFormatToString(format),
+					formatType);
+			}
+		}
+
+		// Emergency fallback - this should rarely happen
+		printLog(
+			"⚠ All candidate formats failed, using emergency fallback: VK_FORMAT_R16G16B16A16_SFLOAT");
+		return VK_FORMAT_R16G16B16A16_SFLOAT;
+	}
+
+	// Enhanced format validation function
+	bool Renderer::isFormatSuitableForHDR(VkFormat format)
+	{
+		TRACY_CPU_SCOPE("Renderer::isFormatSuitableForHDR");
+
+		// Check if format supports required features for HDR rendering
+		VkFormatProperties props;
+		vkGetPhysicalDeviceFormatProperties(ctx_.physicalDevice(), format, &props);
+
+		// Required features for HDR color attachments
+		VkFormatFeatureFlags requiredFeatures =
+			VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | // Can render to it
+			VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;     // Can sample from it
+
+		// Optional but preferred for HDR
+		VkFormatFeatureFlags preferredFeatures =
+			VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT; // Can blend (for transparency)
+
+		bool hasRequired = (props.optimalTilingFeatures & requiredFeatures) == requiredFeatures;
+		bool hasPreferred = (props.optimalTilingFeatures & preferredFeatures) == preferredFeatures;
+
+		if (hasRequired && !hasPreferred && format != VK_FORMAT_R8G8B8A8_UNORM) {
+			printLog("  Note: {} missing blend support but acceptable for HDR",
+				vkFormatToString(format));
+		}
+
+		return hasRequired;
+	}
+
+	void Renderer::logHDRMemoryUsage(uint32_t width, uint32_t height)
+	{
+		TRACY_CPU_SCOPE("Renderer::logHDRMemoryUsage");
+
+		uint64_t totalPixels = static_cast<uint64_t>(width) * height;
+
+		uint32_t hdrBytes = getFormatSize(selectedHDRFormat_);
+		uint32_t standardBytes = getFormatSize(VK_FORMAT_R16G16B16A16_SFLOAT);
+
+		// Calculate memory usage for current format (no MSAA, so 1x samples)
+		uint64_t hdrMemoryMB = (totalPixels * hdrBytes + totalPixels * hdrBytes * 2) / (1024 * 1024);
+		uint64_t standardMemoryMB =
+			(totalPixels * standardBytes + totalPixels * standardBytes * 2) / (1024 * 1024);
+
+		float savings =
+			(1.0f - static_cast<float>(hdrMemoryMB) / static_cast<float>(standardMemoryMB)) * 100.0f;
+
+		printLog("HDR Memory Analysis:");
+		printLog("  Resolution: {}x{} (no MSAA)", width, height);
+		printLog("  Current format memory: {} MB", hdrMemoryMB);
+		printLog("  Standard RGBA16F memory: {} MB", standardMemoryMB);
+		if (savings > 0) {
+			printLog("  Memory savings: {:.1f}%", savings);
+		}
+		else {
+			printLog("  Memory overhead: {:.1f}%", -savings);
+		}
+
+		// Quality assessment
+		if (selectedHDRFormat_ == VK_FORMAT_R8G8B8A8_UNORM) {
+			printLog("  Quality: ⚠️ LIMITED - R8G8B8A8 has restricted HDR range");
+		}
+		else if (selectedHDRFormat_ == VK_FORMAT_B10G11R11_UFLOAT_PACK32) {
+			printLog("  Quality: ✓ GOOD - B10G11R11 excellent for HDR with memory savings");
+		}
+		else if (selectedHDRFormat_ == VK_FORMAT_R16G16B16A16_SFLOAT) {
+			printLog("  Quality: ✓ EXCELLENT - Standard HDR format");
+		}
+		else {
+			printLog("  Quality: ✓ HIGH - Float format suitable for HDR");
+		}
+	}
+
+	void Renderer::updateViewFrustum(const glm::mat4& viewProjection)
+	{
+		TRACY_CPU_SCOPE("Renderer::updateViewFrustum");
+
+		if (frustumCullingEnabled_) {
+			viewFrustum_.extractFromViewProjection(viewProjection);
+		}
+	}
+
+	void Renderer::performFrustumCulling(vector<unique_ptr<Model>>& models)
+	{
+		TRACY_CPU_SCOPE("Renderer::performFrustumCulling");
+
+		cullingStats_.totalMeshes = 0;
+		cullingStats_.culledMeshes = 0;
+		cullingStats_.renderedMeshes = 0;
+
+		if (!frustumCullingEnabled_) {
+			TRACY_CPU_SCOPE("Frustum Culling Disabled");
+			for (auto& model : models) {
+				for (auto& mesh : model->meshes()) {
+					mesh.isCulled = false;
+					cullingStats_.totalMeshes++;
+					cullingStats_.renderedMeshes++;
+				}
+			}
+			return;
 		}
 
 		{
-			TRACY_CPU_SCOPE("setSamplers");
-			// Samplers are set during resource creation in ResourceRegistry
-			// No additional sampler setup needed here
+			TRACY_CPU_SCOPE("frustumCullingLoop");
+			for (auto& model : models) {
+				for (auto& mesh : model->meshes()) {
+					cullingStats_.totalMeshes++;
+
+					bool isVisible = viewFrustum_.intersects(mesh.worldBounds);
+
+					mesh.isCulled = !isVisible;
+
+					if (isVisible) {
+						cullingStats_.renderedMeshes++;
+					}
+					else {
+						cullingStats_.culledMeshes++;
+					}
+				}
+			}
+		}
+
+		// Track culling statistics in Tracy
+		TRACY_PLOT("FrustumCulling_TotalMeshes", static_cast<int64_t>(cullingStats_.totalMeshes));
+		TRACY_PLOT("FrustumCulling_RenderedMeshes", static_cast<int64_t>(cullingStats_.renderedMeshes));
+		TRACY_PLOT("FrustumCulling_CulledMeshes", static_cast<int64_t>(cullingStats_.culledMeshes));
+
+		if (cullingStats_.totalMeshes > 0) {
+			float cullingEfficiency =
+				(float(cullingStats_.culledMeshes) / float(cullingStats_.totalMeshes)) * 100.0f;
+			TRACY_PLOT("FrustumCulling_EfficiencyPercent", static_cast<int64_t>(cullingEfficiency));
 		}
 	}
+
+	void Renderer::updateWorldBounds(vector<unique_ptr<Model>>& models)
+	{
+		TRACY_CPU_SCOPE("Renderer::updateWorldBounds");
+
+		for (auto& model : models) {
+			for (auto& mesh : model->meshes()) {
+				mesh.updateWorldBounds(model->modelMatrix());
+			}
+		}
+	}
+
+	void Renderer::setFrustumCullingEnabled(bool enabled)
+	{
+		frustumCullingEnabled_ = enabled;
+	}
+
+	bool Renderer::isFrustumCullingEnabled() const
+	{
+		return frustumCullingEnabled_;
+	}
+
+	const CullingStats& Renderer::getCullingStats() const
+	{
+		return cullingStats_;
+	}
+
+	VkRenderingAttachmentInfo Renderer::createColorAttachment(VkImageView imageView,
+		VkAttachmentLoadOp loadOp,
+		VkClearColorValue clearColor,
+		VkImageView resolveImageView,
+		VkResolveModeFlagBits resolveMode) const
+	{
+		VkRenderingAttachmentInfo attachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
+		attachment.imageView = imageView;
+		attachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		attachment.loadOp = loadOp;
+		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		attachment.clearValue.color = clearColor;
+		attachment.resolveMode = resolveMode;
+		attachment.resolveImageView = resolveImageView;
+		attachment.resolveImageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		return attachment;
+	}
+
+	VkRenderingAttachmentInfo Renderer::createDepthAttachment(VkImageView imageView,
+		VkAttachmentLoadOp loadOp,
+		float clearDepth,
+		VkImageView resolveImageView,
+		VkResolveModeFlagBits resolveMode) const
+	{
+		VkRenderingAttachmentInfo attachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
+		attachment.imageView = imageView;
+		attachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		attachment.loadOp = loadOp;
+		attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		attachment.clearValue.depthStencil = { clearDepth, 0 };
+		attachment.resolveMode = resolveMode;
+		attachment.resolveImageView = resolveImageView;
+		attachment.resolveImageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		return attachment;
+	}
+
+} // namespace BinRenderer::Vulkan} // namespace BinRenderer::Vulkan

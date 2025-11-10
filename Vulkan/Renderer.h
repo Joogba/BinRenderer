@@ -217,7 +217,10 @@ namespace BinRenderer::Vulkan {
 		PostOptionsUBO postOptionsUBO_{};
 		SsaoOptionsUBO ssaoOptionsUBO_{};
 
-		// ✅ NEW SYSTEM: Resources managed by ResourceRegistry
+		// ❌ REMOVED: OLD SYSTEM - Fully replaced by ResourceRegistry
+		// unordered_map<string, vector<unique_ptr<MappedBuffer>>> perFrameUniformBuffers_;
+		// unordered_map<string, unique_ptr<Image2D>> imageBuffers_;
+
 		unique_ptr<TextureManager> materialTextures_; // Material textures for bindless rendering
 		unique_ptr<StorageBuffer> materialBuffer_;    // Material data storage buffer
 
@@ -237,20 +240,24 @@ namespace BinRenderer::Vulkan {
 
 		bool perFrameResources(vector<string> resourceNames)
 		{
+			// Check if any resource is a per-frame resource
+			const static unordered_set<string> perFrameResourceSet = {
+				"sceneData", "options", "skyOptions", "postOptions", "ssaoOptions", "boneData"
+			};
+			
 			for (const auto& name : resourceNames) {
-				// Check if it's a per-frame resource by name
-				if (name == "sceneData" || name == "options" || name == "skyOptions" ||
-					name == "boneData" || name == "postOptions" || name == "ssaoOptions") {
+				if (perFrameResourceSet.contains(name)) {
 					return true;
 				}
 			}
+			
 			return false;
 		}
 
 		void addResource(string resourceName, uint32_t frameNumber,
 			vector<reference_wrapper<Resource>>& resources)
 		{
-			// ✅ NEW SYSTEM: Try to get from ResourceRegistry
+			// 🆕 NEW SYSTEM: Get from ResourceRegistry
 			{
 				// Check if it's a per-frame buffer
 				if (resourceName == "sceneData" && frameNumber != uint32_t(-1)) {
@@ -300,7 +307,7 @@ namespace BinRenderer::Vulkan {
 				}
 			}
 
-			// Special resources (not migrated to Handle system yet)
+			// Special cases: materialBuffer and materialTextures (not in Registry)
 			if (resourceName == "materialBuffer") {
 				resources.push_back(*materialBuffer_);
 				return;
@@ -310,8 +317,8 @@ namespace BinRenderer::Vulkan {
 				resources.push_back(*materialTextures_);
 				return;
 			}
-
-			// ⚠️ Resource not found!
+			
+			// ⚠️ Resource not found - this should not happen!
 			printLog("ERROR: Resource '{}' not found in ResourceRegistry!", resourceName);
 		}
 
