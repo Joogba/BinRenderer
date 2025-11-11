@@ -1,5 +1,4 @@
 ﻿#include "RenderManager.h"
-#include "RenderGraph.h"
 
 namespace BinRenderer {
 
@@ -67,7 +66,7 @@ namespace BinRenderer {
 
             // RenderGraph 단순 실행 - DrawCommand 전달 불필요!
             if (m_renderGraph) {
-                m_renderGraph->Execute(); // 단순 호출
+                //m_renderGraph->Execute(); // 단순 호출
             }
 
             std::swap(m_writeIndex, m_readIndex);

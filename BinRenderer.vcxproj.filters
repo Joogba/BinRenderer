@@ -39,18 +39,6 @@
     <ClCompile Include="Core\IRenderPass.h">
       <Filter>헤더 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Passes\GBufferPass.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Passes\LightingPass.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Passes\CompositePass.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="DeferredRenderer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="Platform\D3D11\D3D11Utils.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -245,18 +233,6 @@
     <ClInclude Include="Resources\SamplerRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Passes\GBufferPass.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Passes\LightingPass.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Passes\CompositePass.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="DeferredRenderer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="Core\RenderGraphBuilder.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -264,9 +240,6 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Core\RenderStates.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\RenderGraph.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Platform\D3D11\D3D11Utils.h">

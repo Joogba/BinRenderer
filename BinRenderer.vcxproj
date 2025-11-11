@@ -191,17 +191,13 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="Passes\CompositePass.h" />
     <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="DeferredRenderer.h" />
     <ClInclude Include="Core\DrawQueue.h" />
-    <ClInclude Include="Passes\GBufferPass.h" />
     <ClInclude Include="GeometryGenerator.h" />
     <ClInclude Include="Core\Handle.h" />
-    <ClInclude Include="Passes\LightingPass.h" />
     <ClInclude Include="Resources\MaterialRegistry.h" />
     <ClInclude Include="MeshData.h" />
     <ClInclude Include="Resources\MeshFactory.h" />
@@ -209,7 +205,6 @@
     <ClInclude Include="Core\PassResources.h" />
     <ClInclude Include="Resources\PSORegistry.h" />
     <ClInclude Include="Core\RendererAPI.h" />
-    <ClInclude Include="Core\RenderGraph.h" />
     <ClInclude Include="Core\RenderGraphBuilder.h" />
     <ClInclude Include="Core\RenderStates.h" />
     <ClInclude Include="Resources\RenderTargetRegistry.h" />
@@ -284,17 +279,13 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Passes\CompositePass.cpp" />
     <ClCompile Include="Platform\D3D11\D3D11RendererAPI.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="DeferredRenderer.cpp" />
     <ClCompile Include="Core\DrawCommand.h" />
-    <ClCompile Include="Passes\GBufferPass.cpp" />
     <ClCompile Include="GeometryGenerator.cpp" />
     <ClCompile Include="Core\IRenderPass.h" />
-    <ClCompile Include="Passes\LightingPass.cpp" />
     <ClCompile Include="Resources\MeshFactory.cpp" />
     <ClCompile Include="Platform\D3D11\D3D11VertexBufferAllocator.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>

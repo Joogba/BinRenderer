@@ -167,38 +167,38 @@ Pipeline 'post': 1 sets
 
     Binding 1 is variable-length array (count=512)
 ShaderManager: Created 8 unique layout(s)
-  Layout 0 (0x1b6dab951a0): 3 binding(s), used by:
+  Layout 0 (0x2b010c53700): 3 binding(s), used by:
     - Pipeline 'post', Set 0
     Binding 0: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=FRAGMENT
     Binding 2: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
-  Layout 1 (0x1b6dab95320): 3 binding(s), used by:
+  Layout 1 (0x2b010c53880): 3 binding(s), used by:
     - Pipeline 'shadowMap', Set 0
     - Pipeline 'pbrForward', Set 0
     - Pipeline 'pbrDeferred', Set 0
     Binding 0: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
     Binding 2: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
-  Layout 2 (0x1b6dab95aa0): 2 binding(s), used by:
+  Layout 2 (0x2b010c53b80): 2 binding(s), used by:
     - Pipeline 'pbrForward', Set 1
     - Pipeline 'pbrDeferred', Set 1
     Binding 0: type=STORAGE_BUFFER, count=1, stages=FRAGMENT
     Binding 1: type=COMBINED_IMAGE_SAMPLER, count=512, stages=FRAGMENT
-  Layout 3 (0x1b6dab954a0): 2 binding(s), used by:
+  Layout 3 (0x2b010c53a00): 2 binding(s), used by:
     - Pipeline 'sky', Set 0
     Binding 0: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
-  Layout 4 (0x1b6dab96220): 1 binding(s), used by:
+  Layout 4 (0x2b010c52500): 1 binding(s), used by:
     - Pipeline 'pbrForward', Set 3
     - Pipeline 'gui', Set 0
     Binding 0: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
-  Layout 5 (0x1b6dab95da0): 3 binding(s), used by:
+  Layout 5 (0x2b010c53d00): 3 binding(s), used by:
     - Pipeline 'pbrForward', Set 2
     - Pipeline 'sky', Set 1
     Binding 0: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
     Binding 1: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
     Binding 2: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
-  Layout 6 (0x1b6dab95620): 14 binding(s), used by:
+  Layout 6 (0x2b010c53e80): 14 binding(s), used by:
     - Pipeline 'deferredLighting', Set 0
     Binding 0: type=UNIFORM_BUFFER, count=1, stages=COMPUTE
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=COMPUTE
@@ -214,7 +214,7 @@ ShaderManager: Created 8 unique layout(s)
     Binding 11: type=COMBINED_IMAGE_SAMPLER, count=1, stages=COMPUTE
     Binding 12: type=COMBINED_IMAGE_SAMPLER, count=1, stages=COMPUTE
     Binding 13: type=COMBINED_IMAGE_SAMPLER, count=1, stages=COMPUTE
-  Layout 7 (0x1b6dab95f20): 5 binding(s), used by:
+  Layout 7 (0x2b010c54180): 5 binding(s), used by:
     - Pipeline 'ssao', Set 0
     Binding 0: type=UNIFORM_BUFFER, count=1, stages=COMPUTE
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=COMPUTE
@@ -223,21 +223,218 @@ ShaderManager: Created 8 unique layout(s)
     Binding 4: type=COMBINED_IMAGE_SAMPLER, count=1, stages=COMPUTE
 Creating graphics pipeline from config: gui
 Successfully created graphics pipeline: gui
-Model directory: ../../assets/models
+Model directory: ../../assets/characters/Leonard
+Processing animations and bones before mesh processing...
+Processing animations in Model...
+  Scene has 1 animations
+Loading animation data from scene...
+  Animations found: 1
+Building animation scene graph...
+Scene graph built with 217 nodes
+Processing bones for global hierarchy...
+Created 65 global bones from 128 total mesh bones
+Global bone ID assignment complete: 65 bones
+Animation loading complete:
+  Animation clips: 1
+  Bones: 65
+  Scene nodes: 217
+Successfully loaded 1 animation clips
+  Current animation: 'mixamo.com'
+  Duration: 2.20 seconds
+Successfully loaded 65 bones for skeletal animation
+Total bones across all meshes: 128
+Synchronized global inverse transform between Model and Animation systems
+Processing 60 bones for mesh 'Ch31_Body'
+Processing 13 bones for mesh 'Ch31_Pants'
+Processing 28 bones for mesh 'Ch31_Sweater'
+Processing 7 bones for mesh 'Ch31_Collar'
+Processing 6 bones for mesh 'Ch31_Eyelashes'
+Processing 8 bones for mesh 'Ch31_Shoes'
+Processing 6 bones for mesh 'Ch31_Hair'
+Texture filename: ../../assets/characters/Leonard/Ch31_1001_Diffuse.png
+Texture filename: ../../assets/characters/Leonard/Ch31_1001_Specular.png
+Texture filename: ../../assets/characters/Leonard/Ch31_1001_Normal.png
+Texture filename: ../../assets/characters/Leonard/Ch31_1002_Diffuse.png
+Successfully loaded model: ../../assets/characters/Leonard/Bboy Hip Hop Move.fbx
+  Meshes: 7
+  Materials: 2
+  Loading time: 871 ms
+Found 1 animations in model 'Dancer'
+Started animation: 'mixamo.com'
+Animation duration: 2.20 seconds
+Cache loading failed, falling back to model file loading
+Model directory: ../../assets/models/AmazonLumberyardBistroMorganMcGuire
 Processing animations and bones before mesh processing...
 No animations found in the model
 No bones found in any mesh
 Synchronized global inverse transform between Model and Animation systems
-Loaded embedded texture 0 (2048x2048) with sRGB format
-Loaded embedded texture 1 (2048x2048) with linear format
-Loaded embedded texture 2 (2048x2048) with linear format
-Loaded embedded texture 3 (2048x2048) with linear format
-Loaded embedded texture 4 (2048x2048) with linear format
-Successfully loaded model: ../../assets/models/DamagedHelmet.glb
-  Meshes: 1
-  Materials: 2
-  Loading time: 129 ms
-No animations found in model 'Helmet'
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Paris_Curbstones_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Pavement_Cobblestone_Small_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Pavement_Cobblestone_Small_01_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Pavement_Cobblestone_Big_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Pavement_Cobblestone_Big_01_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Pavement_Cobblestone_03_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Pavement_Cobblestone_03_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Pavement_Brick_01_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Pavement_Brick_01_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Ground_Wet_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Paris_manholecover_01b_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Paris_manholecover_01b_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Cobble_02B_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Cobble_02B_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Pavement_Cobblestone_01_b_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Pavement_Cobblestone_01_b_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Brick_Small_03_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Brick_Small_03_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\concrete_smooth_02_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\paris_bistroexteriorspotlight_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Metal_Chrome_01_tint_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Paris_BistroExteriorSpotLightGlass_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\bistro_woodpanelornament_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\bistro_woodpanelornament_01_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Bistro_main_door_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\concrete_grooved_02_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Glass_Dirty_01_Emit.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Glass_Dirty_01_spec.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Wood_Painted_02_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Wood_Painted_02_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Bistro_Main_Door_Concrete_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Paris_BistroSideBanner_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Paris_BistroSideBanner_mask.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_MainBalcony_01\Paris_Doors_04A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_MainBalcony_01\Paris_MainBalcony_02A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_MainBalcony_01\Paris_MainBalcony_02A_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_MainBalcony_01\Paris_MainBalcony_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_MainBalcony_01\Paris_MainBalcony_01A_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_MainBalcony_01\Paris_Doors_03A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Plastic_01_Planters_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\grain_metal_01_black_metal_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Plaster_01A_yellow_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Plaster_01A_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\concrete_smooth_02_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Concrete_Smooth_03\Concrete_Smooth_03_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Concrete_Smooth_03\Concrete_Smooth_03_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Roofing_Shingle_01_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Roofing_Shingle_01_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Roofing_Shingle_03_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Roofing_Shingle_03_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Trim_cornice_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Trim_cornice_01_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Paris_Building01_Window_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Paris_Building01_Window_01_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Paris_Building01_Window_01_mask.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Windows_curtains_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Grain_Metal_01\Grain_Metal_01_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\wood_base_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Paris_Doors_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\brick_large_03_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Brick_Large_03\Brick_Large_03_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\wood_painted_flat_grey_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\brick_large_02_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\brick_large_02_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Paris_Building_09_Details_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\paris_building_09_details_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\wood_painted_flat_cyan_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\brick_small_02_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\brick_small_02_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\roofing_metal_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Room_Interior_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Paris_BistroAwning_Beams_01B_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Boulangeria_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\frosted_glass_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Paris_BistroAwning_Fabric_Cyan_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Metal_Clean_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Plaster_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\paris_bistroawning_fabric_01a_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Books_Covers_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\concrete_smooth_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/BuildingTextures\Wood_Painted_04_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Metal_RollDoor_01\Metal_RollDoor_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Metal_RollDoor_01\Metal_RollDoor_01_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Buxus\buxus_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Buxus\buxus_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Buxus\buxus_mask.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Italian_Cypress\Italian_Cypress_Leaves_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Italian_Cypress\Italian_Cypress_Leaves_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Italian_Cypress\Italian_Cypress_Leaves_mask.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Italian_Cypress\Italian_Cypress_Bark_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Paris_flowers_01a\Paris_Foliage_01a_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Paris_flowers_01a\Paris_Foliage_01a_mask.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Paris_flowers_01a\Paris_flowers_01a_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Paris_flowers_01a\Paris_flowers_01a_mask.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\linden\Linden_Bark_A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\linden\Leaves_B_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\linden\Leaves_B_mask.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\linden\Leaves_A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\linden\Leaves_A_mask.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Paris_ivy_01a\Paris_ivy_leaf_a_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Paris_ivy_01a\Paris_ivy_leaf_a_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Paris_ivy_01a\Paris_ivy_leaf_a_mask.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Natural\Paris_ivy_01a\Paris_ivy_branch_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_StreetLight_01\Paris_StreetLight_Glass_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Colors\White.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_StreetLight_01\Paris_StreetLight_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_StreetLight_01\Street_decals_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_StreetLight_01\Street_decals_mask.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_StreetPivot\Paris_StreetPivot_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_ElectricBox_01\Paris_ElectricBox_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_ShopSign_01\Paris_ShopSign_bakery_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_ShopSign_01\Paris_ShopSign_bakery_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Metal_Chrome_01\Metal_Chrome_01_banner_metal_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_ShopSign_01\Paris_ShopSign_bookshop_emt.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_ShopSign_01\Paris_ShopSign_bookshop_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_ShopSign_01\Paris_ShopSign_bookshop_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_ShopSign_01\Paris_ShopSign_pharmacy_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_ShopSign_01\Paris_ShopSign_ties shop_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_BistroExteriorSpotLight_01\Paris_BistroExteriorSpotLight_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_BistroExteriorSpotLight_01\Paris_BistroExteriorSpotLightGlass_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_StreetSign_01\Paris_StreetSign_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_StreetSign_01\Paris_StreetSign_01A_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_TrafficSign_01\Paris_TrafficSign_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_MenuSign_01\Paris_MenuSign_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_MenuSign_01\Paris_MenuSign_01B_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Glass_Dirty_01\Glass_Dirty_01_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_TrashCan_01\Paris_TrashCan_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Colors\Green.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Colors\Red_Full.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_StringLights_01\Paris_StringLights_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Colors\Purple.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Colors\Orange.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_Bollard_01\Paris_Bollard_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_VespaScooter_01\Paris_VespaScooter_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_VespaScooter_01\Paris_VespaScooter_01_odometer_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Metal_Clean_01\Metal_Clean_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Plastic_02\Plastic_02_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_BistroAwning_01\Paris_BistroAwning_Fabric_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_BistroAwning_01\Paris_BistroAwning_Fabric_01A_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_BistroAwning_01\Paris_BistroAwning_Beams_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_BistroAwning_02\Paris_BistroAwning_02_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_BistroAwning_02\Paris_BistroAwning_02_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_BistroFrontBanner_01\Paris_BistroFrontBanner_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Colors\Grey_80.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_PlantPot_01\Paris_PlantPot_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_PlantPot_01\Paris_PlantPot_01A_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_SidewalkBarrier_01\Paris_SidewalkBarrier_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Concrete_Smooth_02\Concrete_Smooth_02_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Brick_Large_01\Brick_Large_01_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Concrete_Smooth_01\Concrete_Smooth_01_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Concrete_Grooved_02\Concrete_Grooved_02_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Concrete_Grooved_02\Concrete_Grooved_02_ddna.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Tiling\Grain_Metal_01\Grain_Metal_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_Lantern_01\Paris_Lantern_01A_emi.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Street\Paris_Lantern_01\Paris_Lantern_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Bistro\Paris_Chair_01\Paris_Chair_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Bistro\Paris_Table_01\Paris_Table_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Bistro\Paris_Ashtray_01\Paris_Ashtray_01A_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Bistro\Paris_NapkinHolder_01\Paris_Napkinholder_01_diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/OtherTextures\Colors\Grey_30.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Bistro\Paris_LiquorBottle_01\Paris_LiquorBottle_01_Cap_Diff.png
+Texture filename: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/LowRes/PropTextures\Bistro\Paris_LiquorBottle_01\Paris_LiquorBottle_labels_01_Diff.png
+Successfully loaded model: ../../assets/models/AmazonLumberyardBistroMorganMcGuire/exterior.obj
+  Meshes: 22396
+  Materials: 128
+  Loading time: 6916 ms
+No animations found in model 'Bistro'
 ResourceRegistry initialized
 ? Selected HDR format: B10G11R11_UFLOAT_PACK32 (4 bytes/pixel, FLOAT, 50% memory vs RGBA16F)
 HDR Format Selection:
@@ -317,6 +514,7 @@ Initializing Tracy profiler...
 ??Tracy GPU zones and timing collection enabled
 Tracy is ENABLED - Attempting to start profiler and web server
 Tracy profiler initialized
+hasAnimation changed to: true
 Cleaning up Tracy context...
 Tracy context destroyed
 INFO: Cleared all resources from registry
