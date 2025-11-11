@@ -1,4 +1,4 @@
-#include "StorageBuffer.h"
+﻿#include "StorageBuffer.h"
 #include "VulkanTools.h"
 #include "CommandBuffer.h"
 
@@ -8,6 +8,14 @@ StorageBuffer::StorageBuffer(Context& ctx, const void* data, VkDeviceSize dataSi
     : Resource(ctx, Type::Buffer)
 {
     create(data, dataSize);
+}
+
+// 추가 생성자: additionalUsage 지원
+StorageBuffer::StorageBuffer(Context& ctx, const void* data, VkDeviceSize dataSize, 
+     VkBufferUsageFlags additionalUsage)
+    : Resource(ctx, Type::Buffer)
+{
+    create(data, dataSize, additionalUsage);
 }
 
 StorageBuffer::~StorageBuffer()
@@ -75,6 +83,19 @@ void StorageBuffer::copyData(const void* data, VkDeviceSize size, VkDeviceSize o
 {
     if (buffer_ == VK_NULL_HANDLE)
         return;
+    
+    // nullptr 체크 추가
+    if (data == nullptr) {
+        // nullptr이면 버퍼를 0으로 초기화
+      if (hostVisible_) {
+        void* mappedData = map();
+ if (mappedData) {
+        memset(static_cast<char*>(mappedData) + offset, 0, size);
+          }
+        }
+        // Device-local memory는 이미 0으로 초기화되어 있으므로 스킵
+   return;
+    }
 
     if (hostVisible_) {
         void* mappedData = map();

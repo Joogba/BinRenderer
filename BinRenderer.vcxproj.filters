@@ -186,6 +186,12 @@
     <ClCompile Include="Vulkan\ResourceRegistry.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Vulkan\Cloth\ClothSimulation.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\Cloth\ClothMesh.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h">
@@ -416,6 +422,15 @@
     <ClInclude Include="Vulkan\ResourceRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\Cloth\ClothConfig.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\Cloth\ClothSimulation.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\Cloth\ClothMesh.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Basic.hlsl">
@@ -431,5 +446,13 @@
     <None Include="docs\ResourceHandleSystem.md" />
     <None Include="docs\ResourceHandleSystemProgress.md" />
     <None Include="docs\Phase2_CompletionGuide.md" />
+    <None Include="assets\shaders\cloth\cloth_integrate.comp" />
+    <None Include="assets\shaders\cloth\cloth_constraints.comp" />
+    <None Include="assets\shaders\cloth\cloth_normals.comp" />
+    <None Include="compile_cloth_shaders.bat">
+      <Filter>소스 파일</Filter>
+    </None>
+    <None Include="assets\shaders\cloth\cloth.vert" />
+    <None Include="assets\shaders\cloth\cloth.frag" />
   </ItemGroup>
 </Project>

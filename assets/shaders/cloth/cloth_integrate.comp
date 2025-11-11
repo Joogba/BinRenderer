@@ -1,0 +1,86 @@
+#version 450
+
+// Verlet Integration: 위치와 속도 업데이트
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+// GPU 데이터 구조
+struct ClothParticle
+{
+    vec4 position;   // xyz: 위치, w: 질량의 역수 (invMass)
+    vec4 velocity;   // xyz: 속도, w: padding
+    vec4 normal;     // xyz: 노말, w: padding
+};
+
+struct ClothSimParams
+{
+    vec4 gravity;          // xyz: 중력, w: padding
+    vec4 wind;// xyz: 바람 방향, w: 바람 강도
+    float deltaTime;       // 시간 간격
+    float damping;         // 감쇠 계수
+    uint constraintIters;  // 제약 조건 반복 횟수
+    uint particleCount;    // 전체 파티클 개수
+    float friction;        // 마찰 계수
+    float padding[3];      // 정렬
+};
+
+// Storage Buffer - 모든 파티클 데이터를 하나의 버퍼에
+layout(set = 0, binding = 0) buffer ParticleBuffer
+{
+    ClothParticle particles[];
+};
+
+// Uniform Buffer
+layout(set = 0, binding = 1) uniform ParamsBuffer
+{
+    ClothSimParams params;
+};
+
+void main()
+{
+    uint index = gl_GlobalInvocationID.x;
+    
+    if (index >= params.particleCount)
+   return;
+
+    // 파티클 데이터 읽기
+    vec3 position = particles[index].position.xyz;
+    float invMass = particles[index].position.w;
+    
+    // 고정된 파티클은 스킵 (invMass == 0)
+    if (invMass == 0.0)
+        return;
+
+vec3 velocity = particles[index].velocity.xyz;
+  
+    // 외력 계산
+    vec3 force = vec3(0.0);
+    
+    // 1. 중력
+    force += params.gravity.xyz / invMass;
+  
+// 2. 바람 (간단한 노이즈 추가)
+    vec3 windDir = params.wind.xyz;
+    float windStrength = params.wind.w;
+    float windEffect = windStrength * (0.5 + 0.5 * sin(position.x * 2.0 + position.z * 3.0));
+    force += windDir * windEffect;
+  
+    // 3. 공기 저항 (속도에 비례)
+    force -= velocity * params.friction;
+    
+    // Verlet Integration
+    vec3 acceleration = force * invMass;
+  
+    // 속도 업데이트
+    velocity += acceleration * params.deltaTime;
+    
+    // 감쇠 적용 (에너지 손실)
+    velocity *= params.damping;
+ 
+    // 위치 업데이트
+    position += velocity * params.deltaTime;
+  
+    // 결과 저장
+    particles[index].position.xyz = position;
+    particles[index].velocity.xyz = velocity;
+}

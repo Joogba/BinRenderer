@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Resource.h"
 #include <vulkan/vulkan.h>
@@ -9,7 +9,11 @@ class StorageBuffer : public Resource
 {
   public:
     StorageBuffer(Context& ctx, const void* data, VkDeviceSize dataSize);
-    ~StorageBuffer();
+    
+    // 추가 생성자: additionalUsage 지원
+    StorageBuffer(Context& ctx, const void* data, VkDeviceSize dataSize, VkBufferUsageFlags additionalUsage);
+    
+  ~StorageBuffer();
 
     // Accessors
     VkBuffer buffer() const
@@ -28,7 +32,9 @@ class StorageBuffer : public Resource
     void create(const void* data, VkDeviceSize dataSize, VkBufferUsageFlags additionalUsage = 0)
     {
         create(dataSize, additionalUsage);
-        copyData(data, dataSize);
+        if (data != nullptr) {  // nullptr 체크 추가
+            copyData(data, dataSize);
+        }
     }
 
     void* map();

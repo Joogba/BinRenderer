@@ -1,0 +1,111 @@
+#version 450
+
+// Distance Constraint Solver: 스프링 제약 조건 해결
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+// GPU 데이터 구조
+struct ClothParticle
+{
+    vec4 position;   // xyz: 위치, w: 질량의 역수 (invMass)
+    vec4 velocity;   // xyz: 속도, w: padding
+    vec4 normal;     // xyz: 노말, w: padding
+};
+
+struct ClothConstraint
+{
+ uint particleA;    // 첫 번째 파티클 인덱스
+    uint particleB;    // 두 번째 파티클 인덱스
+float restLength;  // 원래 길이
+    float stiffness;   // 강성 (0.0 ~ 1.0)
+};
+
+struct ClothSimParams
+{
+    vec4 gravity;
+    vec4 wind;
+    float deltaTime;
+    float damping;
+  uint constraintIters;
+    uint particleCount;
+ float friction;
+    float padding[3];
+};
+
+// Storage Buffers
+layout(set = 0, binding = 0) buffer ParticleBuffer
+{
+    ClothParticle particles[];
+};
+
+layout(set = 0, binding = 1) buffer ConstraintBuffer
+{
+    ClothConstraint constraints[];
+};
+
+layout(set = 0, binding = 2) uniform ParamsBuffer
+{
+    ClothSimParams params;
+};
+
+// Push Constants로 제약 조건 개수 전달
+layout(push_constant) uniform PushConstants
+{
+    uint constraintCount;
+} pushConstants;
+
+void main()
+{
+ uint index = gl_GlobalInvocationID.x;
+    
+    if (index >= pushConstants.constraintCount)
+        return;
+
+    ClothConstraint constraint = constraints[index];
+  
+    uint idxA = constraint.particleA;
+    uint idxB = constraint.particleB;
+    
+    vec3 posA = particles[idxA].position.xyz;
+    vec3 posB = particles[idxB].position.xyz;
+    float invMassA = particles[idxA].position.w;
+    float invMassB = particles[idxB].position.w;
+    
+    // 둘 다 고정된 파티클이면 스킵
+    if (invMassA == 0.0 && invMassB == 0.0)
+     return;
+    
+    // 현재 거리 계산
+    vec3 delta = posB - posA;
+    float currentLength = length(delta);
+  
+    // 길이가 0이면 스킵 (수치 안정성)
+    if (currentLength < 0.0001)
+      return;
+    
+    // 정규화된 방향 벡터
+    vec3 direction = delta / currentLength;
+    
+    // 거리 오차
+    float error = currentLength - constraint.restLength;
+    
+    // 강성 적용 (Gauss-Seidel 방식)
+    float stiffness = constraint.stiffness;
+    
+    // 질량 비율 계산
+    float totalInvMass = invMassA + invMassB;
+    
+    if (totalInvMass == 0.0)
+   return;
+  
+    // 보정량 계산
+    float correction = error / totalInvMass * stiffness;
+    
+    // 위치 보정 적용
+    vec3 correctionA = direction * correction * invMassA;
+    vec3 correctionB = -direction * correction * invMassB;
+    
+    // 위치 업데이트 (여러 스레드가 동시에 접근 가능 - 여러 반복 필요)
+    particles[idxA].position.xyz += correctionA;
+  particles[idxB].position.xyz += correctionB;
+}

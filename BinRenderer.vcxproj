@@ -158,6 +158,9 @@
     <ClInclude Include="Vulkan\Application.h" />
     <ClInclude Include="Vulkan\BarrierHelper.h" />
     <ClInclude Include="Vulkan\Camera.h" />
+    <ClInclude Include="Vulkan\Cloth\ClothConfig.h" />
+    <ClInclude Include="Vulkan\Cloth\ClothMesh.h" />
+    <ClInclude Include="Vulkan\Cloth\ClothSimulation.h" />
     <ClInclude Include="Vulkan\DescriptorSet.h" />
     <ClInclude Include="Vulkan\GpuTimer.h" />
     <ClInclude Include="Vulkan\GuiRenderer.h" />
@@ -250,6 +253,8 @@
     <ClCompile Include="Vulkan\Application.cpp" />
     <ClCompile Include="Vulkan\BarrierHelper.cpp" />
     <ClCompile Include="Vulkan\Camera.cpp" />
+    <ClCompile Include="Vulkan\Cloth\ClothMesh.cpp" />
+    <ClCompile Include="Vulkan\Cloth\ClothSimulation.cpp" />
     <ClCompile Include="Vulkan\DescriptorSet.cpp" />
     <ClCompile Include="Vulkan\GpuTimer.cpp" />
     <ClCompile Include="Vulkan\GuiRenderer.cpp" />
@@ -339,6 +344,12 @@
     <Image Include="..\..\Users\tjdwn\Downloads\checker.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\shaders\cloth\cloth.frag" />
+    <None Include="assets\shaders\cloth\cloth.vert" />
+    <None Include="assets\shaders\cloth\cloth_constraints.comp" />
+    <None Include="assets\shaders\cloth\cloth_integrate.comp" />
+    <None Include="assets\shaders\cloth\cloth_normals.comp" />
+    <None Include="compile_cloth_shaders.bat" />
     <None Include="docs\Phase2_CompletionGuide.md" />
     <None Include="docs\ResourceHandleSystem.md" />
     <None Include="docs\ResourceHandleSystemProgress.md" />

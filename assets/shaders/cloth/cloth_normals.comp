@@ -1,0 +1,177 @@
+#version 450
+
+// Normal Computation: 삼각형 메쉬의 노말 재계산
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+// GPU 데이터 구조
+struct ClothParticle
+{
+    vec4 position;   // xyz: 위치, w: 질량의 역수 (invMass)
+    vec4 velocity;   // xyz: 속도, w: padding
+  vec4 normal;  // xyz: 노말, w: padding
+};
+
+struct ClothSimParams
+{
+  vec4 gravity;
+    vec4 wind;
+    float deltaTime;
+    float damping;
+    uint constraintIters;
+  uint particleCount;
+    float friction;
+    float padding[3];
+};
+
+// Storage Buffer - 모든 파티클 데이터
+layout(set = 0, binding = 0) buffer ParticleBuffer
+{
+    ClothParticle particles[];
+};
+
+layout(set = 0, binding = 1) uniform ParamsBuffer
+{
+    ClothSimParams params;
+};
+
+// Push Constants로 그리드 크기 전달
+layout(push_constant) uniform PushConstants
+{
+    uint gridWidth;
+    uint gridHeight;
+} pushConstants;
+
+// 인덱스 계산 헬퍼
+uint getParticleIndex(uint x, uint y)
+{
+  return y * pushConstants.gridWidth + x;
+}
+
+void main()
+{
+    uint index = gl_GlobalInvocationID.x;
+
+    if (index >= params.particleCount)
+return;
+
+    // 2D 그리드 좌표로 변환
+    uint x = index % pushConstants.gridWidth;
+    uint y = index / pushConstants.gridWidth;
+    
+    vec3 normal = vec3(0.0);
+  
+    vec3 pos = particles[index].position.xyz;
+  
+    // 주변 삼각형들의 노말을 평균내기
+    
+    // 오른쪽 위 삼각형 (x, y) - (x+1, y) - (x, y+1)
+    if (x < pushConstants.gridWidth - 1 && y < pushConstants.gridHeight - 1)
+    {
+ uint idx1 = getParticleIndex(x + 1, y);
+        uint idx2 = getParticleIndex(x, y + 1);
+ 
+   vec3 pos1 = particles[idx1].position.xyz;
+        vec3 pos2 = particles[idx2].position.xyz;
+    
+        vec3 edge1 = pos1 - pos;
+        vec3 edge2 = pos2 - pos;
+      
+      vec3 triNormal = cross(edge1, edge2);
+      normal += triNormal;
+    }
+  
+    // 오른쪽 아래 삼각형
+    if (x < pushConstants.gridWidth - 1 && y < pushConstants.gridHeight - 1)
+    {
+   uint idx1 = getParticleIndex(x, y + 1);
+   uint idx2 = getParticleIndex(x + 1, y + 1);
+    
+     vec3 pos1 = particles[idx1].position.xyz;
+        vec3 pos2 = particles[idx2].position.xyz;
+        
+        vec3 edge1 = pos1 - pos;
+        vec3 edge2 = pos2 - pos;
+        
+     vec3 triNormal = cross(edge1, edge2);
+        normal += triNormal;
+    }
+    
+    // 왼쪽 위 삼각형
+    if (x > 0 && y > 0)
+    {
+  uint idx1 = getParticleIndex(x - 1, y);
+  uint idx2 = getParticleIndex(x, y - 1);
+        
+  vec3 pos1 = particles[idx1].position.xyz;
+   vec3 pos2 = particles[idx2].position.xyz;
+        
+        vec3 edge1 = pos1 - pos;
+        vec3 edge2 = pos2 - pos;
+        
+        vec3 triNormal = cross(edge1, edge2);
+     normal += triNormal;
+    }
+    
+    // 왼쪽 아래 삼각형
+    if (x > 0 && y > 0)
+    {
+        uint idx1 = getParticleIndex(x, y - 1);
+        uint idx2 = getParticleIndex(x - 1, y - 1);
+        
+        vec3 pos1 = particles[idx1].position.xyz;
+    vec3 pos2 = particles[idx2].position.xyz;
+        
+        vec3 edge1 = pos1 - pos;
+   vec3 edge2 = pos2 - pos;
+        
+        vec3 triNormal = cross(edge1, edge2);
+        normal += triNormal;
+    }
+    
+ // 상단 왼쪽 삼각형
+    if (x > 0 && y < pushConstants.gridHeight - 1)
+    {
+        uint idx1 = getParticleIndex(x - 1, y + 1);
+        uint idx2 = getParticleIndex(x - 1, y);
+   
+        vec3 pos1 = particles[idx1].position.xyz;
+        vec3 pos2 = particles[idx2].position.xyz;
+     
+        vec3 edge1 = pos1 - pos;
+        vec3 edge2 = pos2 - pos;
+    
+        vec3 triNormal = cross(edge1, edge2);
+        normal += triNormal;
+    }
+  
+    // 상단 오른쪽 삼각형
+    if (x < pushConstants.gridWidth - 1 && y < pushConstants.gridHeight - 1)
+    {
+        uint idx1 = getParticleIndex(x + 1, y + 1);
+        uint idx2 = getParticleIndex(x, y + 1);
+        
+   vec3 pos1 = particles[idx1].position.xyz;
+        vec3 pos2 = particles[idx2].position.xyz;
+     
+        vec3 edge1 = pos1 - pos;
+        vec3 edge2 = pos2 - pos;
+        
+      vec3 triNormal = cross(edge1, edge2);
+        normal += triNormal;
+    }
+    
+    // 노말 정규화
+    float normalLength = length(normal);
+    if (normalLength > 0.0001)
+    {
+        normal = normal / normalLength;
+    }
+  else
+    {
+        normal = vec3(0.0, 1.0, 0.0); // 기본 노말
+    }
+    
+  // 결과 저장
+    particles[index].normal.xyz = normal;
+}
