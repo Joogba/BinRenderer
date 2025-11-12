@@ -160,6 +160,7 @@
     <ClInclude Include="Vulkan\Camera.h" />
     <ClInclude Include="Vulkan\Cloth\ClothConfig.h" />
     <ClInclude Include="Vulkan\Cloth\ClothMesh.h" />
+    <ClInclude Include="Vulkan\Cloth\ClothRenderPass.h" />
     <ClInclude Include="Vulkan\Cloth\ClothSimulation.h" />
     <ClInclude Include="Vulkan\DescriptorSet.h" />
     <ClInclude Include="Vulkan\GpuTimer.h" />
@@ -219,6 +220,7 @@
     <ClInclude Include="UniformSystem.h" />
     <ClInclude Include="Core\Vertex.h" />
     <ClInclude Include="View.h" />
+    <ClInclude Include="Vulkan\IRenderPass.h" />
     <ClInclude Include="Vulkan\Logger.h" />
     <ClInclude Include="Vulkan\MappedBuffer.h" />
     <ClInclude Include="Vulkan\Material.h" />
@@ -231,6 +233,7 @@
     <ClInclude Include="Vulkan\PushConstants.h" />
     <ClInclude Include="Vulkan\Renderer.h" />
     <ClInclude Include="Vulkan\RenderGraph.h" />
+    <ClInclude Include="Vulkan\RenderPassManager.h" />
     <ClInclude Include="Vulkan\Resource.h" />
     <ClInclude Include="Vulkan\ResourceBinding.h" />
     <ClInclude Include="Vulkan\ResourceHandle.h" />
@@ -254,6 +257,7 @@
     <ClCompile Include="Vulkan\BarrierHelper.cpp" />
     <ClCompile Include="Vulkan\Camera.cpp" />
     <ClCompile Include="Vulkan\Cloth\ClothMesh.cpp" />
+    <ClCompile Include="Vulkan\Cloth\ClothRenderPass.cpp" />
     <ClCompile Include="Vulkan\Cloth\ClothSimulation.cpp" />
     <ClCompile Include="Vulkan\DescriptorSet.cpp" />
     <ClCompile Include="Vulkan\GpuTimer.cpp" />
@@ -316,6 +320,7 @@
     <ClCompile Include="Vulkan\PushConstants.cpp" />
     <ClCompile Include="Vulkan\Renderer.cpp" />
     <ClCompile Include="Vulkan\RenderGraph.cpp" />
+    <ClCompile Include="Vulkan\RenderPassManager.cpp" />
     <ClCompile Include="Vulkan\Resource.cpp" />
     <ClCompile Include="Vulkan\ResourceBinding.cpp" />
     <ClCompile Include="Vulkan\ResourceRegistry.cpp" />
@@ -350,9 +355,30 @@
     <None Include="assets\shaders\cloth\cloth_integrate.comp" />
     <None Include="assets\shaders\cloth\cloth_normals.comp" />
     <None Include="compile_cloth_shaders.bat" />
+    <None Include="Docs\BinRenderer\BarrierHelper.md" />
+    <None Include="Docs\BinRenderer\Camera.md" />
+    <None Include="Docs\BinRenderer\CommandBuffer.md" />
+    <None Include="Docs\BinRenderer\Context.md" />
+    <None Include="Docs\BinRenderer\DescriptorPool.md" />
+    <None Include="Docs\BinRenderer\DescriptorSet.md" />
+    <None Include="Docs\BinRenderer\Image2D.md" />
+    <None Include="Docs\BinRenderer\MappedBuffer.md" />
+    <None Include="Docs\BinRenderer\Material.md" />
+    <None Include="Docs\BinRenderer\Model.md" />
+    <None Include="Docs\BinRenderer\Pipeline.md" />
+    <None Include="Docs\BinRenderer\PipelineConfig.md" />
+    <None Include="Docs\BinRenderer\Renderer.md" />
+    <None Include="Docs\BinRenderer\RenderGraph.md" />
+    <None Include="Docs\BinRenderer\Resource.md" />
+    <None Include="Docs\BinRenderer\ResourceBinding.md" />
+    <None Include="Docs\BinRenderer\Sampler.md" />
+    <None Include="Docs\BinRenderer\ShaderManager.md" />
+    <None Include="Docs\BinRenderer\StorageBuffer.md" />
     <None Include="docs\Phase2_CompletionGuide.md" />
     <None Include="docs\ResourceHandleSystem.md" />
     <None Include="docs\ResourceHandleSystemProgress.md" />
+    <None Include="Docs\VulkanArchitecture.canvas" />
+    <None Include="Docs\VulkanClasses.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

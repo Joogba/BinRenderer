@@ -1,4 +1,4 @@
-#include "RenderGraph.h"
+﻿#include "RenderGraph.h"
 #include <iostream>
 #include <algorithm>
 
@@ -19,6 +19,22 @@ void RenderGraph::writeToFile(const string& filename) const
         const auto& node = renderNodes_[i];
         
         file << "    {\n";
+    
+        // NEW fields (RenderPassManager integration)
+        if (!node.name.empty()) {
+            file << "    \"name\": \"" << escapeJsonString(node.name) << "\",\n";
+        }
+        if (!node.passType.empty() && node.passType != "default") {
+            file << "      \"passType\": \"" << escapeJsonString(node.passType) << "\",\n";
+        }
+        if (node.priority != 100) {
+            file << "      \"priority\": " << node.priority << ",\n";
+        }
+        if (!node.enabled) {
+            file << "      \"enabled\": false,\n";
+        }
+   
+        // 기존 fields
         file << "      \"pipelineNames\": " << vectorToJsonArray(node.pipelineNames) << ",\n";
         file << "      \"colorAttachments\": " << vectorToJsonArray(node.colorAttachments) << ",\n";
         file << "      \"depthAttachment\": \"" << escapeJsonString(node.depthAttachment) << "\",\n";
@@ -91,6 +107,12 @@ bool RenderGraph::readFromFile(const string& filename)
             node.depthAttachment = parseJsonStringField(nodeContent, "depthAttachment");
             node.stencilAttachment = parseJsonStringField(nodeContent, "stencilAttachment");
             
+            // Parse NEW fields for RenderPassManager integration
+            node.name = parseJsonStringField(nodeContent, "name");
+            node.passType = parseJsonStringField(nodeContent, "passType");
+            node.priority = parseJsonIntField(nodeContent, "priority", 100);
+            node.enabled = parseJsonBoolField(nodeContent, "enabled", true);
+   
             renderNodes_.push_back(node);
             
             pos = nodeEnd + 1;
@@ -248,6 +270,75 @@ string RenderGraph::parseJsonStringField(const string& nodeContent, const string
     
     string value = nodeContent.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
     return unescapeJsonString(value);
+}
+
+// ========================================
+// NEW: JSON parsing helpers for RenderPassManager integration
+// ========================================
+
+int RenderGraph::parseJsonIntField(const string& nodeContent, const string& fieldName, int defaultValue) const
+{
+    size_t fieldPos = nodeContent.find("\"" + fieldName + "\"");
+    if (fieldPos == string::npos) {
+  return defaultValue;
+    }
+    
+    size_t colonPos = nodeContent.find(":", fieldPos);
+    if (colonPos == string::npos) {
+        return defaultValue;
+    }
+    
+    // Find the number after the colon
+    size_t numStart = nodeContent.find_first_of("-0123456789", colonPos);
+    if (numStart == string::npos) {
+    return defaultValue;
+    }
+    
+    size_t numEnd = nodeContent.find_first_not_of("-0123456789", numStart);
+    if (numEnd == string::npos) {
+numEnd = nodeContent.length();
+    }
+    
+    try {
+        string numStr = nodeContent.substr(numStart, numEnd - numStart);
+ return std::stoi(numStr);
+    }
+    catch (...) {
+        return defaultValue;
+    }
+}
+
+bool RenderGraph::parseJsonBoolField(const string& nodeContent, const string& fieldName, bool defaultValue) const
+{
+    size_t fieldPos = nodeContent.find("\"" + fieldName + "\"");
+    if (fieldPos == string::npos) {
+        return defaultValue;
+  }
+    
+    size_t colonPos = nodeContent.find(":", fieldPos);
+    if (colonPos == string::npos) {
+        return defaultValue;
+    }
+    
+    // Find "true" or "false" after the colon
+    size_t truePos = nodeContent.find("true", colonPos);
+    size_t falsePos = nodeContent.find("false", colonPos);
+    
+    // Check which one comes first (and is closer to the colon)
+    if (truePos != string::npos && (falsePos == string::npos || truePos < falsePos)) {
+    // Make sure it's not too far away (to avoid matching in another field)
+        if (truePos - colonPos < 10) {
+            return true;
+        }
+    }
+    
+    if (falsePos != string::npos) {
+  if (falsePos - colonPos < 10) {
+     return false;
+     }
+    }
+    
+    return defaultValue;
 }
 
 } // namespace BinRenderer::Vulkan

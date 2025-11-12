@@ -1,6 +1,7 @@
-#pragma once
+﻿#pragma once
 
 #include "DescriptorSet.h"
+#include "RenderPassManager.h"
 #include <string>
 #include <vector>
 #include <fstream>
@@ -21,6 +22,14 @@ class RenderGraph
         vector<string> colorAttachments;
         string depthAttachment;
         string stencilAttachment;
+
+        // ========================================
+        // NEW: RenderPassManager 통합을 위한 필드
+        // ========================================
+        string name = "";              // Pass 이름
+        string passType = "default";   // "scene", "cloth", "post", "gui" 등
+        int priority = 100; // 실행 순서 (낮을수록 먼저)
+        bool enabled = true;        // 활성화 여부
     };
 
     void addRenderNode(RenderNode node)
@@ -30,6 +39,15 @@ class RenderGraph
 
     void writeToFile(const string& filename) const;
     bool readFromFile(const string& filename);
+
+    // ========================================
+    // NEW: RenderPassManager 통합 메서드
+    // ========================================
+
+    /**
+     * @brief RenderNode 목록 반환 (외부 접근용)
+     */
+    const vector<RenderNode>& getRenderNodes() const { return renderNodes_; }
 
   private:
     vector<RenderNode> renderNodes_;
@@ -42,6 +60,10 @@ class RenderGraph
     string unescapeJsonString(const string& str) const;
     vector<string> parseJsonField(const string& nodeContent, const string& fieldName) const;
     string parseJsonStringField(const string& nodeContent, const string& fieldName) const;
+
+    // NEW: JSON parsing helpers
+    int parseJsonIntField(const string& nodeContent, const string& fieldName, int defaultValue) const;
+    bool parseJsonBoolField(const string& nodeContent, const string& fieldName, bool defaultValue) const;
 };
 
 } // namespace BinRenderer::Vulkan

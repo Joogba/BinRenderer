@@ -192,6 +192,12 @@
     <ClCompile Include="Vulkan\Cloth\ClothMesh.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Vulkan\RenderPassManager.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\Cloth\ClothRenderPass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h">
@@ -431,6 +437,15 @@
     <ClInclude Include="Vulkan\Cloth\ClothMesh.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\IRenderPass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\RenderPassManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\Cloth\ClothRenderPass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Basic.hlsl">
@@ -454,5 +469,26 @@
     </None>
     <None Include="assets\shaders\cloth\cloth.vert" />
     <None Include="assets\shaders\cloth\cloth.frag" />
+    <None Include="Docs\VulkanClasses.md" />
+    <None Include="Docs\BinRenderer\ShaderManager.md" />
+    <None Include="Docs\BinRenderer\Pipeline.md" />
+    <None Include="Docs\BinRenderer\Resource.md" />
+    <None Include="Docs\BinRenderer\Image2D.md" />
+    <None Include="Docs\BinRenderer\StorageBuffer.md" />
+    <None Include="Docs\BinRenderer\BarrierHelper.md" />
+    <None Include="Docs\BinRenderer\ResourceBinding.md" />
+    <None Include="Docs\BinRenderer\Renderer.md" />
+    <None Include="Docs\VulkanArchitecture.canvas" />
+    <None Include="Docs\BinRenderer\CommandBuffer.md" />
+    <None Include="Docs\BinRenderer\Sampler.md" />
+    <None Include="Docs\BinRenderer\Camera.md" />
+    <None Include="Docs\BinRenderer\Model.md" />
+    <None Include="Docs\BinRenderer\RenderGraph.md" />
+    <None Include="Docs\BinRenderer\MappedBuffer.md" />
+    <None Include="Docs\BinRenderer\PipelineConfig.md" />
+    <None Include="Docs\BinRenderer\Material.md" />
+    <None Include="Docs\BinRenderer\Context.md" />
+    <None Include="Docs\BinRenderer\DescriptorPool.md" />
+    <None Include="Docs\BinRenderer\DescriptorSet.md" />
   </ItemGroup>
 </Project>
