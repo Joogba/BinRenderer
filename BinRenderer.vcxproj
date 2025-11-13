@@ -163,8 +163,10 @@
     <ClInclude Include="Vulkan\Cloth\ClothRenderPass.h" />
     <ClInclude Include="Vulkan\Cloth\ClothSimulation.h" />
     <ClInclude Include="Vulkan\DescriptorSet.h" />
+    <ClInclude Include="Vulkan\EngineConfig.h" />
     <ClInclude Include="Vulkan\GpuTimer.h" />
     <ClInclude Include="Vulkan\GuiRenderer.h" />
+    <ClInclude Include="Vulkan\IApplicationListener.h" />
     <ClInclude Include="Vulkan\Image2D.h" />
     <ClInclude Include="Vulkan\DescriptorPool.h" />
     <ClInclude Include="Vulkan\CommandBuffer.h" />
@@ -239,6 +241,7 @@
     <ClInclude Include="Vulkan\ResourceHandle.h" />
     <ClInclude Include="Vulkan\ResourceRegistry.h" />
     <ClInclude Include="Vulkan\Sampler.h" />
+    <ClInclude Include="Vulkan\Scene.h" />
     <ClInclude Include="Vulkan\Shader.h" />
     <ClInclude Include="Vulkan\ShaderManager.h" />
     <ClInclude Include="Vulkan\Skeleton.h" />
@@ -374,9 +377,14 @@
     <None Include="Docs\BinRenderer\Sampler.md" />
     <None Include="Docs\BinRenderer\ShaderManager.md" />
     <None Include="Docs\BinRenderer\StorageBuffer.md" />
+    <None Include="docs\Device_Lost_Error_Fix.md" />
+    <None Include="docs\High_Priority_Refactoring_Guide.md" />
+    <None Include="docs\Memory_Exhaustion_Fix_Guide.md" />
     <None Include="docs\Phase2_CompletionGuide.md" />
+    <None Include="docs\RenderPassManager_Guide.md" />
     <None Include="docs\ResourceHandleSystem.md" />
     <None Include="docs\ResourceHandleSystemProgress.md" />
+    <None Include="docs\StorageBuffer_OOM_Debug_Guide.md" />
     <None Include="Docs\VulkanArchitecture.canvas" />
     <None Include="Docs\VulkanClasses.md" />
   </ItemGroup>

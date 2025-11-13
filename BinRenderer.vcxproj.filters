@@ -446,6 +446,15 @@
     <ClInclude Include="Vulkan\Cloth\ClothRenderPass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\EngineConfig.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\Scene.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\IApplicationListener.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Basic.hlsl">
@@ -490,5 +499,10 @@
     <None Include="Docs\BinRenderer\Context.md" />
     <None Include="Docs\BinRenderer\DescriptorPool.md" />
     <None Include="Docs\BinRenderer\DescriptorSet.md" />
+    <None Include="docs\RenderPassManager_Guide.md" />
+    <None Include="docs\High_Priority_Refactoring_Guide.md" />
+    <None Include="docs\Memory_Exhaustion_Fix_Guide.md" />
+    <None Include="docs\StorageBuffer_OOM_Debug_Guide.md" />
+    <None Include="docs\Device_Lost_Error_Fix.md" />
   </ItemGroup>
 </Project>

@@ -363,6 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 vcpkg_installed/
+docs/
 
 
 # Large asset files - Download separately (see README.md)
