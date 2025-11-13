@@ -19,16 +19,29 @@ public:
 		// Load single small model (Helmet) - ✅ shared_ptr로 변경
 		auto helmetModel = std::make_shared<Model>(ctx);
 		helmetModel->loadFromModelFile("../../assets/models/DamagedHelmet.glb", false);
-		helmetModel->modelMatrix() = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
+		
+		// ✅ FIX: 헬멧 회전 수정 (X축 +90도 → 정면)
+		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
+		glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		helmetModel->modelMatrix() = scale * rotation;
 
 		scene.addModel(helmetModel, "Helmet");
 
-		// Setup camera (using forHelmet preset)
+		// ========================================
+		// ✅ FIX: 카메라 설정 (올바른 초기 방향)
+		// ========================================
 		auto& camera = scene.getCamera();
 		camera.type = Camera::CameraType::firstperson;
-		camera.position = glm::vec3(0.0f, 0.0f, 2.5f);  // ✅ FIX: Z축 양수 (카메라 앞)
-		camera.rotation = glm::vec3(0.0f, 180.0f, 0.0f);  // ✅ FIX: Y축 180도 회전 (뒤돌아보기)
-		camera.viewPos = glm::vec3(0.0f, 0.0f, -2.5f);  // ✅ FIX: 바라보는 방향
+		
+		// 카메라 위치: 헬멧 앞쪽 (Z축 음수 - Vulkan 기본 방향)
+		camera.position = glm::vec3(0.0f, 0.0f, -4.0f);
+		
+		// 회전: 기본 방향 (카메라는 기본적으로 +Z 방향을 바라봄)
+		camera.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+		
+		// ✅ lookat 타겟: 헬멧 위치 (원점)
+		camera.viewPos = glm::vec3(0.0f, 0.0f, 0.0f);
+		
 		camera.setMovementSpeed(5.0f);
 		camera.setRotationSpeed(0.1f);
 		

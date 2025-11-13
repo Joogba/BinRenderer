@@ -83,7 +83,7 @@ Descriptor indexing features supported:
   runtimeDescriptorArray: YES
   descriptorBindingVariableDescriptorCount: YES
 Found DescriptorPoolSize.txt, loading previous statistics...
-Created initial pool with 11 sets and 4 descriptor types
+Created initial pool with 12 sets and 4 descriptor types
 Selected Surface Format: R8G8B8A8_UNORM
 Selected Color Space: VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
 Swapchain Storage Bit Support: YES
@@ -168,38 +168,38 @@ Pipeline 'post': 1 sets
 
     Binding 1 is variable-length array (count=512)
 ShaderManager: Created 8 unique layout(s)
-  Layout 0 (0x274845feba0): 3 binding(s), used by:
+  Layout 0 (0x1eea3349380): 3 binding(s), used by:
     - Pipeline 'post', Set 0
     Binding 0: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=FRAGMENT
     Binding 2: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
-  Layout 1 (0x274845fd6a0): 3 binding(s), used by:
+  Layout 1 (0x1eea3349500): 3 binding(s), used by:
     - Pipeline 'shadowMap', Set 0
     - Pipeline 'pbrForward', Set 0
     - Pipeline 'pbrDeferred', Set 0
     Binding 0: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
     Binding 2: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
-  Layout 2 (0x274845fd820): 2 binding(s), used by:
+  Layout 2 (0x1eea3349980): 2 binding(s), used by:
     - Pipeline 'pbrForward', Set 1
     - Pipeline 'pbrDeferred', Set 1
     Binding 0: type=STORAGE_BUFFER, count=1, stages=FRAGMENT
     Binding 1: type=COMBINED_IMAGE_SAMPLER, count=512, stages=FRAGMENT
-  Layout 3 (0x274845fed20): 2 binding(s), used by:
+  Layout 3 (0x1eea3349680): 2 binding(s), used by:
     - Pipeline 'sky', Set 0
     Binding 0: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=VERTEX|FRAGMENT
-  Layout 4 (0x274845fe5a0): 1 binding(s), used by:
+  Layout 4 (0x1eea3347b80): 1 binding(s), used by:
     - Pipeline 'pbrForward', Set 3
     - Pipeline 'gui', Set 0
     Binding 0: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
-  Layout 5 (0x274845fe420): 3 binding(s), used by:
+  Layout 5 (0x1eea3347d00): 3 binding(s), used by:
     - Pipeline 'pbrForward', Set 2
     - Pipeline 'sky', Set 1
     Binding 0: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
     Binding 1: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
     Binding 2: type=COMBINED_IMAGE_SAMPLER, count=1, stages=FRAGMENT
-  Layout 6 (0x274845fe720): 14 binding(s), used by:
+  Layout 6 (0x1eea3347e80): 14 binding(s), used by:
     - Pipeline 'deferredLighting', Set 0
     Binding 0: type=UNIFORM_BUFFER, count=1, stages=COMPUTE
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=COMPUTE
@@ -215,7 +215,7 @@ ShaderManager: Created 8 unique layout(s)
     Binding 11: type=COMBINED_IMAGE_SAMPLER, count=1, stages=COMPUTE
     Binding 12: type=COMBINED_IMAGE_SAMPLER, count=1, stages=COMPUTE
     Binding 13: type=COMBINED_IMAGE_SAMPLER, count=1, stages=COMPUTE
-  Layout 7 (0x274ebb4b730): 5 binding(s), used by:
+  Layout 7 (0x1eea3348000): 5 binding(s), used by:
     - Pipeline 'ssao', Set 0
     Binding 0: type=UNIFORM_BUFFER, count=1, stages=COMPUTE
     Binding 1: type=UNIFORM_BUFFER, count=1, stages=COMPUTE
@@ -324,11 +324,18 @@ Loaded embedded texture 4 (2048x2048) with linear format
 Successfully loaded model: ../../assets/models/DamagedHelmet.glb
   Meshes: 1
   Materials: 2
-  Loading time: 132 ms
+  Loading time: 117 ms
 Scene initialized: 1 nodes (lightweight)
 Synced Scene camera to Application camera
-  Position: vec3(0.000000, 0.000000, 2.500000)
-  Rotation: vec3(0.000000, 180.000000, 0.000000)
+  Position: vec3(0.000000, 0.000000, -4.000000)
+  Rotation: vec3(0.000000, 0.000000, 0.000000)
+Updating materials for 1 scene models...
+Updated material buffer with 2 materials
+Recreating material descriptor sets...
+Allocating descriptor set with variable count: 512
+? Recreated 'material' descriptor set
+Pipeline 'pbrDeferred': No write-only image binding found for dimension determination
+? Rebound descriptor sets to pipeline 'pbrDeferred'
 BinRenderer initialization complete!
 Calling IApplicationListener::onShutdown()...
 === Lightweight Test: Shutdown ===
@@ -340,11 +347,11 @@ Saved descriptor pool statistics to DescriptorPoolSize.txt
   (Capped to reasonable limits: 20 sets, 256 descriptors per type)
 
 === DescriptorPool 할당 통계 ===
-생성된 총 풀 수: 9
-할당된 총 세트 수: 11
-  COMBINED_IMAGE_SAMPLER: 538
+생성된 총 풀 수: 10
+할당된 총 세트 수: 12
+  COMBINED_IMAGE_SAMPLER: 1050
   UNIFORM_BUFFER: 18
-  STORAGE_BUFFER: 1
+  STORAGE_BUFFER: 2
   STORAGE_IMAGE: 4
 ============================================
 

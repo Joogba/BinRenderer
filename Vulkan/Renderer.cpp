@@ -1418,4 +1418,127 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 		}
 	}
 
+	// ========================================
+	// ✅ NEW: Material 동적 업데이트
+	// ========================================
+	
+	void Renderer::updateMaterials(const vector<unique_ptr<Model>>& models)
+	{
+		TRACY_CPU_SCOPE("Renderer::updateMaterials (unique_ptr)");
+		
+		vector<MaterialUBO> allMaterials;
+		
+		for (const auto& model : models) {
+			if (model) {
+				model->prepareForBindlessRendering(samplerLinearRepeat_, allMaterials, *materialTextures_);
+			}
+		}
+		
+		if (allMaterials.empty()) {
+			printLog("WARNING: No materials to update, keeping dummy material");
+			return;
+		}
+		
+		// Recreate material buffer with new data
+		materialBuffer_ = std::make_unique<StorageBuffer>(ctx_, allMaterials.data(),
+			sizeof(MaterialUBO) * allMaterials.size());
+		
+		printLog("Updated material buffer with {} materials", allMaterials.size());
+	}
+	
+	void Renderer::updateMaterials(const vector<Model*>& models)
+	{
+		TRACY_CPU_SCOPE("Renderer::updateMaterials (Model*)");
+		
+		vector<MaterialUBO> allMaterials;
+		
+		for (auto* model : models) {
+			if (model) {
+				model->prepareForBindlessRendering(samplerLinearRepeat_, allMaterials, *materialTextures_);
+			}
+		}
+		
+		if (allMaterials.empty()) {
+			printLog("WARNING: No materials to update, keeping dummy material");
+			return;
+		}
+		
+		// Recreate material buffer with new data
+		materialBuffer_ = std::make_unique<StorageBuffer>(ctx_, allMaterials.data(),
+			sizeof(MaterialUBO) * allMaterials.size());
+		
+		printLog("Updated material buffer with {} materials", allMaterials.size());
+		
+		// ========================================
+		// ✅ FIX: Recreate descriptor sets that reference materialBuffer_
+		// ========================================
+		updateMaterialDescriptorSets();
+	}
+	
+	void Renderer::updateMaterialDescriptorSets()
+	{
+		TRACY_CPU_SCOPE("Renderer::updateMaterialDescriptorSets");
+		
+		printLog("Recreating material descriptor sets...");
+		
+		// "material" descriptor set을 다시 생성
+		vector<string> bindingNames = {"materialBuffer", "materialTextures"};
+		
+		vector<reference_wrapper<Resource>> resources;
+		for (const string& resourceName : bindingNames) {
+			addResource(resourceName, uint32_t(-1), resources);
+		}
+		
+		// Recreate descriptor set
+		if (pipelines_.find("pbrDeferred") != pipelines_.end()) {
+			descriptorSets_["material"].create(
+				ctx_, 
+				pipelines_["pbrDeferred"]->layouts()[1], 
+				resources
+			);
+			
+			printLog("✅ Recreated 'material' descriptor set");
+			
+			// ========================================
+			// ✅ FIX: 파이프라인에 다시 바인딩
+			// ========================================
+			for (const string& pipelineName : {"pbrDeferred", "pbrForward"}) {
+				if (pipelines_.find(pipelineName) == pipelines_.end()) continue;
+				
+				// 파이프라인의 descriptor set 이름들
+				vector<string> setNames;
+				if (pipelineName == "pbrDeferred") {
+					setNames = {"sceneOptions", "material"};
+				} else if (pipelineName == "pbrForward") {
+					setNames = {"sceneOptions", "material", "sky", "shadowMap"};
+				}
+				
+				// 각 프레임에 대해 descriptor set 재구성
+				vector<vector<reference_wrapper<DescriptorSet>>> pipelineDescriptorSets;
+				pipelineDescriptorSets.resize(kMaxFramesInFlight_);
+				
+				for (uint32_t frameIndex = 0; frameIndex < kMaxFramesInFlight_; ++frameIndex) {
+					pipelineDescriptorSets[frameIndex].reserve(setNames.size());
+					
+					for (const string& setName : setNames) {
+						// Per-frame descriptor set
+						if (perFrameDescriptorSets_.find(setName) != perFrameDescriptorSets_.end()) {
+							pipelineDescriptorSets[frameIndex].emplace_back(
+								std::ref(perFrameDescriptorSets_[setName][frameIndex]));
+						}
+						// Non-per-frame descriptor set
+						else if (descriptorSets_.find(setName) != descriptorSets_.end()) {
+							pipelineDescriptorSets[frameIndex].emplace_back(
+								std::ref(descriptorSets_[setName]));
+						}
+					}
+				}
+				
+				// 파이프라인에 재바인딩
+				pipelines_[pipelineName]->setDescriptorSets(pipelineDescriptorSets);
+				printLog("✅ Rebound descriptor sets to pipeline '{}'", pipelineName);
+			}
+		}
+	}
+
 } // namespace BinRenderer::Vulkan

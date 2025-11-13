@@ -126,15 +126,30 @@ namespace BinRenderer::Vulkan {
 		if (listener_) {
 			printLog("Calling IApplicationListener::onInit()...");
 			listener_->onInit(scene_, *renderer_);
+			
+			// ========================================
+			// ✅ FIX: Sync Scene camera to Application camera
+			// ========================================
+			camera_ = scene_.getCamera();
+			printLog("Synced Scene camera to Application camera");
+			printLog("  Position: {}", glm::to_string(camera_.position));
+			printLog("  Rotation: {}", glm::to_string(camera_.rotation));
+			
+			// ========================================
+			// ✅ FIX: Update materials after loading models
+			// ========================================
+			vector<Model*> sceneModels;
+			for (auto& node : scene_.getNodes()) {
+				if (node.model) {
+					sceneModels.push_back(node.model.get());
+				}
+			}
+			
+			if (!sceneModels.empty()) {
+				printLog("Updating materials for {} scene models...", sceneModels.size());
+				renderer_->updateMaterials(sceneModels);
+			}
 		}
-		
-		// ========================================
-		// ? FIX: Sync Scene camera to Application camera
-		// ========================================
-		camera_ = scene_.getCamera();
-		printLog("Synced Scene camera to Application camera");
-		printLog("  Position: {}", glm::to_string(camera_.position));
-		printLog("  Rotation: {}", glm::to_string(camera_.rotation));
 
 		printLog("BinRenderer initialization complete!");
 	}
@@ -256,7 +271,7 @@ namespace BinRenderer::Vulkan {
 					break;
 				case GLFW_KEY_F2:
 					if (app->camera_.type == BinRenderer::Vulkan::Camera::CameraType::lookat) {
-						app->camera_.type = BinRenderer::Vulkan::Camera::CameraType::firstperson;
+					app->camera_.type = BinRenderer::Vulkan::Camera::CameraType::firstperson;
 					}
 					else {
 						app->camera_.type = BinRenderer::Vulkan::Camera::CameraType::lookat;
@@ -1650,6 +1665,12 @@ namespace BinRenderer::Vulkan {
 			if (ImGui::Checkbox("First Person Mode", &isFirstPerson)) {
 				camera_.type = isFirstPerson ? BinRenderer::Vulkan::Camera::CameraType::firstperson
 					: BinRenderer::Vulkan::Camera::CameraType::lookat;
+				
+				// ✅ FIX: View matrix 재계산
+				camera_.updateViewMatrix();
+				
+				// ✅ FIX: Scene 카메라 동기화
+				scene_.setCamera(camera_);
 			}
 		}
 

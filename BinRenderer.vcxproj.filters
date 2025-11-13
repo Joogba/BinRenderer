@@ -504,5 +504,6 @@
     <None Include="docs\Memory_Exhaustion_Fix_Guide.md" />
     <None Include="docs\StorageBuffer_OOM_Debug_Guide.md" />
     <None Include="docs\Device_Lost_Error_Fix.md" />
+    <None Include="docs\Material_Update_Device_Lost_Fix.md" />
   </ItemGroup>
 </Project>

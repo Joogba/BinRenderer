@@ -164,33 +164,26 @@ namespace BinRenderer::Vulkan {
 		void updateViewFrustum(const glm::mat4& viewProjection);
 
 		// ========================================
-		// NEW: Context access for Scene
+		// ✅ NEW: Material 동적 업데이트
 		// ========================================
+		void updateMaterials(const vector<Model*>& models);
+		void updateMaterials(const vector<unique_ptr<Model>>& models);
+
+	private:
+		void updateMaterialDescriptorSets();  // ✅ Helper method
+
+	public:
+		// Accessors
 		Context& getContext()
 		{
 			return ctx_;
 		}
 
-		auto sceneUBO() -> SceneUniform&
-		{
-			return sceneUBO_;
-		}
-		auto optionsUBO() -> OptionsUniform&
-		{
-			return optionsUBO_;
-		}
-		auto skyOptionsUBO() -> SkyOptionsUBO&
-		{
-			return skyOptionsUBO_;
-		}
-		auto postOptionsUBO() -> PostOptionsUBO&
-		{
-			return postOptionsUBO_;
-		}
-		auto ssaoOptionsUBO() -> SsaoOptionsUBO&
-		{
-			return ssaoOptionsUBO_;
-		}
+		auto& sceneUBO() { return sceneUBO_; }
+		auto& optionsUBO() { return optionsUBO_; }
+		auto& skyOptionsUBO() { return skyOptionsUBO_; }
+		auto& postOptionsUBO() { return postOptionsUBO_; }
+		auto& ssaoOptionsUBO() { return ssaoOptionsUBO_; }
 
 	private:
 		const uint32_t& kMaxFramesInFlight_; // 2;
