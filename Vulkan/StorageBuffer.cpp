@@ -25,12 +25,20 @@ StorageBuffer::~StorageBuffer()
 
 void StorageBuffer::create(VkDeviceSize size, VkBufferUsageFlags additionalUsage)
 {
+    // ========================================
+    // FIX: 0 크기 버퍼 방지
+    // ========================================
+    if (size == 0) {
+ printLog("WARNING: Attempted to create 0-size StorageBuffer, using minimum size of 16 bytes");
+     size = 16;  // Minimum buffer size
+    }
+    
     const VkDevice device = ctx_.device();
     size_ = size;
 
     VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
-                               VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
-                               additionalUsage;
+    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+         additionalUsage;
 
     VkBufferCreateInfo bufferInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     bufferInfo.size = size_;
@@ -41,18 +49,38 @@ void StorageBuffer::create(VkDeviceSize size, VkBufferUsageFlags additionalUsage
     VkMemoryRequirements memRequirements;
     vkGetBufferMemoryRequirements(device, buffer_, &memRequirements);
     uint32_t memoryTypeIndex = ctx_.getMemoryTypeIndex(memRequirements.memoryTypeBits,
-                                                       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     if (memoryTypeIndex == uint32_t(-1)) {
         memoryTypeIndex = ctx_.getMemoryTypeIndex(memRequirements.memoryTypeBits,
-                                                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         hostVisible_ = true;
     }
 
     VkMemoryAllocateInfo allocInfo{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = memoryTypeIndex;
-    check(vkAllocateMemory(device, &allocInfo, nullptr, &memory_));
+    
+    // ========================================
+    // FIX: 메모리 할당 에러 로깅
+    // ========================================
+    VkResult result = vkAllocateMemory(device, &allocInfo, nullptr, &memory_);
+    if (result != VK_SUCCESS) {
+        printLog("ERROR: vkAllocateMemory failed! Size: {} bytes, Error: {}", 
+   allocInfo.allocationSize, static_cast<int>(result));
+      
+        // 메모리 정보 출력
+ VkPhysicalDeviceMemoryProperties memProps;
+        vkGetPhysicalDeviceMemoryProperties(ctx_.physicalDevice(), &memProps);
+        
+        printLog("Memory Type {}: heap {}", memoryTypeIndex, memProps.memoryTypes[memoryTypeIndex].heapIndex);
+        printLog("Heap {} size: {} MB", 
+        memProps.memoryTypes[memoryTypeIndex].heapIndex,
+               memProps.memoryHeaps[memProps.memoryTypes[memoryTypeIndex].heapIndex].size / (1024 * 1024));
+   
+        check(result);  // 여기서 예외 발생
+    }
+    
     check(vkBindBufferMemory(device, buffer_, memory_, 0));
 
     // Initialize the resource

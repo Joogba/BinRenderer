@@ -1,5 +1,4 @@
-﻿
-#include "DescriptorPool.h"
+﻿#include "DescriptorPool.h"
 #include "Logger.h"
 #include <unordered_map>
 #include <iostream>
@@ -45,7 +44,18 @@ namespace BinRenderer
                             if (type != VK_DESCRIPTOR_TYPE_MAX_ENUM) {
                                 VkDescriptorPoolSize poolSize{};
                                 poolSize.type = type;
-                                poolSize.descriptorCount = count;
+
+                                // ========================================
+                                // FIX: Cap the descriptor count to prevent memory exhaustion
+                                // ========================================
+                                const uint32_t kMaxReasonableDescriptors = 256; // Reasonable limit
+                                poolSize.descriptorCount = std::min(count, kMaxReasonableDescriptors);
+
+                                if (count > kMaxReasonableDescriptors) {
+                                    printLog("WARNING: Capped {} from {} to {} (was too large)",
+                                        typeStr, count, kMaxReasonableDescriptors);
+                                }
+
                                 poolSizes.push_back(poolSize);
                             }
                         }
@@ -55,8 +65,16 @@ namespace BinRenderer
 
                 // 로드된 통계로 풀 생성 (유효한 데이터가 있는 경우)
                 if (numSets > 0 && !poolSizes.empty()) {
-                    createNewPool(poolSizes, numSets);
-                    printLog("Created initial pool with {} sets and {} descriptor types", numSets,
+                    // Cap number of sets as well
+                    const uint32_t kMaxReasonableSets = 20;
+                    uint32_t cappedNumSets = std::min(numSets, kMaxReasonableSets);
+
+                    if (numSets > kMaxReasonableSets) {
+                        printLog("WARNING: Capped NumSets from {} to {}", numSets, cappedNumSets);
+                    }
+
+                    createNewPool(poolSizes, cappedNumSets);
+                    printLog("Created initial pool with {} sets and {} descriptor types", cappedNumSets,
                         poolSizes.size());
                 }
             }
@@ -481,16 +499,27 @@ namespace BinRenderer
             if (descriptorPools_.size() > 0) {
                 std::ofstream file(kScriptFilename_);
                 if (file.is_open()) {
+                    // ========================================
+                    // FIX: Cap statistics to prevent future memory issues
+                    // ========================================
+                    const uint32_t kMaxReasonableSets = 20;
+                    const uint32_t kMaxReasonableDescriptors = 256;
+    
+                    uint32_t cappedSets = std::min(allocatedSets_, kMaxReasonableSets);
+    
                     // 먼저 세트 수 작성 (들여쓰기 없음)
-                    file << "NumSets " << allocatedSets_ << "\n";
+                    file << "NumSets " << cappedSets << "\n";
 
                     // 할당된 각 디스크립터 타입과 카운트 작성 (들여쓰기 없음)
                     for (const auto& [type, count] : allocatedTypeCounts_) {
-                        file << descriptorTypeToString(type) << " " << count << "\n";
+                        uint32_t cappedCount = std::min(count, kMaxReasonableDescriptors);
+                        file << descriptorTypeToString(type) << " " << cappedCount << "\n";
                     }
 
                     file.close();
                     printLog("Saved descriptor pool statistics to DescriptorPoolSize.txt");
+                    printLog("  (Capped to reasonable limits: {} sets, {} descriptors per type)",
+ kMaxReasonableSets, kMaxReasonableDescriptors);
                 }
                 else {
                     printLog("Warning: Could not write to DescriptorPoolSize.txt");

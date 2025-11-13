@@ -42,6 +42,17 @@ namespace BinRenderer::Vulkan {
 				m->prepareForBindlessRendering(samplerLinearRepeat_, allMaterials, *materialTextures_);
 			}
 
+			// ========================================
+			// FIX: 빈 모델일 때 더미 버퍼 생성
+			// ========================================
+			if (allMaterials.empty()) {
+				printLog("WARNING: No models provided, creating dummy material buffer");
+				
+				// 더미 Material 추가 (최소 1개 필요)
+				MaterialUBO dummyMaterial{};
+				allMaterials.push_back(dummyMaterial);
+			}
+
 			materialBuffer_ = std::make_unique<StorageBuffer>(ctx_, allMaterials.data(),
 				sizeof(MaterialUBO) * allMaterials.size());
 		}
@@ -333,7 +344,6 @@ namespace BinRenderer::Vulkan {
 			string mainTarget;
 			vector<VkRenderingAttachmentInfo> colorAttachments{};
 			VkRenderingAttachmentInfo depthAttachment{};
-			VkRenderingAttachmentInfo stencilAttachment{};
 			VkRenderingInfo renderingInfo{};
 			renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
 
@@ -399,13 +409,13 @@ namespace BinRenderer::Vulkan {
 								image->attachmentView(),
 								VK_ATTACHMENT_LOAD_OP_CLEAR, 1.0f);
 						}
+
+						renderingInfo.pDepthAttachment = &depthAttachment;
 					}
 					else {
 						// ⚠️ Resource not found - should not happen!
 						printLog("ERROR: Depth attachment '{}' not found in ResourceRegistry!", renderNode.depthAttachment);
 					}
-
-					renderingInfo.pDepthAttachment = &depthAttachment;
 				}
 			}
 
@@ -433,6 +443,7 @@ namespace BinRenderer::Vulkan {
 				}
 			}
 
+			// Setup rendering info
 			VkRect2D renderArea = { 0, 0, width, height };
 			renderingInfo.renderArea = renderArea;
 			renderingInfo.layerCount = 1;
@@ -441,14 +452,14 @@ namespace BinRenderer::Vulkan {
 				renderingInfo.pColorAttachments = colorAttachments.data();
 			}
 
-			VkViewport viewport{ 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
-			VkRect2D scissor{ 0, 0, width, height };
+			VkViewport vp{0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f};
+			VkRect2D sc{0, 0, width, height};
 
 			{
 				TRACY_CPU_SCOPE("Begin Rendering");
 				vkCmdBeginRendering(cmd, &renderingInfo);
-				vkCmdSetViewport(cmd, 0, 1, &viewport);
-				vkCmdSetScissor(cmd, 0, 1, &scissor);
+				vkCmdSetViewport(cmd, 0, 1, &vp);
+				vkCmdSetScissor(cmd, 0, 1, &sc);
 			}
 
 			// Process all pipelines for this render node
@@ -479,10 +490,7 @@ namespace BinRenderer::Vulkan {
 
 						if (pipelineName == "shadowMap") {
 							TRACY_CPU_SCOPE("shadowMapSetup");
-							vkCmdSetDepthBias(cmd,
-								1.1f,  // Constant factor
-								0.0f,  // Clamp value
-								2.0f); // Slope factor
+							vkCmdSetDepthBias(cmd, 1.1f, 0.0f, 2.0f);
 						}
 
 						// Render all visible models for this pipeline
@@ -1077,4 +1085,337 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 		return attachment;
 	}
 
-} // namespace BinRenderer::Vulkan} // namespace BinRenderer::Vulkan
+	// ========================================
+	// ✅ NEW API: Model* 기반 오버로드 구현
+	// ========================================
+	
+	void Renderer::update(Camera& camera, vector<Model*>& models, uint32_t currentFrame, double time)
+	{
+		TRACY_CPU_SCOPE("Renderer::update (Model*)");
+
+		{
+			TRACY_CPU_SCOPE("Update View Frustum");
+			updateViewFrustum(camera.matrices.perspective * camera.matrices.view);
+		}
+
+		{
+			TRACY_CPU_SCOPE("Update World Bounds");
+			updateWorldBounds(models);
+		}
+
+		{
+			TRACY_CPU_SCOPE("Update Bone Data");
+			updateBoneData(models, currentFrame);
+		}
+
+		{
+			TRACY_CPU_SCOPE("Perform Frustum Culling");
+			if (frustumCullingEnabled_) {
+				performFrustumCulling(models);
+			}
+		}
+
+		{
+			TRACY_CPU_SCOPE("Update Uniform Buffers");
+
+			// 🆕 NEW SYSTEM: Update scene UBO
+			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.sceneData[currentFrame])) {
+				sceneUBO_.projection = camera.matrices.perspective;
+				sceneUBO_.view = camera.matrices.view;
+				sceneUBO_.cameraPos = camera.position;
+				buffer->updateFromCpuData();
+			}
+
+			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.options[currentFrame])) {
+				buffer->updateFromCpuData();
+			}
+
+			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.skyOptions[currentFrame])) {
+				buffer->updateFromCpuData();
+			}
+
+			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.postOptions[currentFrame])) {
+				buffer->updateFromCpuData();
+			}
+
+			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.ssaoOptions[currentFrame])) {
+				buffer->updateFromCpuData();
+			}
+		}
+	}
+
+	void Renderer::updateBoneData(const vector<Model*>& models, uint32_t currentFrame)
+	{
+		TRACY_CPU_SCOPE("Renderer::updateBoneData (Model*)");
+
+		// Reset bone data
+		boneDataUBO_.animationData.x = 0.0f;
+		for (int i = 0; i < 65; ++i) {
+			boneDataUBO_.boneMatrices[i] = glm::mat4(1.0f);
+		}
+
+		// Check if any model has animation data
+		bool hasAnyAnimation = false;
+		for (auto* model : models) {
+			if (model && model->hasAnimations() && model->hasBones()) {
+				hasAnyAnimation = true;
+
+				// Get bone matrices from the first animated model
+				const auto& boneMatrices = model->getBoneMatrices();
+
+				// Copy bone matrices (up to 65 bones)
+				const size_t maxBones = 65;
+				size_t bonesToCopy = (boneMatrices.size() < maxBones) ? boneMatrices.size() : maxBones;
+				for (size_t i = 0; i < bonesToCopy; ++i) {
+					boneDataUBO_.boneMatrices[i] = boneMatrices[i];
+				}
+
+				break; // For now, use the first animated model
+			}
+		}
+
+		boneDataUBO_.animationData.x = float(hasAnyAnimation);
+
+		// DEBUG: Log hasAnimation state
+		static bool lastHasAnimation = false;
+		if (lastHasAnimation != hasAnyAnimation) {
+			printLog("hasAnimation changed to: {}", hasAnyAnimation);
+			lastHasAnimation = hasAnyAnimation;
+		}
+
+		if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.boneData[currentFrame])) {
+			buffer->updateFromCpuData();
+		}
+	}
+
+	void Renderer::draw(VkCommandBuffer cmd, uint32_t currentFrame, VkImageView swapchainImageView,
+		vector<Model*>& models, VkViewport viewport, VkRect2D scissor)
+	{
+		TRACY_CPU_SCOPE("Renderer::draw (Model*)");
+
+		for (auto& renderNode : renderGraph_.renderNodes_) {
+			if (renderNode.pipelineNames[0] == "deferredLighting") {
+				TRACY_CPU_SCOPE("deferredLighting");
+				pipelines_.at("deferredLighting")->dispatch(cmd, currentFrame);
+				continue;
+			}
+
+			string mainTarget;
+			vector<VkRenderingAttachmentInfo> colorAttachments{};
+			VkRenderingAttachmentInfo depthAttachment{};
+			VkRenderingInfo renderingInfo{};
+			renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+
+			// Handle color attachments
+			{
+				TRACY_CPU_SCOPE("Setup Color Attachments");
+				for (const auto& colorTarget : renderNode.colorAttachments) {
+					if (colorTarget == "swapchain") {
+						colorAttachments.push_back(createColorAttachment(
+							swapchainImageView, VK_ATTACHMENT_LOAD_OP_CLEAR, {0.0f, 0.0f, 1.0f, 0.0f}));
+						continue;
+					}
+
+					if (mainTarget.empty()) {
+						mainTarget = colorTarget;
+					}
+
+					// 🆕 NEW SYSTEM: Use Handle
+					ImageHandle handle = getImageHandleByName(colorTarget);
+					Image2D* image = resourceRegistry_.getResourceAs<Image2D>(handle);
+
+					if (image) {
+						if (renderNode.pipelineNames[0] == "sky") {
+							colorAttachments.push_back(createColorAttachment(
+								image->view(), VK_ATTACHMENT_LOAD_OP_LOAD, {0.0f, 0.0f, 0.5f, 0.0f}));
+						} else {
+							colorAttachments.push_back(createColorAttachment(
+								image->view(), VK_ATTACHMENT_LOAD_OP_CLEAR, {0.0f, 0.0f, 0.5f, 0.0f}));
+						}
+					} else {
+						printLog("ERROR: Color target '{}' not found in ResourceRegistry!", colorTarget);
+					}
+				}
+			}
+
+			// Handle depth attachment
+			{
+				TRACY_CPU_SCOPE("Setup Depth Attachment");
+				if (!renderNode.depthAttachment.empty()) {
+					if (mainTarget.empty()) {
+						mainTarget = renderNode.depthAttachment;
+					}
+
+					// 🆕 NEW SYSTEM: Use Handle (now safe!)
+					ImageHandle handle = getImageHandleByName(renderNode.depthAttachment);
+					Image2D* image = resourceRegistry_.getResourceAs<Image2D>(handle);
+
+					if (image) {
+						image->transitionToDepthStencilAttachment(cmd);
+						
+						if (renderNode.pipelineNames[0] == "sky") {
+							depthAttachment = createDepthAttachment(
+								image->attachmentView(),
+								VK_ATTACHMENT_LOAD_OP_LOAD, 1.0f);
+						} else {
+							depthAttachment = createDepthAttachment(
+								image->attachmentView(),
+								VK_ATTACHMENT_LOAD_OP_CLEAR, 1.0f);
+						}
+						
+						renderingInfo.pDepthAttachment = &depthAttachment;
+					} else {
+						printLog("ERROR: Depth attachment '{}' not found in ResourceRegistry!", renderNode.depthAttachment);
+					}
+				}
+			}
+
+			{
+				TRACY_CPU_SCOPE("Submit Pipeline Barriers");
+				for (auto& pipelineName : renderNode.pipelineNames) {
+					pipelines_.at(pipelineName)->submitBarriers(cmd, currentFrame);
+				}
+			}
+
+			// ✅ FIX: Get dimensions properly
+			uint32_t width = uint32_t(viewport.width);
+			uint32_t height = uint32_t(viewport.height);
+			
+			if (!mainTarget.empty()) {
+				ImageHandle handle = getImageHandleByName(mainTarget);
+				Image2D* image = resourceRegistry_.getResourceAs<Image2D>(handle);
+
+				if (image) {
+					width = image->width();
+					height = image->height();
+				} else {
+					printLog("WARNING: Main target '{}' not found, using viewport dimensions", mainTarget);
+				}
+			}
+
+			// Setup rendering info
+			VkRect2D renderArea = {0, 0, width, height};
+			renderingInfo.renderArea = renderArea;
+			renderingInfo.layerCount = 1;
+			
+			if (!colorAttachments.empty()) {
+				renderingInfo.colorAttachmentCount = uint32_t(colorAttachments.size());
+				renderingInfo.pColorAttachments = colorAttachments.data();
+			}
+
+			VkViewport vp{0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f};
+			VkRect2D sc{0, 0, width, height};
+
+			{
+				TRACY_CPU_SCOPE("Begin Rendering");
+				vkCmdBeginRendering(cmd, &renderingInfo);
+				vkCmdSetViewport(cmd, 0, 1, &vp);
+				vkCmdSetScissor(cmd, 0, 1, &sc);
+			}
+
+			// Process pipelines
+			{
+				TRACY_CPU_SCOPE("ProcessPipelines");
+				
+				for (auto& pipelineName : renderNode.pipelineNames) {
+					{
+						TRACY_CPU_SCOPE("Pipeline Processing");
+						
+						vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, 
+							pipelines_.at(pipelineName)->pipeline());
+						pipelines_.at(pipelineName)->bindDescriptorSets(cmd, currentFrame);
+
+						if (pipelineName == "sky") {
+							TRACY_CPU_SCOPE("drawSky");
+							vkCmdDraw(cmd, 36, 1, 0, 0);
+							continue;
+						}
+
+						if (pipelineName == "post") {
+							TRACY_CPU_SCOPE("drawPost");
+							vkCmdDraw(cmd, 6, 1, 0, 0);
+							continue;
+						}
+
+						if (pipelineName == "shadowMap") {
+							TRACY_CPU_SCOPE("shadowMapSetup");
+							vkCmdSetDepthBias(cmd, 1.1f, 0.0f, 2.0f);
+						}
+
+						// ✅ Render models (Model* version)
+						{
+							TRACY_CPU_SCOPE("DrawModels");
+							
+							VkDeviceSize offsets[1]{0};
+							size_t visibleMeshCount = 0;
+							size_t totalMeshCount = 0;
+							
+							for (auto* model : models) {
+								if (!model || !model->visible()) continue;
+
+								for (auto& mesh : model->meshes()) {
+									totalMeshCount++;
+									
+									if (mesh.isCulled) continue;
+									
+									visibleMeshCount++;
+
+									PbrPushConstants pushConstants;
+									pushConstants.model = model->modelMatrix();
+									pushConstants.materialIndex = mesh.materialIndex_;
+									memcpy(pushConstants.coeffs, model->coeffs(), sizeof(pushConstants.coeffs));
+
+									vkCmdPushConstants(cmd, pipelines_.at(pipelineName)->pipelineLayout(),
+										VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+										0, sizeof(PbrPushConstants), &pushConstants);
+
+									vkCmdBindVertexBuffers(cmd, 0, 1, &mesh.vertexBuffer_, offsets);
+									vkCmdBindIndexBuffer(cmd, mesh.indexBuffer_, 0, VK_INDEX_TYPE_UINT32);
+									vkCmdDrawIndexed(cmd, static_cast<uint32_t>(mesh.indices_.size()), 1, 0, 0, 0);
+								}
+							}
+							
+							// Track rendering statistics
+							TRACY_PLOT("VisibleMeshes", static_cast<int64_t>(visibleMeshCount));
+							TRACY_PLOT("TotalMeshes", static_cast<int64_t>(totalMeshCount));
+							TRACY_PLOT("CulledMeshes", static_cast<int64_t>(totalMeshCount - visibleMeshCount));
+						}
+					}
+				}
+			}
+
+			{
+				TRACY_CPU_SCOPE("End Rendering");
+				vkCmdEndRendering(cmd);
+			}
+		}
+	}
+
+	void Renderer::performFrustumCulling(vector<Model*>& models)
+	{
+		cullingStats_ = {};
+		for (auto* model : models) {
+			if (!model) continue;
+			for (auto& mesh : model->meshes()) {
+				cullingStats_.totalMeshes++;
+				mesh.isCulled = !viewFrustum_.intersects(mesh.worldBounds);  // ✅ intersects 사용
+				if (mesh.isCulled) {
+					cullingStats_.culledMeshes++;
+				} else {
+					cullingStats_.renderedMeshes++;
+				}
+			}
+		}
+	}
+
+	void Renderer::updateWorldBounds(vector<Model*>& models)
+	{
+		for (auto* model : models) {
+			if (!model) continue;
+			for (auto& mesh : model->meshes()) {
+				mesh.updateWorldBounds(model->modelMatrix());
+			}
+		}
+	}
+
+} // namespace BinRenderer::Vulkan

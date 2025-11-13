@@ -45,6 +45,12 @@
     <ClCompile Include="PBRTest.cpp">
       <Filter>소스 파일\PBR</Filter>
     </ClCompile>
+    <ClCompile Include="PBRTest_NewAPI.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="PBRTest_Lightweight.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SkyBoxExample.h">

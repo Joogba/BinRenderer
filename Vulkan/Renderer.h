@@ -135,19 +135,41 @@ namespace BinRenderer::Vulkan {
 		void createPipelines(const VkFormat colorFormat, const VkFormat depthFormat);
 		void createTextures(uint32_t swapchainWidth, uint32_t swapchainHeight);
 		void createUniformBuffers();
+
+		// ========================================
+		// Legacy API (unique_ptr 기반)
+		// ========================================
 		void update(Camera& camera, vector<unique_ptr<Model>>& models, uint32_t currentFrame,
 			double time);
 		void updateBoneData(const vector<unique_ptr<Model>>& models, uint32_t currentFrame);
 		void draw(VkCommandBuffer cmd, uint32_t currentFrame, VkImageView swapchainImageView,
 			vector<unique_ptr<Model>>& models, VkViewport viewport, VkRect2D scissor);
+		void performFrustumCulling(vector<unique_ptr<Model>>& models);
+		void updateWorldBounds(vector<unique_ptr<Model>>& models);
+
+		// ========================================
+		// ✅ NEW API (Model* 기반 - Scene 호환)
+		// ========================================
+		void update(Camera& camera, vector<Model*>& models, uint32_t currentFrame, double time);
+		void updateBoneData(const vector<Model*>& models, uint32_t currentFrame);
+		void draw(VkCommandBuffer cmd, uint32_t currentFrame, VkImageView swapchainImageView,
+			vector<Model*>& models, VkViewport viewport, VkRect2D scissor);
+		void performFrustumCulling(vector<Model*>& models);
+		void updateWorldBounds(vector<Model*>& models);
 
 		// View frustum culling
 		auto getCullingStats() const -> const CullingStats&;
 		bool isFrustumCullingEnabled() const;
-		void performFrustumCulling(vector<unique_ptr<Model>>& models);
-		void updateWorldBounds(vector<unique_ptr<Model>>& models);
 		void setFrustumCullingEnabled(bool enabled);
 		void updateViewFrustum(const glm::mat4& viewProjection);
+
+		// ========================================
+		// NEW: Context access for Scene
+		// ========================================
+		Context& getContext()
+		{
+			return ctx_;
+		}
 
 		auto sceneUBO() -> SceneUniform&
 		{
@@ -244,13 +266,13 @@ namespace BinRenderer::Vulkan {
 			const static unordered_set<string> perFrameResourceSet = {
 				"sceneData", "options", "skyOptions", "postOptions", "ssaoOptions", "boneData"
 			};
-			
+
 			for (const auto& name : resourceNames) {
 				if (perFrameResourceSet.contains(name)) {
 					return true;
 				}
 			}
-			
+
 			return false;
 		}
 
@@ -296,7 +318,7 @@ namespace BinRenderer::Vulkan {
 						return;
 					}
 				}
-				
+
 				// Check if it's an image resource
 				ImageHandle imgHandle = getImageHandleByName(resourceName);
 				if (imgHandle.isValid()) {
@@ -317,7 +339,7 @@ namespace BinRenderer::Vulkan {
 				resources.push_back(*materialTextures_);
 				return;
 			}
-			
+
 			// ⚠️ Resource not found - this should not happen!
 			printLog("ERROR: Resource '{}' not found in ResourceRegistry!", resourceName);
 		}
