@@ -328,6 +328,7 @@
     <ClCompile Include="Vulkan\ResourceBinding.cpp" />
     <ClCompile Include="Vulkan\ResourceRegistry.cpp" />
     <ClCompile Include="Vulkan\Sampler.cpp" />
+    <ClCompile Include="Vulkan\Scene.cpp" />
     <ClCompile Include="Vulkan\Shader.cpp" />
     <ClCompile Include="Vulkan\ShaderManager.cpp" />
     <ClCompile Include="Vulkan\Skeleton.cpp" />
@@ -388,6 +389,7 @@
     <None Include="docs\StorageBuffer_OOM_Debug_Guide.md" />
     <None Include="Docs\VulkanArchitecture.canvas" />
     <None Include="Docs\VulkanClasses.md" />
+    <None Include="glsl assets\shaders\pbrForward.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -557,17 +557,19 @@ namespace BinRenderer::Vulkan {
 			{
 				TRACY_CPU_SCOPE("Shadow Mapping Setup");
 
-				// ? FIX: 레거시 + Scene 모델 병합
+				// ✅ FIX: 레거시 + Scene 모델 병합 + Transform 적용
 				vector<Model*> allModels;
 				for (auto& m : models_) {
 					if (m) allModels.push_back(m.get());
 				}
 				for (auto& node : scene_.getNodes()) {
 					if (node.model && node.visible) {
+						// ✅ SceneNode의 transform을 Model에 적용
+						node.model->modelMatrix() = node.transform;
 						allModels.push_back(node.model.get());
 					}
 				}
-
+				
 				if (allModels.size() > 0) {
 
 					glm::mat4 lightView =
@@ -635,13 +637,15 @@ namespace BinRenderer::Vulkan {
 			{
 				TRACY_CPU_SCOPE("Renderer Update");
 				
-				// ? FIX: 레거시 + Scene 모델 병합
+				// ✅ FIX: 레거시 + Scene 모델 병합 + Transform 적용
 				vector<Model*> allModels;
 				for (auto& m : models_) {
 					if (m) allModels.push_back(m.get());
 				}
 				for (auto& node : scene_.getNodes()) {
 					if (node.model && node.visible) {
+						// ✅ SceneNode의 transform을 Model에 적용
+						node.model->modelMatrix() = node.transform;
 						allModels.push_back(node.model.get());
 					}
 				}
@@ -735,7 +739,7 @@ namespace BinRenderer::Vulkan {
 				}
 				
 				// ========================================
-				// ? FIX: Scene 모델과 레거시 모델 병합
+				// ✅ FIX: Scene 모델과 레거시 모델 병합 + Transform 적용
 				// ========================================
 				vector<Model*> allModels;
 				
@@ -744,9 +748,11 @@ namespace BinRenderer::Vulkan {
 					if (m) allModels.push_back(m.get());
 				}
 				
-				// Scene models
+				// Scene models - Transform 적용
 				for (auto& node : scene_.getNodes()) {
 					if (node.model && node.visible) {
+						// ✅ SceneNode의 transform을 Model에 적용
+						node.model->modelMatrix() = node.transform;
 						allModels.push_back(node.model.get());
 					}
 				}
@@ -915,7 +921,7 @@ namespace BinRenderer::Vulkan {
 			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "? Tracy Profiler Active");
 			if (ImGui::IsItemHovered()) {
 				ImGui::SetTooltip("Tracy profiler is connected and collecting data.\n"
-					"Connect Tracy client to view detailed profiling information.");
+					" Connect Tracy client to view detailed profiling information.");
 			}
 		}
 		else {
@@ -1577,11 +1583,11 @@ namespace BinRenderer::Vulkan {
 				renderer_->postOptionsUBO().filmGrainStrength = 0.0f;
 				renderer_->postOptionsUBO().chromaticAberration =
 					1.25f; // Fast FXAA (0.25 strength, 0.0 quality)
-			}
+						}
 
 			if (ImGui::Button("Show Tone Mapping")) {
 				renderer_->postOptionsUBO().debugMode = 1;
-				renderer_->postOptionsUBO().exposure = 2.0f;
+			 renderer_->postOptionsUBO().exposure = 2.0f;
 				renderer_->postOptionsUBO().chromaticAberration = 0.0f; // Disable effects for debug
 			}
 			ImGui::SameLine();
@@ -1967,4 +1973,4 @@ namespace BinRenderer::Vulkan {
 		ImGui::End();
 	}
 
-} // namespace BinRenderer::Vulkan} // namespace BinRenderer::Vulkan
+} // namespace BinRenderer::Vulkan

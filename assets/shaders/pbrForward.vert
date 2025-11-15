@@ -1,14 +1,24 @@
 #version 450
 
-// Vertex input attributes matching the updated Vertex class layout
+// ========================================
+// ? GPU Instancing: Step 3 - Vertex Input
+// ========================================
+
+// Per-vertex attributes (기존)
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec2 inTexCoord;
 layout(location = 3) in vec3 inTangent;
 layout(location = 4) in vec3 inBitangent;
-layout(location = 5) in vec4 inBoneWeights;   // NEW: Bone weights for skeletal animation
-layout(location = 6) in ivec4 inBoneIndices;  // NEW: Bone indices for skeletal animation
+layout(location = 5) in vec4 inBoneWeights;   // Bone weights for skeletal animation
+layout(location = 6) in ivec4 inBoneIndices;  // Bone indices for skeletal animation
 
+// ? NEW: Per-instance attributes (from Instance Buffer)
+// mat4는 4개의 vec4로 구성되므로 4개의 location을 차지함
+layout(location = 10) in mat4 instanceModelMatrix;  // locations 10, 11, 12, 13
+layout(location = 14) in uint instanceMaterialOffset;
+
+// Uniform buffers
 layout(set = 0, binding = 0) uniform SceneDataUBO {
     mat4 projection;
     mat4 view;
@@ -30,15 +40,16 @@ layout(set = 0, binding = 1) uniform OptionsUBO {
     float ssaoBias;
     int ssaoSampleCount;
     float ssaoPower;
+    bool isInstanced;  // ? NEW: GPU Instancing flag
 } options;
 
 layout(set = 0, binding = 2) uniform BoneDataUBO {
     mat4 boneMatrices[65];  // Support up to 65 bones (4,160 bytes)
-    vec4 animationData;      // x = hasAnimation (0.0/1.0), y,z,w = future use
+    vec4 animationData;    // x = hasAnimation (0.0/1.0), y,z,w = future use
 } boneData;
 
 layout(push_constant) uniform PushConstants {
-    mat4 model;
+    mat4 model;  // ?? Legacy: 단일 인스턴스용 (instancing 시 무시됨)
     uint materialIndex;
     float coeffs[15];    
 } pushConstants;
@@ -60,79 +71,86 @@ void main() {
     
     bool animationApplied = false;
 
-    // UPDATED: Check animation flag from animationData.x
+    // Check animation flag from animationData.x
     bool hasAnimationEnabled = (boneData.animationData.x > 0.5);
     
-    // Apply skeletal animation if enabled and vertex has valid bone data
+    // Apply skeletal animation if enabled
     if (hasAnimationEnabled && (inBoneIndices.x >= 0 || inBoneIndices.y >= 0 || 
-                                inBoneIndices.z >= 0 || inBoneIndices.w >= 0)) {
-        
-        // Calculate animated position
+       inBoneIndices.z >= 0 || inBoneIndices.w >= 0)) {
+  
         vec4 animatedPosition = vec4(0.0);
         vec3 animatedNormal = vec3(0.0);
         vec3 animatedTangent = vec3(0.0);
         vec3 animatedBitangent = vec3(0.0);
         
-        // Apply bone transformations for up to 4 bones per vertex
         for (int i = 0; i < 4; i++) {
             int boneIndex = inBoneIndices[i];
             float weight = inBoneWeights[i];
-            
+  
             if (boneIndex >= 0 && boneIndex < 65 && weight > 0.0) {
-                
-                mat4 boneMatrix = boneData.boneMatrices[boneIndex];
-                
-                // Transform position
-                animatedPosition += weight * (boneMatrix * vec4(inPosition, 1.0));
-                
-                // Transform normal (using upper 3x3 matrix)
-                mat3 boneNormalMatrix = mat3(boneMatrix);
-                animatedNormal += weight * (boneNormalMatrix * inNormal);
-                animatedTangent += weight * (boneNormalMatrix * inTangent);
-                animatedBitangent += weight * (boneNormalMatrix * inBitangent);
+        mat4 boneMatrix = boneData.boneMatrices[boneIndex];
+     
+     animatedPosition += weight * (boneMatrix * vec4(inPosition, 1.0));
+     
+           mat3 boneNormalMatrix = mat3(boneMatrix);
+  animatedNormal += weight * (boneNormalMatrix * inNormal);
+          animatedTangent += weight * (boneNormalMatrix * inTangent);
+          animatedBitangent += weight * (boneNormalMatrix * inBitangent);
 
-                animationApplied = true; // DEBUG: Track if any bone transformation was applied
-            }
+      animationApplied = true;
+       }
         }
-        
-        // Use animated attributes if any bone transformations were applied
+     
         if (animatedPosition.w > 0.0) {
-            position = animatedPosition.xyz;
-            normal = normalize(animatedNormal);
-            tangent = normalize(animatedTangent);
+   position = animatedPosition.xyz;
+      normal = normalize(animatedNormal);
+      tangent = normalize(animatedTangent);
             bitangent = normalize(animatedBitangent);
-        }
     }
-    
-    // DEBUG: Apply a small offset if animation was applied (for visual debugging)
+    }
+  
+    // DEBUG: Visual indicator for animation
     if (animationApplied && hasAnimationEnabled) {
-        position.y += sin(gl_VertexIndex * 0.1) * 0.01; // Small visual indicator
+ position.y += sin(gl_VertexIndex * 0.1) * 0.01;
     }
 
-    // Transform vertex position to world space
-    vec4 worldPos = pushConstants.model * vec4(position, 1.0);
-    fragPos = worldPos.xyz;
+    // ========================================
+    // ? GPU Instancing: Step 3 - Use Per-instance Transform
+ // ========================================
+    // ? NEW: 조건부 transform 선택
+    mat4 modelMatrix;
+  if (options.isInstanced) {
+        // Instancing: per-instance transform 사용
+        modelMatrix = instanceModelMatrix;
+    } else {
+        // Legacy: push constants transform 사용
+      modelMatrix = pushConstants.model;
+    }
+
+    // Transform to world space
+ vec4 worldPos = modelMatrix * vec4(position, 1.0);
+fragPos = worldPos.xyz;
     
     const mat4 scaleBias = mat4(
         0.5, 0.0, 0.0, 0.0, 
         0.0, 0.5, 0.0, 0.0, 
         0.0, 0.0, 1.0, 0.0, 
-        0.5, 0.5, 0.0, 1.0
+   0.5, 0.5, 0.0, 1.0
     );
 
-    // Transform to light space for shadow mapping
+    // Shadow mapping
     fragPosLightSpace = scaleBias * sceneData.lightSpaceMatrix * worldPos;
-    
-    // Transform normal, tangent, and bitangent to world space
-    mat3 normalMatrix = transpose(inverse(mat3(pushConstants.model)));
+
+  // Transform normals to world space
+    mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
     fragNormal = normalMatrix * normal;
     fragTangent = normalMatrix * tangent;
     fragBitangent = normalMatrix * bitangent;
     
-    // Pass through texture coordinates and camera position
+    // Pass through
     fragTexCoord = inTexCoord;
     fragCameraPos = sceneData.cameraPos;
     
-    // Transform vertex to clip space
+    // Final transform to clip space
     gl_Position = sceneData.projection * sceneData.view * worldPos;
 }

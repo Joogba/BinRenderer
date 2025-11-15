@@ -23,6 +23,7 @@ namespace BinRenderer::Vulkan {
 
 	using namespace std;
 
+
 	struct SceneUniform // Layout matches pbrForward.vert
 	{
 		alignas(16) glm::mat4 projection = glm::mat4(1.0f); // 64 bytes
@@ -57,6 +58,10 @@ namespace BinRenderer::Vulkan {
 		alignas(4) float diffuseWeight = 1.0f;    // PBR diffuse weight
 		alignas(4) float emissiveWeight = 1.0f;   // PBR emissive weight
 		alignas(4) float shadowOffset = 0.0f;     // Shadow bias offset
+		alignas(4) int isInstanced = 0;    // GPU Instancing flag
+		alignas(4) float padding1 = 0.0f;     // Padding for alignment
+		alignas(4) float padding2 = 0.0f;
+		alignas(4) float padding3 = 0.0f;
 	};
 
 	// Post-processing options uniform buffer structure
@@ -156,6 +161,8 @@ namespace BinRenderer::Vulkan {
 			vector<Model*>& models, VkViewport viewport, VkRect2D scissor);
 		void performFrustumCulling(vector<Model*>& models);
 		void updateWorldBounds(vector<Model*>& models);
+
+
 
 		// View frustum culling
 		auto getCullingStats() const -> const CullingStats&;

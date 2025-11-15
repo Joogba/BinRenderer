@@ -198,6 +198,9 @@
     <ClCompile Include="Vulkan\Cloth\ClothRenderPass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Vulkan\Scene.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h">
@@ -505,5 +508,6 @@
     <None Include="docs\StorageBuffer_OOM_Debug_Guide.md" />
     <None Include="docs\Device_Lost_Error_Fix.md" />
     <None Include="docs\Material_Update_Device_Lost_Fix.md" />
+    <None Include="glsl assets\shaders\pbrForward.vert" />
   </ItemGroup>
 </Project>
