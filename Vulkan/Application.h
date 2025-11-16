@@ -7,6 +7,7 @@
 #include "GpuTimer.h"
 #include "IApplicationListener.h"
 #include "Image2D.h"
+#include "InputManager.h"
 #include "Logger.h"
 #include "MappedBuffer.h"
 #include "Model.h"
@@ -27,15 +28,25 @@
 
 namespace BinRenderer::Vulkan {
 
-	struct MouseState
+	/**
+	 * @brief Application-level input handler
+	 * 
+	 * 엔진 레벨의 기본 입력 처리 (카메라 이동, 애니메이션 제어 등)
+	 */
+	class ApplicationInputHandler : public IInputListener
 	{
-		struct
-		{
-			bool left = false;
-			bool right = false;
-			bool middle = false;
-		} buttons;
-		glm::vec2 position{ 0.0f, 0.0f };
+	public:
+		ApplicationInputHandler(class Application* app) : app_(app) {}
+
+		void onKeyPressed(int key, int mods) override;
+		void onKeyReleased(int key, int mods) override;
+		void onMouseButtonPressed(MouseButton button, double x, double y) override;
+		void onMouseButtonReleased(MouseButton button, double x, double y) override;
+		void onMouseMoved(double x, double y, double deltaX, double deltaY) override;
+		void onMouseScrolled(double xOffset, double yOffset) override;
+
+	private:
+		class Application* app_;
 	};
 
 	class Application
@@ -94,6 +105,14 @@ namespace BinRenderer::Vulkan {
 			return scene_.getCamera();
 		}
 
+		/**
+		 * @brief InputManager 접근
+		 */
+		InputManager& getInputManager()
+		{
+			return inputManager_;
+		}
+
 	private:
 		// ========================================
 		// Engine Configuration
@@ -111,12 +130,13 @@ namespace BinRenderer::Vulkan {
 		Scene scene_;
 		unique_ptr<Renderer> renderer_;
 		GuiRenderer guiRenderer_;
+		InputManager inputManager_;
+		unique_ptr<ApplicationInputHandler> inputHandler_;
 
 		// ========================================
 		// Rendering State
 		// ========================================
 		VkExtent2D windowSize_{};
-		MouseState mouseState_;
 		Camera camera_;  // Application-level camera (synchronized with Scene)
 
 		// ========================================
@@ -146,13 +166,12 @@ namespace BinRenderer::Vulkan {
 		// Initialization Methods
 		// ========================================
 		void initializeVulkanResources();
-		void setupCallbacks();
+		void initializeInputSystem();
 
 		// ========================================
-		// GUI & Input
+		// GUI
 		// ========================================
 		void updateGui();
-		void handleMouseMove(int32_t x, int32_t y);
 
 		// Performance tracking
 		void updatePerformanceMetrics(float deltaTime);
@@ -176,6 +195,9 @@ namespace BinRenderer::Vulkan {
 		 * @brief Scene의 모든 visible 노드의 Transform을 Model에 적용
 		 */
 		void syncSceneTransforms();
+
+		// Friend class for input handling
+		friend class ApplicationInputHandler;
 	};
 
 } // namespace BinRenderer::Vulkan

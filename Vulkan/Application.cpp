@@ -15,6 +15,201 @@
 
 namespace BinRenderer::Vulkan {
 
+	// ========================================
+	// ApplicationInputHandler Implementation
+	// ========================================
+
+	void ApplicationInputHandler::onKeyPressed(int key, int mods)
+	{
+		// Safety check
+		if (!app_ || !app_->renderer_) {
+			return;
+		}
+
+		// General controls
+		switch (key) {
+		case GLFW_KEY_F2:
+			if (app_->camera_.type == Camera::CameraType::lookat) {
+				app_->camera_.type = Camera::CameraType::firstperson;
+			}
+			else {
+				app_->camera_.type = Camera::CameraType::lookat;
+			}
+			break;
+		case GLFW_KEY_F3:
+			printLog("{} {} {}", glm::to_string(app_->camera_.position),
+				glm::to_string(app_->camera_.rotation),
+				glm::to_string(app_->camera_.viewPos));
+			break;
+		case GLFW_KEY_F4:
+		{
+			bool cullingEnabled = app_->renderer_->isFrustumCullingEnabled();
+			app_->renderer_->setFrustumCullingEnabled(!cullingEnabled);
+			printLog("Frustum culling: {}", !cullingEnabled ? "Enabled" : "Disabled");
+		}
+		break;
+		case GLFW_KEY_ESCAPE:
+			// ✅ FIX: Use window from Application instead of glfwGetCurrentContext()
+			glfwSetWindowShouldClose(app_->window_.getGLFWWindow(), GLFW_TRUE);
+			printLog("ESC pressed - closing application");
+			break;
+		}
+
+		// First person camera controls
+		if (app_->camera_.type == Camera::firstperson) {
+			switch (key) {
+			case GLFW_KEY_W:
+				app_->camera_.keys.forward = true;
+				break;
+			case GLFW_KEY_S:
+				app_->camera_.keys.backward = true;
+				break;
+			case GLFW_KEY_A:
+				app_->camera_.keys.left = true;
+				break;
+			case GLFW_KEY_D:
+				app_->camera_.keys.right = true;
+				break;
+			case GLFW_KEY_E:
+				app_->camera_.keys.down = true;
+				break;
+			case GLFW_KEY_Q:
+				app_->camera_.keys.up = true;
+				break;
+			}
+		}
+
+		// Animation control keys
+		switch (key) {
+		case GLFW_KEY_SPACE:
+			// Toggle animation play/pause
+			for (auto& node : app_->scene_.getNodes()) {
+				if (node.model && node.model->hasAnimations()) {
+					if (node.model->isAnimationPlaying()) {
+						node.model->pauseAnimation();
+						printLog("Animation paused");
+					}
+					else {
+						node.model->playAnimation();
+						printLog("Animation resumed");
+					}
+				}
+			}
+			break;
+
+		case GLFW_KEY_R:
+			// Restart animation
+			for (auto& node : app_->scene_.getNodes()) {
+				if (node.model && node.model->hasAnimations()) {
+					node.model->stopAnimation();
+					node.model->playAnimation();
+					printLog("Animation restarted");
+				}
+			}
+			break;
+
+		case GLFW_KEY_1:
+		case GLFW_KEY_2:
+		case GLFW_KEY_3:
+		case GLFW_KEY_4:
+		case GLFW_KEY_5:
+		{
+			uint32_t animIndex = key - GLFW_KEY_1;
+			for (auto& node : app_->scene_.getNodes()) {
+				if (node.model && node.model->hasAnimations() && animIndex < node.model->getAnimationCount()) {
+					node.model->setAnimationIndex(animIndex);
+					node.model->playAnimation();
+					printLog("Switched to animation {}: '{}'", animIndex,
+						node.model->getAnimation()->getCurrentAnimationName());
+				}
+			}
+		}
+		break;
+		}
+	}
+
+	void ApplicationInputHandler::onKeyReleased(int key, int mods)
+	{
+		// First person camera controls
+		if (app_->camera_.type == Camera::firstperson) {
+			switch (key) {
+			case GLFW_KEY_W:
+				app_->camera_.keys.forward = false;
+				break;
+			case GLFW_KEY_S:
+				app_->camera_.keys.backward = false;
+				break;
+			case GLFW_KEY_A:
+				app_->camera_.keys.left = false;
+				break;
+			case GLFW_KEY_D:
+				app_->camera_.keys.right = false;
+				break;
+			case GLFW_KEY_E:
+				app_->camera_.keys.down = false;
+				break;
+			case GLFW_KEY_Q:
+				app_->camera_.keys.up = false;
+				break;
+			}
+		}
+	}
+
+	void ApplicationInputHandler::onMouseButtonPressed(MouseButton button, double x, double y)
+	{
+		// Mouse button handling if needed
+	}
+
+	void ApplicationInputHandler::onMouseButtonReleased(MouseButton button, double x, double y)
+	{
+		// Mouse button handling if needed
+	}
+
+	void ApplicationInputHandler::onMouseMoved(double x, double y, double deltaX, double deltaY)
+	{
+		// Safety check
+		if (!app_) {
+			return;
+		}
+
+		// ImGui가 마우스를 캡처하고 있으면 무시
+		if (ImGui::GetIO().WantCaptureMouse) {
+			return;
+		}
+
+		// Check mouse button states from InputManager
+		bool leftPressed = app_->inputManager_.isMouseButtonPressed(MouseButton::Left);
+		bool rightPressed = app_->inputManager_.isMouseButtonPressed(MouseButton::Right);
+		bool middlePressed = app_->inputManager_.isMouseButtonPressed(MouseButton::Middle);
+
+		if (leftPressed) {
+			app_->camera_.rotate(glm::vec3(static_cast<float>(-deltaY) * app_->camera_.rotationSpeed,
+				static_cast<float>(-deltaX) * app_->camera_.rotationSpeed, 0.0f));
+		}
+
+		if (rightPressed) {
+			app_->camera_.translate(glm::vec3(0.0f, 0.0f, static_cast<float>(deltaY) * 0.005f));
+		}
+
+		if (middlePressed) {
+			app_->camera_.translate(glm::vec3(static_cast<float>(-deltaX) * 0.005f,
+				static_cast<float>(deltaY) * 0.005f, 0.0f));
+		}
+	}
+
+	void ApplicationInputHandler::onMouseScrolled(double xOffset, double yOffset)
+	{
+		// Safety check
+		if (!app_) {
+			return;
+		}
+
+		app_->camera_.translate(glm::vec3(0.0f, 0.0f, static_cast<float>(yOffset) * 0.05f));
+	}
+
+	// ========================================
+	// Constructor with EngineConfig
+	// ========================================
 	Application::Application(const EngineConfig& engineConfig, IApplicationListener* listener)
 		: engineConfig_(engineConfig),
 		listener_(listener),
@@ -41,12 +236,20 @@ namespace BinRenderer::Vulkan {
 		printLog("  Validation layers: {}", engineConfig_.enableValidationLayers ? "Enabled" : "Disabled");
 
 		initializeVulkanResources();
-		setupCallbacks();
 
-		// Initialize default camera
+		// Initialize default camera BEFORE input system
 		const float aspectRatio = float(windowSize_.width) / windowSize_.height;
 		scene_.getCamera().setPerspective(75.0f, aspectRatio, 0.1f, 256.0f);
 		scene_.getCamera().updateViewMatrix();
+		
+		// Sync Scene camera to Application camera
+		camera_ = scene_.getCamera();
+		printLog("Camera initialized");
+		printLog("  Position: {}", glm::to_string(camera_.position));
+		printLog("  Type: {}", camera_.type == Camera::CameraType::firstperson ? "FirstPerson" : "LookAt");
+
+		// Initialize input system AFTER camera is ready
+		initializeInputSystem();
 
 		// Create renderer with empty models (Scene will manage them)
 		vector<unique_ptr<Model>> emptyModels;
@@ -121,197 +324,30 @@ namespace BinRenderer::Vulkan {
 		}
 	}
 
-	void Application::setupCallbacks()
+	void Application::initializeInputSystem()
 	{
-		window_.setUserPointer(this);
+		// Initialize InputManager with GLFW window
+		inputManager_.initialize(window_.getGLFWWindow());
 
-		// Keyboard/Mouse callbacks
+		// Create and register Application-level input handler
+		inputHandler_ = std::make_unique<ApplicationInputHandler>(this);
+		inputManager_.addListener(inputHandler_.get());
 
-		window_.setKeyCallback([](GLFWwindow* window, int key, int scancode, int action, int mods) {
-			auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
-
-			if (action == GLFW_PRESS) {
-
-				// General controls
-				switch (key) {
-				case GLFW_KEY_P:
-					break;
-				case GLFW_KEY_F1:
-					break;
-				case GLFW_KEY_F2:
-					if (app->camera_.type == BinRenderer::Vulkan::Camera::CameraType::lookat) {
-				 app->camera_.type = BinRenderer::Vulkan::Camera::CameraType::firstperson;
-				 }
-					else {
-				 app->camera_.type = BinRenderer::Vulkan::Camera::CameraType::lookat;
-				 }
-					break;
-				case GLFW_KEY_F3:
-					printLog("{} {} {}", glm::to_string(app->camera_.position),
-						glm::to_string(app->camera_.rotation),
-						glm::to_string(app->camera_.viewPos));
-					break;
-				case GLFW_KEY_F4:
-					// Toggle frustum culling
-				{
-					bool cullingEnabled = app->renderer_->isFrustumCullingEnabled();
-					app->renderer_->setFrustumCullingEnabled(!cullingEnabled);
-					printLog("Frustum culling: {}", !cullingEnabled ? "Enabled" : "Disabled");
-				}
-				break;
-				case GLFW_KEY_ESCAPE:
-					glfwSetWindowShouldClose(window, GLFW_TRUE);
-					break;
-				}
-
-				// First person camera controls
-				if (app->camera_.type == BinRenderer::Vulkan::Camera::firstperson) {
-					switch (key) {
-					case GLFW_KEY_W:
-						app->camera_.keys.forward = true;
-						break;
-					case GLFW_KEY_S:
-						app->camera_.keys.backward = true;
-						break;
-					case GLFW_KEY_A:
-						app->camera_.keys.left = true;
-						break;
-					case GLFW_KEY_D:
-						app->camera_.keys.right = true;
-						break;
-					case GLFW_KEY_E:
-						app->camera_.keys.down = true;
-						break;
-					case GLFW_KEY_Q:
-						app->camera_.keys.up = true;
-						break;
-					}
-				}
-
-				// NEW: Handle animation control keys
-				switch (key) {
-				case GLFW_KEY_SPACE:
-					// Toggle animation play/pause
-					for (auto& node : app->scene_.getNodes()) {
-						if (node.model && node.model->hasAnimations()) {
-							if (node.model->isAnimationPlaying()) {
-								node.model->pauseAnimation();
-								printLog("Animation paused");
-							}
-							else {
-								node.model->playAnimation();
-								printLog("Animation resumed");
-							}
-						}
-					}
-					break;
-
-				case GLFW_KEY_R:
-					// Restart animation
-					for (auto& node : app->scene_.getNodes()) {
-						if (node.model && node.model->hasAnimations()) {
-							node.model->stopAnimation();
-							node.model->playAnimation();
-							printLog("Animation restarted");
-						}
-					}
-					break;
-
-				case GLFW_KEY_1:
-				case GLFW_KEY_2:
-				case GLFW_KEY_3:
-				case GLFW_KEY_4:
-				case GLFW_KEY_5:
-					// Switch between animations (1-5)
-				{
-					uint32_t animIndex = key - GLFW_KEY_1;
-					for (auto& node : app->scene_.getNodes()) {
-						if (node.model && node.model->hasAnimations() && animIndex < node.model->getAnimationCount()) {
-							node.model->setAnimationIndex(animIndex);
-							node.model->playAnimation();
-							printLog("Switched to animation {}: '{}'", animIndex,
-								node.model->getAnimation()->getCurrentAnimationName());
-						}
-					}
-				}
-				break;
-				}
+		// Register user listener if provided
+		if (listener_) {
+			auto* userInputListener = dynamic_cast<IInputListener*>(listener_);
+			if (userInputListener) {
+				inputManager_.addListener(userInputListener);
+				printLog("User listener registered as input listener");
 			}
-			else if (action == GLFW_RELEASE) {
-				// First person camera controls
-				if (app->camera_.type == BinRenderer::Vulkan::Camera::firstperson) {
-					switch (key) {
-					case GLFW_KEY_W:
-						app->camera_.keys.forward = false;
-						break;
-					case GLFW_KEY_S:
-						app->camera_.keys.backward = false;
-						break;
-					case GLFW_KEY_A:
-						app->camera_.keys.left = false;
-						break;
-					case GLFW_KEY_D:
-						app->camera_.keys.right = false;
-						break;
-					case GLFW_KEY_E:
-						app->camera_.keys.down = false;
-						break;
-					case GLFW_KEY_Q:
-						app->camera_.keys.up = false;
-						break;
-					}
-				}
-			}
-			});
-
-		window_.setMouseButtonCallback([](GLFWwindow* window, int button, int action, int mods) {
-			auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
-
-			double xpos, ypos;
-			glfwGetCursorPos(window, &xpos, &ypos);
-
-			if (action == GLFW_PRESS) {
-				switch (button) {
-				case GLFW_MOUSE_BUTTON_LEFT:
-					app->mouseState_.buttons.left = true;
-					break;
-				case GLFW_MOUSE_BUTTON_RIGHT:
-					app->mouseState_.buttons.right = true;
-					break;
-				case GLFW_MOUSE_BUTTON_MIDDLE:
-					app->mouseState_.buttons.middle = true;
-					break;
-				}
-			}
-			else if (action == GLFW_RELEASE) {
-				switch (button) {
-				case GLFW_MOUSE_BUTTON_LEFT:
-					app->mouseState_.buttons.left = false;
-					break;
-				case GLFW_MOUSE_BUTTON_RIGHT:
-					app->mouseState_.buttons.right = false;
-					break;
-				case GLFW_MOUSE_BUTTON_MIDDLE:
-					app->mouseState_.buttons.middle = false;
-					break;
-				}
-			}
-			});
-
-		window_.setCursorPosCallback([](GLFWwindow* window, double xpos, double ypos) {
-			auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
-			app->handleMouseMove(static_cast<int32_t>(xpos), static_cast<int32_t>(ypos));
-			});
-
-		window_.setScrollCallback([](GLFWwindow* window, double xoffset, double yoffset) {
-			auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
-			app->camera_.translate(glm::vec3(0.0f, 0.0f, (float)yoffset * 0.05f));
-			});
+		}
 
 		// Add framebuffer size callback
-		window_.setFramebufferSizeCallback([](GLFWwindow* window, int width, int height) {
+		glfwSetFramebufferSizeCallback(window_.getGLFWWindow(), [](GLFWwindow* window, int width, int height) {
 			exitWithMessage("Window resize not implemented");
-			});
+		});
+
+		printLog("Input system initialized");
 	}
 
 	Application::~Application()
@@ -362,6 +398,12 @@ namespace BinRenderer::Vulkan {
 			{
 				TRACY_CPU_SCOPE("Window Poll Events");
 				window_.pollEvents();
+			}
+
+			// Update input system
+			{
+				TRACY_CPU_SCOPE("Input Update");
+				inputManager_.update();
 			}
 
 			// NEW: Calculate delta time for smooth animation
@@ -630,7 +672,7 @@ namespace BinRenderer::Vulkan {
 			submitInfo.pWaitSemaphores = &presentCompleteSemaphores_[currentSemaphore];
 			submitInfo.waitSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = &renderCompleteSemaphores_[currentSemaphore];
-			submitInfo.signalSemaphoreCount = 1;
+		 submitInfo.signalSemaphoreCount = 1;
 
 			{
 				TRACY_CPU_SCOPE("GPU Submit");
@@ -703,11 +745,12 @@ namespace BinRenderer::Vulkan {
 		io.DisplaySize = ImVec2(float(windowSize_.width), float(windowSize_.height));
 		// io.DeltaTime = frameTimer;
 
-		// Always pass mouse input to ImGui - let ImGui decide if it wants to capture it
-		io.MousePos = ImVec2(mouseState_.position.x, mouseState_.position.y);
-		io.MouseDown[0] = mouseState_.buttons.left;
-		io.MouseDown[1] = mouseState_.buttons.right;
-		io.MouseDown[2] = mouseState_.buttons.middle;
+		// Get mouse input from InputManager
+		glm::vec2 mousePos = inputManager_.getMousePosition();
+		io.MousePos = ImVec2(mousePos.x, mousePos.y);
+		io.MouseDown[0] = inputManager_.isMouseButtonPressed(MouseButton::Left);
+		io.MouseDown[1] = inputManager_.isMouseButtonPressed(MouseButton::Right);
+		io.MouseDown[2] = inputManager_.isMouseButtonPressed(MouseButton::Middle);
 
 		{
 			TRACY_CPU_SCOPE("ImGui NewFrame");
@@ -1301,7 +1344,7 @@ namespace BinRenderer::Vulkan {
 				renderer_->postOptionsUBO().vignetteStrength = 0.0f;
 				renderer_->postOptionsUBO().filmGrainStrength = 0.0f;
 				renderer_->postOptionsUBO().chromaticAberration =
-					1.99f;                                   // Maximum FXAA (0.9 strength, 0.9 quality)
+					1.99f;                                   // 최대 FXAA (0.9 strength, 0.9 quality)
 				renderer_->postOptionsUBO().padding1 = 0.0f; // Disable Bokeh
 			}
 			ImGui::SameLine();
@@ -1412,7 +1455,7 @@ namespace BinRenderer::Vulkan {
 			float rotationSpeed = camera_.rotationSpeed;
 			if (ImGui::SliderFloat("Rotation Speed", &rotationSpeed, 0.01f, 2.0f, "%.2f")) {
 				camera_.setRotationSpeed(rotationSpeed);
-			}
+						}
 
 			// Field of view control
 			float currentFov = camera_.fov;
@@ -1471,31 +1514,6 @@ namespace BinRenderer::Vulkan {
 		ImGui::End();
 	}
 
-	void Application::handleMouseMove(int32_t x, int32_t y)
-	{
-		if (ImGui::GetIO().WantCaptureMouse) {
-			mouseState_.position = glm::vec2((float)x, (float)y);
-			return;
-		}
-
-		int32_t dx = (int32_t)mouseState_.position.x - x;
-		int32_t dy = (int32_t)mouseState_.position.y - y;
-
-		if (mouseState_.buttons.left) {
-			camera_.rotate(glm::vec3(-dy * camera_.rotationSpeed, -dx * camera_.rotationSpeed, 0.0f));
-		}
-
-		if (mouseState_.buttons.right) {
-			camera_.translate(glm::vec3(-0.0f, 0.0f, dy * .005f));
-		}
-
-		if (mouseState_.buttons.middle) {
-			camera_.translate(glm::vec3(-dx * 0.005f, dy * 0.005f, 0.0f));
-		}
-
-		mouseState_.position = glm::vec2((float)x, (float)y);
-	}
-
 	void Application::updatePerformanceMetrics(float deltaTime)
 	{
 		TRACY_CPU_SCOPE("Application::updatePerformanceMetrics");
@@ -1538,7 +1556,7 @@ namespace BinRenderer::Vulkan {
 						if (tracyProfiler_ && tracyProfiler_->isTracySupported()) {
 							tracyProfiler_->plot("GPU_Time_Average_ms", currentGpuTimeMs_);
 							tracyProfiler_->plot("GPU_FPS_Equivalent",
-								1000.0f / std::max(currentGpuTimeMs_, 0.1f));
+								1000.0f / std::max(currentGpuTimeMs_,  0.1f));
 						}
 						break;
 					}
@@ -1695,7 +1713,6 @@ namespace BinRenderer::Vulkan {
 			}
 		}
 		
-		printLog("✅ getSceneModels() returned {} unique models", models.size());
 		
 		return models;
 	}

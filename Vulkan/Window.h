@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // 주의: 윈도우즈 운영체제에서 제공하는 "Windows.h"와 다릅니다.
 
@@ -31,6 +31,8 @@ class Window
     void setCursorPosCallback(GLFWcursorposfun callback);
     void setScrollCallback(GLFWscrollfun callback);
     void setFramebufferSizeCallback(GLFWframebuffersizefun callback); // Add this line
+
+    GLFWwindow* getGLFWWindow() { return glfwWindow_; }
 
     static GLFWwindow* createWindow();
 

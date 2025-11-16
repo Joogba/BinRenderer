@@ -222,6 +222,7 @@
     <ClInclude Include="UniformSystem.h" />
     <ClInclude Include="Core\Vertex.h" />
     <ClInclude Include="View.h" />
+    <ClInclude Include="Vulkan\InputManager.h" />
     <ClInclude Include="Vulkan\IRenderPass.h" />
     <ClInclude Include="Vulkan\Logger.h" />
     <ClInclude Include="Vulkan\MappedBuffer.h" />
@@ -310,6 +311,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="UniformSystem.cpp" />
+    <ClCompile Include="Vulkan\InputManager.cpp" />
     <ClCompile Include="Vulkan\Logger.cpp" />
     <ClCompile Include="Vulkan\MappedBuffer.cpp" />
     <ClCompile Include="Vulkan\Material.cpp" />
