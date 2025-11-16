@@ -15,78 +15,6 @@
 
 namespace BinRenderer::Vulkan {
 
-	// Default constructor - uses hardcoded configuration
-	Application::Application() : Application(ApplicationConfig::createDefault())
-	{
-	}
-
-	// Configuration-based constructor
-	Application::Application(const ApplicationConfig& config)
-		: window_(), windowSize_(window_.getFramebufferSize()),
-		ctx_(window_.getRequiredExtensions(), true),
-		swapchain_(ctx_, window_.createSurface(ctx_.instance()), windowSize_),
-		shaderManager_(ctx_, kShaderPathPrefix,
-			{ {"shadowMap", {"shadowMap.vert.spv", "shadowMap.frag.spv"}},
-			 {"pbrForward", {"pbrForward.vert.spv", "pbrForward.frag.spv"}},
-			 {"pbrDeferred", {"pbrForward.vert.spv", "pbrDeferred.frag.spv"}},
-			 {"sky", {"skybox.vert.spv", "skybox.frag.spv"}},
-			 {"ssao", {"ssao.comp.spv"}},
-			 {"deferredLighting", {"deferredLighting.comp.spv"}},
-			 {"post", {"post.vert.spv", "post.frag.spv"}},
-			 {"gui", {"imgui.vert", "imgui.frag"}} }),
-		guiRenderer_(ctx_, shaderManager_, swapchain_.colorFormat()),
-		gpuTimer_(ctx_, kMaxFramesInFlight) // Initialize GPU timer
-	{
-		initializeVulkanResources();
-		setupCallbacks();
-		setupCamera(config.camera);
-		loadModels(config.models);
-
-		// ========================================
-		// ✅ FIX: Use Scene models instead of legacy models_
-		// ========================================
-		vector<unique_ptr<Model>> emptyModels; // Renderer 생성자 호환성을 위한 빈 벡터
-		renderer_ = std::make_unique<Renderer>(
-			ctx_, shaderManager_, kMaxFramesInFlight, kAssetsPathPrefix, kShaderPathPrefix, emptyModels,
-			swapchain_.colorFormat(), ctx_.depthFormat(), windowSize_.width, windowSize_.height);
-
-		// ========================================
-		// ✅ FIX: Sync Scene camera to Application camera
-		// ========================================
-		camera_ = scene_.getCamera();
-		printLog("Synced Scene camera to Application camera");
-		printLog("  Position: {}", glm::to_string(camera_.position));
-		printLog("  Rotation: {}", glm::to_string(camera_.rotation));
-
-		// ========================================
-		// ✅ FIX: Update materials after loading models
-		// ========================================
-		auto sceneModels = getSceneModels();
-		if (!sceneModels.empty()) {
-			printLog("Updating materials for {} scene models...", sceneModels.size());
-			renderer_->updateMaterials(sceneModels);
-		}
-
-		// Initialize Tracy profiler conditionally
-#ifdef TRACY_ENABLE
-		tracyProfiler_ = std::make_unique<TracyProfiler>(ctx_, kMaxFramesInFlight);
-		printLog("Tracy profiler initialized");
-#else
-		tracyProfiler_ = nullptr;
-		printLog("Tracy profiler disabled (compiled without TRACY_ENABLE)");
-#endif
-	}
-
-	// Future: Load from file constructor
-	Application::Application(const string& configFile)
-		: Application(ApplicationConfig::createDefault()) // Fallback to default
-	{
-		printLog("Config file loading not implemented yet, using default configuration");
-	}
-
-	// ========================================
-	// New constructor with EngineConfig
-	// ========================================
 	Application::Application(const EngineConfig& engineConfig, IApplicationListener* listener)
 		: engineConfig_(engineConfig),
 		listener_(listener),
@@ -120,10 +48,8 @@ namespace BinRenderer::Vulkan {
 		scene_.getCamera().setPerspective(75.0f, aspectRatio, 0.1f, 256.0f);
 		scene_.getCamera().updateViewMatrix();
 
-		// ========================================
-		// ✅ FIX: Use Scene models instead of legacy models_
-		// ========================================
-		vector<unique_ptr<Model>> emptyModels; // Renderer 생성자 호환성을 위한 빈 벡터
+		// Create renderer with empty models (Scene will manage them)
+		vector<unique_ptr<Model>> emptyModels;
 		renderer_ = std::make_unique<Renderer>(
 			ctx_, shaderManager_, engineConfig_.maxFramesInFlight,
 			engineConfig_.assetsPath, engineConfig_.shaderPath, emptyModels,
@@ -152,17 +78,13 @@ namespace BinRenderer::Vulkan {
 			printLog("Calling IApplicationListener::onInit()...");
 			listener_->onInit(scene_, *renderer_);
 			
-			// ========================================
-			// ✅ FIX: Sync Scene camera to Application camera
-			// ========================================
+			// Sync Scene camera to Application camera
 			camera_ = scene_.getCamera();
 			printLog("Synced Scene camera to Application camera");
 			printLog("  Position: {}", glm::to_string(camera_.position));
 			printLog("  Rotation: {}", glm::to_string(camera_.rotation));
 			
-			// ========================================
-			// ✅ FIX: Update materials after loading models
-			// ========================================
+			// Update materials after loading models
 			auto sceneModels = getSceneModels();
 			
 			if (!sceneModels.empty()) {
@@ -176,10 +98,10 @@ namespace BinRenderer::Vulkan {
 
 	void Application::initializeVulkanResources()
 	{
-		commandBuffers_ = ctx_.createGraphicsCommandBuffers(kMaxFramesInFlight);
+		commandBuffers_ = ctx_.createGraphicsCommandBuffers(engineConfig_.maxFramesInFlight);
 
 		// Initialize fences
-		waitFences_.resize(kMaxFramesInFlight);
+		waitFences_.resize(engineConfig_.maxFramesInFlight);
 		for (auto& fence : waitFences_) {
 			VkFenceCreateInfo fenceCreateInfo{};
 			fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -197,66 +119,6 @@ namespace BinRenderer::Vulkan {
 			check(
 				vkCreateSemaphore(ctx_.device(), &semaphoreCI, nullptr, &renderCompleteSemaphores_[i]));
 		}
-	}
-
-	void Application::setupCamera(const CameraConfig& cameraConfig)
-	{
-		const float aspectRatio = float(windowSize_.width) / windowSize_.height;
-
-		// Setup legacy camera (deprecated)
-		camera_.type = cameraConfig.type;
-		camera_.position = cameraConfig.position;
-		camera_.rotation = cameraConfig.rotation;
-		camera_.viewPos = cameraConfig.viewPos;
-		camera_.setMovementSpeed(cameraConfig.movementSpeed);
-		camera_.setRotationSpeed(cameraConfig.rotationSpeed);
-		camera_.updateViewMatrix();
-		camera_.setPerspective(cameraConfig.fov, aspectRatio, cameraConfig.nearPlane,
-			cameraConfig.farPlane);
-
-		// Setup scene camera (new)
-		scene_.setCamera(camera_);
-	}
-
-	void Application::loadModels(const vector<ModelConfig>& modelConfigs)
-	{
-		// ========================================
-		// ✅ FIX: Scene에만 모델 추가 (legacy models_ 제거)
-		// ========================================
-		for (const auto& modelConfig : modelConfigs) {
-			string fullPath = kAssetsPathPrefix + modelConfig.filePath;
-			
-			auto sceneModel = std::make_unique<Model>(ctx_);
-			sceneModel->loadFromModelFile(fullPath, modelConfig.isBistroObj);
-			sceneModel->name() = modelConfig.displayName;
-			sceneModel->modelMatrix() = modelConfig.transform;
-
-			// Setup animation if model supports it
-			if (sceneModel->hasAnimations() && modelConfig.autoPlayAnimation) {
-				printLog("Found {} animations in model '{}'", sceneModel->getAnimationCount(),
-					modelConfig.displayName);
-
-				if (sceneModel->getAnimationCount() > 0) {
-					uint32_t animIndex =
-						std::min(modelConfig.initialAnimationIndex, sceneModel->getAnimationCount() - 1);
-					sceneModel->setAnimationIndex(animIndex);
-					sceneModel->setAnimationLooping(modelConfig.loopAnimation);
-					sceneModel->setAnimationSpeed(modelConfig.animationSpeed);
-					sceneModel->playAnimation();
-
-					printLog("Started animation: '{}'",
-						sceneModel->getAnimation()->getCurrentAnimationName());
-					printLog("Animation duration: {:.2f} seconds", sceneModel->getAnimation()->getDuration());
-				}
-			}
-			else if (!sceneModel->hasAnimations()) {
-				printLog("No animations found in model '{}'", modelConfig.displayName);
-			}
-
-			scene_.addModel(std::move(sceneModel), modelConfig.displayName);
-		}
-		
-		printLog("✅ Loaded {} models into Scene", modelConfigs.size());
 	}
 
 	void Application::setupCallbacks()
@@ -651,7 +513,7 @@ namespace BinRenderer::Vulkan {
 			}
 
 			// Acquire using currentSemaphore index (GPU-side semaphore)
-			uint32_t imageIndex{ 0 };
+		 uint32_t imageIndex{ 0 };
 			VkResult result;
 			{
 				TRACY_CPU_SCOPE("Swapchain Image Acquire");
@@ -796,7 +658,7 @@ namespace BinRenderer::Vulkan {
 				check(vkQueuePresentKHR(ctx_.graphicsQueue(), &presentInfo));
 			}
 
-			currentFrame = (currentFrame + 1) % kMaxFramesInFlight;
+			currentFrame = (currentFrame + 1) % engineConfig_.maxFramesInFlight;
 			currentSemaphore = (currentSemaphore + 1) % swapchain_.imageCount();
 
 			frameCounter++;
@@ -1666,7 +1528,7 @@ namespace BinRenderer::Vulkan {
 			TRACY_CPU_SCOPE("GPU Time Update");
 			// Get GPU time for frames that should be ready
 			if (gpuTimer_.isTimestampSupported()) {
-				for (uint32_t i = 0; i < kMaxFramesInFlight; ++i) {
+				for (uint32_t i = 0; i < engineConfig_.maxFramesInFlight; ++i) {
 					// Try to get results even if not marked as ready
 					float newGpuTime = gpuTimer_.getGpuTimeMs(i);
 					if (newGpuTime > 0.0f) {
