@@ -34,10 +34,10 @@ namespace BinRenderer::Vulkan {
 		Context& ctx)
 	{
 		// ========================================
-		// ✅ GPU Instancing: Step B - 자동 인스턴싱
+		// ✅ FIX: 각 인스턴스마다 개별 노드 생성 (Transform 적용)
 		// ========================================
 		
-		// 1. 캐시된 모델 확인 (GPU Instancing용)
+		// 1. 캐시된 모델 확인 (메모리 절약)
 		shared_ptr<Model> cachedModel = loadOrGetModel(resourcePath, ctx);
 		
 		if (!cachedModel) {
@@ -45,35 +45,13 @@ namespace BinRenderer::Vulkan {
 			return false;
 		}
 		
-		// 2. 이미 같은 모델이 Scene에 있는지 확인
-		SceneNode* existingNode = nullptr;
-		for (auto& node : nodes_) {
-			if (node.model == cachedModel) {
-				existingNode = &node;
-				break;
-			}
-		}
+		// 2. 첫 번째 인스턴스인지 확인
+		bool isFirstInstance = (cachedModel->getInstanceCount() == 0);
 		
-		// 3. 기존 노드가 있으면 인스턴스 추가
-		if (existingNode) {
-			printLog("✅ Found existing model, adding as instance #{}", 
-				cachedModel->getInstanceCount());
-			
-			cachedModel->addInstance(transform);
-			
-			printLog("✅ Added instance '{}' at ({:.2f}, {:.2f}, {:.2f}) - Total: {} instances",
-				instanceName, transform[3][0], transform[3][1], transform[3][2],
-				cachedModel->getInstanceCount());
-			
-			return true;
-		}
-		
-		// 4. 새 모델이면 첫 번째 인스턴스로 추가
-		printLog("📦 First instance of model, creating new node");
-		
+		// 3. GPU Instancing에 transform 추가
 		cachedModel->addInstance(transform);
-		cachedModel->name() = instanceName;
 		
+		// 4. 각 인스턴스마다 SceneNode 생성
 		SceneNode node;
 		node.model = cachedModel;
 		node.name = instanceName;
@@ -82,8 +60,17 @@ namespace BinRenderer::Vulkan {
 		
 		nodes_.push_back(node);
 		
-		printLog("✅ Added first instance '{}' at ({:.2f}, {:.2f}, {:.2f})",
-			instanceName, transform[3][0], transform[3][1], transform[3][2]);
+		if (isFirstInstance) {
+			printLog("📦 First instance of model: '{}'", instanceName);
+			printLog("   Model cached at: {}", resourcePath);
+		} else {
+			printLog("✅ Added instance #{}: '{}'", cachedModel->getInstanceCount(), instanceName);
+			printLog("   Transform: ({:.2f}, {:.2f}, {:.2f})", 
+				transform[3][0], transform[3][1], transform[3][2]);
+		}
+		
+		printLog("   Total instances of this model: {}", cachedModel->getInstanceCount());
+		printLog("   Total scene nodes: {}", nodes_.size());
 		
 		return true;
 	}

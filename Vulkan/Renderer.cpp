@@ -229,6 +229,21 @@ namespace BinRenderer::Vulkan {
 	{
 		TRACY_CPU_SCOPE("Renderer::update");
 
+		// ========================================
+		// ✅ GPU Instancing: Detect if any model uses instancing
+		// ========================================
+		{
+			TRACY_CPU_SCOPE("Detect GPU Instancing");
+			bool anyInstancedModel = false;
+			for (const auto& model : models) {
+				if (model && model->getInstanceCount() > 1) {
+					anyInstancedModel = true;
+					break;
+				}
+			}
+			optionsUBO_.isInstanced = anyInstancedModel ? 1 : 0;
+		}
+
 		{
 			TRACY_CPU_SCOPE("Update View Frustum");
 			// Update view frustum based on current camera view-projection matrix
@@ -1093,6 +1108,21 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 	{
 		TRACY_CPU_SCOPE("Renderer::update (Model*)");
 
+		// ========================================
+		// ✅ GPU Instancing: Detect if any model uses instancing
+		// ========================================
+		{
+			TRACY_CPU_SCOPE("Detect GPU Instancing");
+			bool anyInstancedModel = false;
+			for (const auto* model : models) {
+				if (model && model->getInstanceCount() > 1) {
+					anyInstancedModel = true;
+					break;
+				}
+			}
+			optionsUBO_.isInstanced = anyInstancedModel ? 1 : 0;
+		}
+
 		{
 			TRACY_CPU_SCOPE("Update View Frustum");
 			updateViewFrustum(camera.matrices.perspective * camera.matrices.view);
@@ -1353,6 +1383,21 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 							for (auto* model : models) {
 								if (!model || !model->visible()) continue;
 
+								// ========================================
+								// ✅ GPU Instancing: Get instance count & buffer
+								// ========================================
+								uint32_t instanceCount = model->getInstanceCount();
+								VkBuffer instanceBuffer = model->getInstanceBuffer();
+								
+								if (instanceCount == 0) {
+									instanceCount = 1; // Fallback for non-instanced models
+								}
+								
+								// ========================================
+								// ✅ GPU Instancing: Set shader flag
+								// ========================================
+								bool isInstanced = (instanceCount > 1 && instanceBuffer != VK_NULL_HANDLE);
+
 								for (auto& mesh : model->meshes()) {
 									totalMeshCount++;
 									
@@ -1369,9 +1414,23 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 										VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 										0, sizeof(PbrPushConstants), &pushConstants);
 
+									// ========================================
+									// ✅ GPU Instancing: Bind vertex + instance buffers
+									// ========================================
 									vkCmdBindVertexBuffers(cmd, 0, 1, &mesh.vertexBuffer_, offsets);
+									
+									// Bind instance buffer if available
+									if (isInstanced) {
+										vkCmdBindVertexBuffers(cmd, 1, 1, &instanceBuffer, offsets);
+									}
+									
 									vkCmdBindIndexBuffer(cmd, mesh.indexBuffer_, 0, VK_INDEX_TYPE_UINT32);
-									vkCmdDrawIndexed(cmd, static_cast<uint32_t>(mesh.indices_.size()), 1, 0, 0, 0);
+									
+									// ========================================
+									// ✅ GPU Instancing: Draw with instanceCount
+									// ========================================
+									vkCmdDrawIndexed(cmd, static_cast<uint32_t>(mesh.indices_.size()), 
+										instanceCount, 0, 0, 0);
 								}
 							}
 							

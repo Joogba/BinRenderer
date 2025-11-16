@@ -11,6 +11,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 #include <algorithm>
+#include <unordered_set>
 
 namespace BinRenderer::Vulkan {
 
@@ -41,9 +42,30 @@ namespace BinRenderer::Vulkan {
 		setupCamera(config.camera);
 		loadModels(config.models);
 
+		// ========================================
+		// ✅ FIX: Use Scene models instead of legacy models_
+		// ========================================
+		vector<unique_ptr<Model>> emptyModels; // Renderer 생성자 호환성을 위한 빈 벡터
 		renderer_ = std::make_unique<Renderer>(
-			ctx_, shaderManager_, kMaxFramesInFlight, kAssetsPathPrefix, kShaderPathPrefix, models_,
+			ctx_, shaderManager_, kMaxFramesInFlight, kAssetsPathPrefix, kShaderPathPrefix, emptyModels,
 			swapchain_.colorFormat(), ctx_.depthFormat(), windowSize_.width, windowSize_.height);
+
+		// ========================================
+		// ✅ FIX: Sync Scene camera to Application camera
+		// ========================================
+		camera_ = scene_.getCamera();
+		printLog("Synced Scene camera to Application camera");
+		printLog("  Position: {}", glm::to_string(camera_.position));
+		printLog("  Rotation: {}", glm::to_string(camera_.rotation));
+
+		// ========================================
+		// ✅ FIX: Update materials after loading models
+		// ========================================
+		auto sceneModels = getSceneModels();
+		if (!sceneModels.empty()) {
+			printLog("Updating materials for {} scene models...", sceneModels.size());
+			renderer_->updateMaterials(sceneModels);
+		}
 
 		// Initialize Tracy profiler conditionally
 #ifdef TRACY_ENABLE
@@ -98,10 +120,13 @@ namespace BinRenderer::Vulkan {
 		scene_.getCamera().setPerspective(75.0f, aspectRatio, 0.1f, 256.0f);
 		scene_.getCamera().updateViewMatrix();
 
-		// Create renderer with empty models (user will add via listener)
+		// ========================================
+		// ✅ FIX: Use Scene models instead of legacy models_
+		// ========================================
+		vector<unique_ptr<Model>> emptyModels; // Renderer 생성자 호환성을 위한 빈 벡터
 		renderer_ = std::make_unique<Renderer>(
 			ctx_, shaderManager_, engineConfig_.maxFramesInFlight,
-			engineConfig_.assetsPath, engineConfig_.shaderPath, models_,
+			engineConfig_.assetsPath, engineConfig_.shaderPath, emptyModels,
 			swapchain_.colorFormat(), ctx_.depthFormat(),
 			windowSize_.width, windowSize_.height);
 		
@@ -138,12 +163,7 @@ namespace BinRenderer::Vulkan {
 			// ========================================
 			// ✅ FIX: Update materials after loading models
 			// ========================================
-			vector<Model*> sceneModels;
-			for (auto& node : scene_.getNodes()) {
-				if (node.model) {
-					sceneModels.push_back(node.model.get());
-				}
-			}
+			auto sceneModels = getSceneModels();
 			
 			if (!sceneModels.empty()) {
 				printLog("Updating materials for {} scene models...", sceneModels.size());
@@ -200,44 +220,22 @@ namespace BinRenderer::Vulkan {
 
 	void Application::loadModels(const vector<ModelConfig>& modelConfigs)
 	{
+		// ========================================
+		// ✅ FIX: Scene에만 모델 추가 (legacy models_ 제거)
+		// ========================================
 		for (const auto& modelConfig : modelConfigs) {
-			models_.emplace_back(std::make_unique<Model>(ctx_));
-			auto& model = *models_.back();
-
 			string fullPath = kAssetsPathPrefix + modelConfig.filePath;
-			model.loadFromModelFile(fullPath, modelConfig.isBistroObj);
-			model.name() = modelConfig.displayName;
-			model.modelMatrix() = modelConfig.transform;
-
-			// Setup animation if model supports it
-			if (model.hasAnimations() && modelConfig.autoPlayAnimation) {
-				printLog("Found {} animations in model '{}'", model.getAnimationCount(),
-					modelConfig.displayName);
-
-				if (model.getAnimationCount() > 0) {
-					uint32_t animIndex =
-						std::min(modelConfig.initialAnimationIndex, model.getAnimationCount() - 1);
-					model.setAnimationIndex(animIndex);
-					model.setAnimationLooping(modelConfig.loopAnimation);
-					model.setAnimationSpeed(modelConfig.animationSpeed);
-					model.playAnimation();
-
-					printLog("Started animation: '{}'",
-						model.getAnimation()->getCurrentAnimationName());
-					printLog("Animation duration: {:.2f} seconds", model.getAnimation()->getDuration());
-				}
-			}
-			else if (!model.hasAnimations()) {
-				printLog("No animations found in model '{}'", modelConfig.displayName);
-			}
-
-			// Add to scene (new)
+			
 			auto sceneModel = std::make_unique<Model>(ctx_);
 			sceneModel->loadFromModelFile(fullPath, modelConfig.isBistroObj);
 			sceneModel->name() = modelConfig.displayName;
 			sceneModel->modelMatrix() = modelConfig.transform;
 
+			// Setup animation if model supports it
 			if (sceneModel->hasAnimations() && modelConfig.autoPlayAnimation) {
+				printLog("Found {} animations in model '{}'", sceneModel->getAnimationCount(),
+					modelConfig.displayName);
+
 				if (sceneModel->getAnimationCount() > 0) {
 					uint32_t animIndex =
 						std::min(modelConfig.initialAnimationIndex, sceneModel->getAnimationCount() - 1);
@@ -245,11 +243,20 @@ namespace BinRenderer::Vulkan {
 					sceneModel->setAnimationLooping(modelConfig.loopAnimation);
 					sceneModel->setAnimationSpeed(modelConfig.animationSpeed);
 					sceneModel->playAnimation();
+
+					printLog("Started animation: '{}'",
+						sceneModel->getAnimation()->getCurrentAnimationName());
+					printLog("Animation duration: {:.2f} seconds", sceneModel->getAnimation()->getDuration());
 				}
+			}
+			else if (!sceneModel->hasAnimations()) {
+				printLog("No animations found in model '{}'", modelConfig.displayName);
 			}
 
 			scene_.addModel(std::move(sceneModel), modelConfig.displayName);
 		}
+		
+		printLog("✅ Loaded {} models into Scene", modelConfigs.size());
 	}
 
 	void Application::setupCallbacks()
@@ -271,11 +278,11 @@ namespace BinRenderer::Vulkan {
 					break;
 				case GLFW_KEY_F2:
 					if (app->camera_.type == BinRenderer::Vulkan::Camera::CameraType::lookat) {
-					app->camera_.type = BinRenderer::Vulkan::Camera::CameraType::firstperson;
-					}
+				 app->camera_.type = BinRenderer::Vulkan::Camera::CameraType::firstperson;
+				 }
 					else {
-						app->camera_.type = BinRenderer::Vulkan::Camera::CameraType::lookat;
-					}
+				 app->camera_.type = BinRenderer::Vulkan::Camera::CameraType::lookat;
+				 }
 					break;
 				case GLFW_KEY_F3:
 					printLog("{} {} {}", glm::to_string(app->camera_.position),
@@ -323,14 +330,14 @@ namespace BinRenderer::Vulkan {
 				switch (key) {
 				case GLFW_KEY_SPACE:
 					// Toggle animation play/pause
-					for (auto& model : app->models_) {
-						if (model->hasAnimations()) {
-							if (model->isAnimationPlaying()) {
-								model->pauseAnimation();
+					for (auto& node : app->scene_.getNodes()) {
+						if (node.model && node.model->hasAnimations()) {
+							if (node.model->isAnimationPlaying()) {
+								node.model->pauseAnimation();
 								printLog("Animation paused");
 							}
 							else {
-								model->playAnimation();
+								node.model->playAnimation();
 								printLog("Animation resumed");
 							}
 						}
@@ -339,10 +346,10 @@ namespace BinRenderer::Vulkan {
 
 				case GLFW_KEY_R:
 					// Restart animation
-					for (auto& model : app->models_) {
-						if (model->hasAnimations()) {
-							model->stopAnimation();
-							model->playAnimation();
+					for (auto& node : app->scene_.getNodes()) {
+						if (node.model && node.model->hasAnimations()) {
+							node.model->stopAnimation();
+							node.model->playAnimation();
 							printLog("Animation restarted");
 						}
 					}
@@ -356,12 +363,12 @@ namespace BinRenderer::Vulkan {
 					// Switch between animations (1-5)
 				{
 					uint32_t animIndex = key - GLFW_KEY_1;
-					for (auto& model : app->models_) {
-						if (model->hasAnimations() && animIndex < model->getAnimationCount()) {
-							model->setAnimationIndex(animIndex);
-							model->playAnimation();
+					for (auto& node : app->scene_.getNodes()) {
+						if (node.model && node.model->hasAnimations() && animIndex < node.model->getAnimationCount()) {
+							node.model->setAnimationIndex(animIndex);
+							node.model->playAnimation();
 							printLog("Switched to animation {}: '{}'", animIndex,
-								model->getAnimation()->getCurrentAnimationName());
+								node.model->getAnimation()->getCurrentAnimationName());
 						}
 					}
 				}
@@ -539,13 +546,7 @@ namespace BinRenderer::Vulkan {
 
 			{
 				TRACY_CPU_SCOPE("Animation Update");
-				for (auto& model : models_) {
-					if (model->hasAnimations()) {
-						model->updateAnimation(deltaTime);
-					}
-				}
-
-				// NEW: Update scene models animation
+				// ✅ FIX: Scene 모델만 업데이트
 				for (auto& node : scene_.getNodes()) {
 					if (node.model && node.model->hasAnimations()) {
 						node.model->updateAnimation(deltaTime);
@@ -557,18 +558,9 @@ namespace BinRenderer::Vulkan {
 			{
 				TRACY_CPU_SCOPE("Shadow Mapping Setup");
 
-				// ✅ FIX: 레거시 + Scene 모델 병합 + Transform 적용
-				vector<Model*> allModels;
-				for (auto& m : models_) {
-					if (m) allModels.push_back(m.get());
-				}
-				for (auto& node : scene_.getNodes()) {
-					if (node.model && node.visible) {
-						// ✅ SceneNode의 transform을 Model에 적용
-						node.model->modelMatrix() = node.transform;
-						allModels.push_back(node.model.get());
-					}
-				}
+				// ✅ FIX: Scene 모델만 사용 + Transform 동기화
+				syncSceneTransforms();
+				auto allModels = getSceneModels();
 				
 				if (allModels.size() > 0) {
 
@@ -637,24 +629,11 @@ namespace BinRenderer::Vulkan {
 			{
 				TRACY_CPU_SCOPE("Renderer Update");
 				
-				// ✅ FIX: 레거시 + Scene 모델 병합 + Transform 적용
-				vector<Model*> allModels;
-				for (auto& m : models_) {
-					if (m) allModels.push_back(m.get());
-				}
-				for (auto& node : scene_.getNodes()) {
-					if (node.model && node.visible) {
-						// ✅ SceneNode의 transform을 Model에 적용
-						node.model->modelMatrix() = node.transform;
-						allModels.push_back(node.model.get());
-					}
-				}
+				// ✅ FIX: Scene 모델만 사용
+				auto allModels = getSceneModels();
 				
 				if (!allModels.empty()) {
 					renderer_->update(camera_, allModels, currentFrame, (float)glfwGetTime());
-				} else {
-					// 레거시 fallback
-					renderer_->update(camera_, models_, currentFrame, (float)glfwGetTime());
 				}
 			}
 
@@ -738,32 +717,12 @@ namespace BinRenderer::Vulkan {
 					TRACY_GPU_SCOPE(*tracyProfiler_, cmd.handle(), "Rendering");
 				}
 				
-				// ========================================
-				// ✅ FIX: Scene 모델과 레거시 모델 병합 + Transform 적용
-				// ========================================
-				vector<Model*> allModels;
-				
-				// Legacy models
-				for (auto& m : models_) {
-					if (m) allModels.push_back(m.get());
-				}
-				
-				// Scene models - Transform 적용
-				for (auto& node : scene_.getNodes()) {
-					if (node.model && node.visible) {
-						// ✅ SceneNode의 transform을 Model에 적용
-						node.model->modelMatrix() = node.transform;
-						allModels.push_back(node.model.get());
-					}
-				}
+				// ✅ FIX: Scene 모델만 사용
+				auto allModels = getSceneModels();
 				
 				if (!allModels.empty()) {
 					renderer_->draw(cmd.handle(), currentFrame, swapchain_.imageView(imageIndex), 
 						allModels, viewport, scissor);
-				} else {
-					// Fallback to legacy
-					renderer_->draw(cmd.handle(), currentFrame, swapchain_.imageView(imageIndex), 
-						models_, viewport, scissor);
 				}
 			}
 
@@ -972,162 +931,28 @@ namespace BinRenderer::Vulkan {
 
 		ImGui::Separator();
 
-		static vec3 lightColor = vec3(1.0f);
-		static float lightIntensity = 28.454f;
-		ImGui::SliderFloat("Light Intensity", &lightIntensity, 0.0f, 100.0f);
-		renderer_->sceneUBO().directionalLightColor = lightIntensity * lightColor;
-
-		// TODO: IS there a way to determine directionalLightColor from time of day? bright morning sun
-		// to noon white light to golden sunset color.
-
-		static float elevation = 65.2f; // Elevation angle (up/down) in degrees
-		static float azimuth = -143.8f; // Azimuth angle (left/right) in degrees
-
-		ImGui::SliderFloat("Light Elevation", &elevation, -90.0f, 90.0f, "%.1f°");
-		ImGui::SliderFloat("Light Azimuth", &azimuth, -180.0f, 180.0f, "%.1f°");
-
-		// Convert to radians
-		float elev_rad = glm::radians(elevation);
-		float azim_rad = glm::radians(azimuth);
-
-		// Calculate direction using standard spherical coordinates
-		glm::vec3 lightDir;
-		lightDir.x = cos(elev_rad) * sin(azim_rad);
-		lightDir.y = sin(elev_rad);
-		lightDir.z = cos(elev_rad) * cos(azim_rad);
-
-		// Set the light direction (already normalized from spherical coordinates)
-		renderer_->sceneUBO().directionalLightDir = lightDir;
-
-		// Display current light direction for debugging
-		ImGui::Text("Light Dir: (%.2f, %.2f, %.2f)", renderer_->sceneUBO().directionalLightDir.x,
-			renderer_->sceneUBO().directionalLightDir.y,
-			renderer_->sceneUBO().directionalLightDir.z);
-
-		// Rendering Options Controls
-		ImGui::Separator();
-		ImGui::Text("Rendering Options");
-
-		bool textureOn = renderer_->optionsUBO().textureOn != 0;
-		bool shadowOn = renderer_->optionsUBO().shadowOn != 0;
-		bool discardOn = renderer_->optionsUBO().discardOn != 0;
-		// bool animationOn = renderer_->optionsUBO().animationOn != 0;
-
-		if (ImGui::Checkbox("Textures", &textureOn)) {
-			renderer_->optionsUBO().textureOn = textureOn ? 1 : 0;
-		}
-		if (ImGui::Checkbox("Shadows", &shadowOn)) {
-			renderer_->optionsUBO().shadowOn = shadowOn ? 1 : 0;
-		}
-		if (ImGui::Checkbox("Alpha Discard", &discardOn)) {
-			renderer_->optionsUBO().discardOn = discardOn ? 1 : 0;
-		}
-		// if (ImGui::Checkbox("Animation", &animationOn)) {
-		//     renderer_.optionsUBO().animationOn = animationOn ? 1 : 0;
-		// }
-
-		// PBR Lighting Controls for Deferred Rendering
-		ImGui::Separator();
-		ImGui::Text("PBR Lighting (Global)");
-
-		ImGui::SliderFloat("Specular Weight", &renderer_->optionsUBO().specularWeight, 0.0f, 0.1f,
-			"%.3f");
-		if (ImGui::IsItemHovered()) {
-			ImGui::SetTooltip("Controls global specular reflection intensity.\n"
-				"Higher values = stronger reflections");
-		}
-
-		ImGui::SliderFloat("Diffuse Weight", &renderer_->optionsUBO().diffuseWeight, 0.0f, 2.0f,
-			"%.2f");
-		if (ImGui::IsItemHovered()) {
-			ImGui::SetTooltip("Controls global diffuse lighting intensity.\n"
-				"Higher values = brighter base lighting");
-		}
-
-		ImGui::SliderFloat("Emissive Weight", &renderer_->optionsUBO().emissiveWeight, 0.0f, 5.0f,
-			"%.2f");
-		if (ImGui::IsItemHovered()) {
-			ImGui::SetTooltip("Controls global emissive glow intensity.\n"
-				"Higher values = stronger self-illumination");
-		}
-
-		ImGui::SliderFloat("Shadow Offset", &renderer_->optionsUBO().shadowOffset, -0.1f, 0.1f, "%.3f");
-		if (ImGui::IsItemHovered()) {
-			ImGui::SetTooltip("Global shadow bias offset.\n"
-				"Positive = lighter shadows\n"
-				"Negative = darker shadows");
-		}
-
-		// Quick presets for PBR lighting
-		ImGui::Text("PBR Presets:");
-		if (ImGui::Button("Default")) {
-			renderer_->optionsUBO().specularWeight = 0.05f;
-			renderer_->optionsUBO().diffuseWeight = 1.0f;
-			renderer_->optionsUBO().emissiveWeight = 1.0f;
-			renderer_->optionsUBO().shadowOffset = 0.0f;
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Bright")) {
-			renderer_->optionsUBO().specularWeight = 0.08f;
-			renderer_->optionsUBO().diffuseWeight = 1.3f;
-			renderer_->optionsUBO().emissiveWeight = 1.5f;
-			renderer_->optionsUBO().shadowOffset = 0.02f;
-		}
-
-		if (ImGui::Button("Matte")) {
-			renderer_->optionsUBO().specularWeight = 0.02f;
-			renderer_->optionsUBO().diffuseWeight = 1.5f;
-			renderer_->optionsUBO().emissiveWeight = 0.8f;
-			renderer_->optionsUBO().shadowOffset = 0.0f;
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Metallic")) {
-			renderer_->optionsUBO().specularWeight = 0.12f;
-			renderer_->optionsUBO().diffuseWeight = 0.7f;
-			renderer_->optionsUBO().emissiveWeight = 1.0f;
-			renderer_->optionsUBO().shadowOffset = 0.01f;
-		}
-
-		// Frustum Culling Controls
-		bool frustumCullingEnabled = renderer_->isFrustumCullingEnabled();
-		if (ImGui::Checkbox("Frustum Culling", &frustumCullingEnabled)) {
-			renderer_->setFrustumCullingEnabled(frustumCullingEnabled);
-		}
-
-		// Display culling statistics
-		if (renderer_->isFrustumCullingEnabled()) {
-			const auto& stats = renderer_->getCullingStats();
-			ImGui::Text("Culling Stats:");
-			ImGui::Text("  Total Meshes: %u", stats.totalMeshes);
-			ImGui::Text("  Rendered: %u", stats.renderedMeshes);
-			ImGui::Text("  Culled: %u", stats.culledMeshes);
-
-			if (stats.totalMeshes > 0) {
-				float cullingPercentage =
-					(float(stats.culledMeshes) / float(stats.totalMeshes)) * 100.0f;
-				ImGui::Text("  Culled: %.1f%%", cullingPercentage);
-			}
-		}
-
-		ImGui::Separator();
-
-		for (uint32_t i = 0; i < models_.size(); i++) {
-			auto& m = *models_[i];
-			ImGui::Checkbox(std::format("{}##{}", m.name(), i).c_str(), &m.visible());
+		// ✅ FIX: Scene 노드 기반으로 GUI 렌더링
+		auto& sceneNodes = scene_.getNodes();
+		for (uint32_t i = 0; i < sceneNodes.size(); i++) {
+			auto& node = sceneNodes[i];
+			if (!node.model) continue;
+			
+			auto& m = *node.model;
+			ImGui::Checkbox(std::format("{}##{}", m.name(), i).c_str(), &node.visible);
 
 			// clean
-			ImGui::SliderFloat(format("SpecularWeight##{}", i).c_str(), &(m.coeffs()[0]), 0.0f, 1.0f);
-			ImGui::SliderFloat(format("DiffuseWeight##{}", i).c_str(), &(m.coeffs()[1]), 0.0f, 10.0f);
-			ImGui::SliderFloat(format("EmissiveWeight##{}", i).c_str(), &(m.coeffs()[2]), 0.0f, 10.0f);
-			ImGui::SliderFloat(format("ShadowOffset##{}", i).c_str(), &(m.coeffs()[3]), 0.0f, 1.0f);
-			ImGui::SliderFloat(format("RoughnessWeight##{}", i).c_str(), &(m.coeffs()[4]), 0.0f, 1.0f);
-			ImGui::SliderFloat(format("MetallicWeight##{}", i).c_str(), &(m.coeffs()[5]), 0.0f, 1.0f);
+			ImGui::SliderFloat(std::format("SpecularWeight##{}", i).c_str(), &(m.coeffs()[0]), 0.0f, 1.0f);
+			ImGui::SliderFloat(std::format("DiffuseWeight##{}", i).c_str(), &(m.coeffs()[1]), 0.0f, 10.0f);
+			ImGui::SliderFloat(std::format("EmissiveWeight##{}", i).c_str(), &(m.coeffs()[2]), 0.0f, 10.0f);
+			ImGui::SliderFloat(std::format("ShadowOffset##{}", i).c_str(), &(m.coeffs()[3]), 0.0f, 1.0f);
+			ImGui::SliderFloat(std::format("RoughnessWeight##{}", i).c_str(), &(m.coeffs()[4]), 0.0f, 1.0f);
+			ImGui::SliderFloat(std::format("MetallicWeight##{}", i).c_str(), &(m.coeffs()[5]), 0.0f, 1.0f);
 
-			// Extract and edit position
-			glm::vec3 position = glm::vec3(m.modelMatrix()[3]);
+			// Extract and edit position from node transform
+			glm::vec3 position = glm::vec3(node.transform[3]);
 			if (ImGui::SliderFloat3(std::format("Position##{}", i).c_str(), &position.x, -10.0f,
 				10.0f)) {
-				m.modelMatrix()[3] = glm::vec4(position, 1.0f);
+				node.transform[3] = glm::vec4(position, 1.0f);
 			}
 
 			// Decompose matrix into components
@@ -1135,7 +960,7 @@ namespace BinRenderer::Vulkan {
 			glm::vec4 perspective;
 			glm::quat rotation;
 
-			if (glm::decompose(m.modelMatrix(), scale, rotation, translation, skew, perspective)) {
+			if (glm::decompose(node.transform, scale, rotation, translation, skew, perspective)) {
 				// Convert quaternion to euler angles for easier editing
 				glm::vec3 eulerAngles = glm::eulerAngles(rotation);
 				float yRotationDegrees = glm::degrees(eulerAngles.y);
@@ -1150,7 +975,7 @@ namespace BinRenderer::Vulkan {
 					glm::mat4 R = glm::mat4_cast(rotation);
 					glm::mat4 S = glm::scale(glm::mat4(1.0f), scale);
 
-					m.modelMatrix() = T * R * S;
+					node.transform = T * R * S;
 				}
 			}
 		}
@@ -1519,7 +1344,7 @@ namespace BinRenderer::Vulkan {
 
 			if (renderer_->postOptionsUBO().debugMode == 2) { // Color Channels
 				const char* channelNames[] = { "All",       "Red Only", "Green Only",
-											  "Blue Only", "Alpha",    "Luminance" };
+										  "Blue Only", "Alpha",    "Luminance" };
 				ImGui::Combo("Show Channel", &renderer_->postOptionsUBO().showOnlyChannel, channelNames,
 					IM_ARRAYSIZE(channelNames));
 			}
@@ -1870,17 +1695,18 @@ namespace BinRenderer::Vulkan {
 			size_t totalTriangles = 0;
 			size_t visibleModels = 0;
 
-			for (const auto& model : models_) {
-				if (model->visible()) {
+			// ✅ FIX: Scene 노드 기반으로 통계 수집
+			for (const auto& node : scene_.getNodes()) {
+				if (node.model && node.visible) {
 					visibleModels++;
 					// Add vertex/triangle counting if your Model class supports it
-					// totalVertices += model->getVertexCount();
-					// totalTriangles += model->getTriangleCount();
+					// totalVertices += node.model->getVertexCount();
+					// totalTriangles += node.model->getTriangleCount();
 				}
 			}
 
 			tracyProfiler_->plot("Visible_Models", static_cast<float>(visibleModels));
-			tracyProfiler_->plot("Total_Models", static_cast<float>(models_.size()));
+			tracyProfiler_->plot("Total_Models", static_cast<float>(scene_.getNodeCount()));
 
 			// Track memory usage if available
 			// tracyProfiler_.plot("GPU_Memory_MB", getGPUMemoryUsageMB());
@@ -1971,6 +1797,57 @@ namespace BinRenderer::Vulkan {
 		}
 
 		ImGui::End();
+	}
+
+	// ========================================
+	// ✅ NEW: Scene Integration Helper Methods
+	// ========================================
+	
+	vector<Model*> Application::getSceneModels()
+	{
+		TRACY_CPU_SCOPE("Application::getSceneModels");
+		
+		vector<Model*> models;
+		models.reserve(scene_.getNodeCount());
+		
+		// ✅ FIX: 중복 제거 - 같은 Model은 한 번만 추가
+		std::unordered_set<Model*> uniqueModels;
+		
+		printLog("🔍 getSceneModels() - Scanning {} nodes...", scene_.getNodeCount());
+		
+		for (auto& node : scene_.getNodes()) {
+			printLog("  Node: '{}' | Model: {} | Visible: {}", 
+				node.name, 
+				node.model ? "✓" : "✗", 
+				node.visible);
+			
+			if (node.model && node.visible) {
+				// 이미 추가된 Model은 스킵
+				if (uniqueModels.find(node.model.get()) == uniqueModels.end()) {
+					models.push_back(node.model.get());
+					uniqueModels.insert(node.model.get());
+					printLog("    → Added to render list (Instances: {})", node.model->getInstanceCount());
+				} else {
+					printLog("    → Skipped (already added, shared model)");
+				}
+			}
+		}
+		
+		printLog("✅ getSceneModels() returned {} unique models", models.size());
+		
+		return models;
+	}
+	
+	void Application::syncSceneTransforms()
+	{
+		TRACY_CPU_SCOPE("Application::syncSceneTransforms");
+		
+		for (auto& node : scene_.getNodes()) {
+			if (node.model) {
+				// SceneNode의 transform을 Model에 적용
+				node.model->modelMatrix() = node.transform;
+			}
+		}
 	}
 
 } // namespace BinRenderer::Vulkan

@@ -265,7 +265,7 @@ namespace BinRenderer::Vulkan {
 
 	private:
 		// ========================================
-	// Engine Configuration
+		// Engine Configuration
 		// ========================================
 		EngineConfig engineConfig_;
 		IApplicationListener* listener_ = nullptr;
@@ -301,11 +301,6 @@ namespace BinRenderer::Vulkan {
 		vector<VkSemaphore> renderCompleteSemaphores_{};
 
 		// ========================================
-		// Legacy model storage (deprecated)
-		// ========================================
-		vector<unique_ptr<Model>> models_;
-
-		// ========================================
 		// Profiling
 		// ========================================
 		GpuTimer gpuTimer_;
@@ -338,6 +333,20 @@ namespace BinRenderer::Vulkan {
 		void renderPostProcessingControlWindow();
 		void renderCameraControlWindow();
 		void renderSSAOControlWindow();
+		
+		// ========================================
+		// ✅ NEW: Scene Integration Helpers
+		// ========================================
+		
+		/**
+		 * @brief Scene의 모든 visible 모델을 Model* 배열로 반환 (Transform 적용됨)
+		 */
+		vector<Model*> getSceneModels();
+		
+		/**
+		 * @brief Scene의 모든 visible 노드의 Transform을 Model에 적용
+		 */
+		void syncSceneTransforms();
 	};
 
 } // namespace BinRenderer::Vulkan
