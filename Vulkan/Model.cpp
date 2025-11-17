@@ -16,13 +16,18 @@ namespace BinRenderer::Vulkan {
 using namespace std;
 using namespace glm;
 
-Model::Model(Context& ctx) : ctx_(ctx)
+Model::Model(Context& ctx, VulkanResourceManager* resourceManager)
+    : ctx_(ctx), resourceManager_(resourceManager)  // ✅ resourceManager 초기화
 {
     rootNode_ = make_unique<ModelNode>();
     rootNode_->name = "Root";
 
-    // Initialize animation system - ADD THIS
+    // Initialize animation system
     animation_ = make_unique<Animation>();
+    
+    if (resourceManager_) {
+        printLog("✅ Model created with VulkanResourceManager support");
+    }
 }
 
 Model::~Model()
@@ -31,7 +36,7 @@ Model::~Model()
 }
 
 void Model::prepareForBindlessRendering(Sampler& sampler, vector<MaterialUBO>& allMaterials,
-                                        TextureManager& textureManager)
+      TextureManager& textureManager)
 {
     for (auto& t : textures_) {
         t->setSampler(sampler.handle());
@@ -40,12 +45,12 @@ void Model::prepareForBindlessRendering(Sampler& sampler, vector<MaterialUBO>& a
     int materialBaseIndex = int(allMaterials.size());
     int textureBaseIndex = int(textureManager.textures_.size());
 
-    // Append textures to textureManager.textures_
+    // Append textures to textureManager.textures_ (shared_ptr이므로 복사)
     textureManager.textures_.reserve(textureManager.textures_.size() + textures_.size());
-    for (auto& texture : textures_) {
-        textureManager.textures_.push_back(std::move(texture));
+    for (const auto& texture : textures_) {  // ✅ const auto& 로 변경 (복사)
+   textureManager.textures_.push_back(texture);  // ✅ shared_ptr 복사
     }
-    textures_.clear(); // Clear the source vector since we moved the textures
+    // textures_.clear(); 제거 - shared_ptr이므로 유지 가능
 
     // Create single large storage buffer for all materials (bindless)
     if (!materials_.empty()) {
@@ -344,7 +349,7 @@ std::vector<VkVertexInputAttributeDescription> Model::getInstanceAttributeDescri
     // Column 2 (location = 12)
     attributeDescriptions[2].binding = 1;
     attributeDescriptions[2].location = 12;
- attributeDescriptions[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    attributeDescriptions[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
     attributeDescriptions[2].offset = offsetof(InstanceData, modelMatrix) + sizeof(float) * 8;
     
     // Column 3 (location = 13)

@@ -235,7 +235,16 @@ namespace BinRenderer::Vulkan {
 		printLog("  Max frames in flight: {}", engineConfig_.maxFramesInFlight);
 		printLog("  Validation layers: {}", engineConfig_.enableValidationLayers ? "Enabled" : "Disabled");
 
+		// ✅ 리소스 매니저 초기화 (플랫폼 독립적 → Vulkan 전용)
+		resourceManager_ = std::make_unique<BinRenderer::ResourceManager>();
+		vulkanResourceManager_ = std::make_unique<VulkanResourceManager>(*resourceManager_, ctx_);
+		printLog("ResourceManager initialized (Platform-independent + Vulkan)");
+
 		initializeVulkanResources();
+
+		// ✅ Scene에 VulkanResourceManager 주입
+		scene_.setVulkanResourceManager(vulkanResourceManager_.get());
+		printLog("VulkanResourceManager injected into Scene");
 
 		// Initialize default camera BEFORE input system
 		const float aspectRatio = float(windowSize_.width) / windowSize_.height;
@@ -257,8 +266,11 @@ namespace BinRenderer::Vulkan {
 			ctx_, shaderManager_, engineConfig_.maxFramesInFlight,
 			engineConfig_.assetsPath, engineConfig_.shaderPath, emptyModels,
 			swapchain_.colorFormat(), ctx_.depthFormat(),
-			windowSize_.width, windowSize_.height);
+			windowSize_.width, windowSize_.height,
+			vulkanResourceManager_.get());  // ✅ VulkanResourceManager 전달!
 		
+		printLog("✅ Renderer initialized with VulkanResourceManager");
+
 		// Initialize Tracy profiler conditionally
 #ifdef TRACY_ENABLE
 		if (engineConfig_.enableProfiling) {
@@ -926,7 +938,7 @@ namespace BinRenderer::Vulkan {
 		// HDR Environment Controls
 		if (ImGui::CollapsingHeader("HDR Environment", ImGuiTreeNodeFlags_DefaultOpen)) {
 			ImGui::SliderFloat("Environment Intensity",
-				&renderer_->skyOptionsUBO().environmentIntensity, 0.0f, 10.0f, "%.2f");
+				&renderer_->skyOptionsUBO().environmentIntensity, 0.0f, 10.0f, "*.2f");
 		}
 
 		// Environment Map Controls

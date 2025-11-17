@@ -1,5 +1,6 @@
-#include "ModelLoader.h"
+﻿#include "ModelLoader.h"
 #include "Model.h"
+#include "VulkanResourceManager.h"  // ✅ VulkanResourceManager 헤더 추가
 #include <chrono>
 #include <filesystem>
 #include <stb_image.h>
@@ -123,17 +124,25 @@ void ModelLoader::loadFromModelFile(const string& modelFilename, bool readBistro
 
     // 안내: Bistro 모델은 파이썬 스크립트로 전처리한 저해상도 텍스쳐를 읽어들입니다.
     model_.textures_.reserve(model_.textureFilenames_.size());
-    for (auto& filename : model_.textureFilenames_) {
+    for (size_t i = 0; i < model_.textureFilenames_.size(); ++i) {
+        const string& filename = model_.textureFilenames_[i];
+        bool sRGB = model_.textureSRgb_[i];
+        
         string prefix = readBistroObj ? directory_ + "/LowRes/" : directory_ + "/";
-        model_.textures_.emplace_back(make_unique<Image2D>(model_.ctx_));
+        
         // Check if this is an embedded texture (indicated by * prefix)
         if (!filename.empty() && filename[0] == '*') {
+            // ========================================
+            // Embedded Texture - 기존 방식 유지 (shared_ptr로 변경)
+            // ========================================
+            model_.textures_.emplace_back(make_shared<Image2D>(model_.ctx_));  // ✅ unique → shared
+
             // Parse the texture index from the path (e.g., "*0" -> 0)
             int textureIndex = stoi(filename.substr(1));
 
-            // Get the embedded texture from the scene
+          // Get the embedded texture from the scene
             const aiScene* scene = importer_.GetScene();
-            if (scene && textureIndex < static_cast<int>(scene->mNumTextures)) {
+          if (scene && textureIndex < static_cast<int>(scene->mNumTextures)) {
                 const aiTexture* aiTex = scene->mTextures[textureIndex];
 
                 int width, height, channels;
@@ -199,11 +208,28 @@ void ModelLoader::loadFromModelFile(const string& modelFilename, bool readBistro
             // - 같은 폴더에 있기 때문에 파일이름에서 폴더명 제거
             string shortFilename =
                 readBistroObj ? filename : filesystem::path(filename).filename().string();
+            string fullPath = prefix + shortFilename;
 
-            printLog("Texture filename: {}", prefix + shortFilename);
+            printLog("Loading texture: {}", fullPath);
 
-            model_.textures_.back()->createTextureFromImage(
-                prefix + shortFilename, false, model_.textureSRgb_[model_.textures_.size() - 1]);
+// VulkanResourceManager가 있으면 캐싱 사용
+        if (model_.resourceManager_) {
+            auto cachedTexture = model_.resourceManager_->LoadOrGetTexture(fullPath, sRGB);
+       if (cachedTexture) {
+        model_.textures_.push_back(cachedTexture);
+              printLog("   ✅ Texture loaded via VulkanResourceManager");
+       } else {
+    // Fallback: 직접 로드
+      printLog("   ⚠️ VulkanResourceManager failed, using fallback");
+   model_.textures_.emplace_back(make_shared<Image2D>(model_.ctx_));  // ✅ unique → shared
+          model_.textures_.back()->createTextureFromImage(fullPath, false, sRGB);
+     }
+         } else {
+      // VulkanResourceManager 없음 - 기존 방식
+         printLog("   ℹ️ No VulkanResourceManager, loading directly");
+        model_.textures_.emplace_back(make_shared<Image2D>(model_.ctx_));  // ✅ unique → shared
+            model_.textures_.back()->createTextureFromImage(fullPath, false, sRGB);
+            }
         }
     }
 
@@ -805,7 +831,7 @@ void ModelLoader::processMaterialBistro(aiMaterial* aiMat, const aiScene* scene,
 
     // Load textures
     {
-        // 안내: Bistro 모델의 텍스쳐 경로에는 앞에 "..\\"가 덧붙어 있어서 나중에 제거합니다.
+        // 안내: Bistro 모델의 텍xture 경로에는 앞에 "..\\"가 덧붙어 있어서 나중에 제거합니다.
         auto getTextureIndex = [this](string textureName, bool sRGB) -> int {
             filesystem::path fullPath("dummy/" + string(textureName));
             textureName = fullPath.lexically_normal().string();

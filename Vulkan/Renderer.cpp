@@ -1,6 +1,7 @@
 ﻿#include "Renderer.h"
 #include "Logger.h"
-#include "TracyProfiler.h" // Add Tracy macros wrapper
+#include "TracyProfiler.h"
+#include "VulkanResourceManager.h"  // ✅ VulkanResourceManager 헤더 추가
 #include <stb_image.h>
 
 namespace BinRenderer::Vulkan {
@@ -8,9 +9,10 @@ namespace BinRenderer::Vulkan {
 	Renderer::Renderer(Context& ctx, ShaderManager& shaderManager, const uint32_t& kMaxFramesInFlight,
 		const string& kAssetsPathPrefix, const string& kShaderPathPrefix_,
 		vector<unique_ptr<Model>>& models, VkFormat outColorFormat, VkFormat depthFormat,
-		uint32_t swapChainWidth, uint32_t swapChainHeight)
+		uint32_t swapChainWidth, uint32_t swapChainHeight,
+		VulkanResourceManager* resourceManager)  // ✅ 파라미터 추가
 		: ctx_(ctx), shaderManager_(shaderManager),
-		resourceRegistry_(ctx), // 🆕 Initialize ResourceRegistry
+		resourceManager_(resourceManager),  // ✅ 초기화
 		kMaxFramesInFlight_(kMaxFramesInFlight),
 		kAssetsPathPrefix_(kAssetsPathPrefix), kShaderPathPrefix_(kShaderPathPrefix_),
 		samplerShadow_(ctx), samplerLinearRepeat_(ctx), samplerLinearClamp_(ctx),
@@ -18,6 +20,14 @@ namespace BinRenderer::Vulkan {
 		materialTextures_(std::make_unique<TextureManager>(ctx))
 	{
 		TRACY_CPU_SCOPE("Renderer::Constructor");
+
+		// ✅ ResourceRegistry 설정
+		if (resourceManager_) {
+			resourceRegistry_ = &resourceManager_->GetGpuResources();
+			printLog("✅ Renderer using VulkanResourceManager's ResourceRegistry");
+		} else {
+			printLog("⚠️ Renderer created without VulkanResourceManager");
+		}
 
 		{
 			TRACY_CPU_SCOPE("Create Pipelines");
@@ -157,13 +167,19 @@ namespace BinRenderer::Vulkan {
 	{
 		TRACY_CPU_SCOPE("Renderer::createUniformBuffers");
 
+		// ✅ Null check
+		if (!resourceRegistry_) {
+			printLog("❌ ERROR: ResourceRegistry not available!");
+			return;
+		}
+
 		// 🆕 NEW SYSTEM: Register all uniform buffers with ResourceRegistry
 		for (uint32_t i = 0; i < kMaxFramesInFlight_; ++i) {
 			// Scene data
 			{
 				auto sceneBuffer = std::make_unique<MappedBuffer>(ctx_);
 				sceneBuffer->createUniformBuffer(sceneUBO_);
-				resourceHandles_.sceneData[i] = resourceRegistry_.registerBuffer(
+				resourceHandles_.sceneData[i] = resourceRegistry_->registerBuffer(  // ✅ -> 사용
 					std::format("sceneData_{}", i),
 					std::move(sceneBuffer)
 				);
@@ -173,7 +189,7 @@ namespace BinRenderer::Vulkan {
 			{
 				auto optionsBuffer = std::make_unique<MappedBuffer>(ctx_);
 				optionsBuffer->createUniformBuffer(optionsUBO_);
-				resourceHandles_.options[i] = resourceRegistry_.registerBuffer(
+				resourceHandles_.options[i] = resourceRegistry_->registerBuffer(  // ✅ -> 사용
 					std::format("options_{}", i),
 					std::move(optionsBuffer)
 				);
@@ -183,7 +199,7 @@ namespace BinRenderer::Vulkan {
 			{
 				auto skyOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
 				skyOptionsBuffer->createUniformBuffer(skyOptionsUBO_);
-				resourceHandles_.skyOptions[i] = resourceRegistry_.registerBuffer(
+				resourceHandles_.skyOptions[i] = resourceRegistry_->registerBuffer(  // ✅ -> 사용
 					std::format("skyOptions_{}", i),
 					std::move(skyOptionsBuffer)
 				);
@@ -193,7 +209,7 @@ namespace BinRenderer::Vulkan {
 			{
 				auto postOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
 				postOptionsBuffer->createUniformBuffer(postOptionsUBO_);
-				resourceHandles_.postOptions[i] = resourceRegistry_.registerBuffer(
+				resourceHandles_.postOptions[i] = resourceRegistry_->registerBuffer(  // ✅ -> 사용
 					std::format("postOptions_{}", i),
 					std::move(postOptionsBuffer)
 				);
@@ -203,7 +219,7 @@ namespace BinRenderer::Vulkan {
 			{
 				auto ssaoOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
 				ssaoOptionsBuffer->createUniformBuffer(ssaoOptionsUBO_);
-				resourceHandles_.ssaoOptions[i] = resourceRegistry_.registerBuffer(
+				resourceHandles_.ssaoOptions[i] = resourceRegistry_->registerBuffer(  // ✅ -> 사용
 					std::format("ssaoOptions_{}", i),
 					std::move(ssaoOptionsBuffer)
 				);
@@ -213,7 +229,7 @@ namespace BinRenderer::Vulkan {
 			{
 				auto boneDataBuffer = std::make_unique<MappedBuffer>(ctx_);
 				boneDataBuffer->createUniformBuffer(boneDataUBO_);
-				resourceHandles_.boneData[i] = resourceRegistry_.registerBuffer(
+				resourceHandles_.boneData[i] = resourceRegistry_->registerBuffer(  // ✅ -> 사용
 					std::format("boneData_{}", i),
 					std::move(boneDataBuffer)
 				);
@@ -269,27 +285,27 @@ namespace BinRenderer::Vulkan {
 			TRACY_CPU_SCOPE("Update Uniform Buffers");
 
 			// 🆕 NEW SYSTEM: Use ResourceRegistry with Handles
-			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.sceneData[currentFrame])) {
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.sceneData[currentFrame])) {  // ✅ -> 사용
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.options[currentFrame])) {
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.options[currentFrame])) {  // ✅ -> 사용
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.skyOptions[currentFrame])) {
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.skyOptions[currentFrame])) {  // ✅ -> 사용
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.postOptions[currentFrame])) {
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.postOptions[currentFrame])) {  // ✅ -> 사용
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.ssaoOptions[currentFrame])) {
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.ssaoOptions[currentFrame])) {  // ✅ -> 사용
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.boneData[currentFrame])) {
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.boneData[currentFrame])) {  // ✅ -> 사용
 				buffer->updateFromCpuData();
 			}
 		}
@@ -335,7 +351,7 @@ namespace BinRenderer::Vulkan {
 		}
 
 		// 🆕 NEW SYSTEM: Update via Handle
-		if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.boneData[currentFrame])) {
+		if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.boneData[currentFrame])) {  // ✅ 이미 -> 사용 중
 			buffer->updateFromCpuData();
 		}
 	}
@@ -378,13 +394,12 @@ namespace BinRenderer::Vulkan {
 
 					// 🆕 NEW SYSTEM: Use Handle
 					ImageHandle handle = getImageHandleByName(colorTarget);
-					Image2D* image = resourceRegistry_.getResourceAs<Image2D>(handle);
+					Image2D* image = resourceRegistry_->getResourceAs<Image2D>(handle);
 
 					if (image) {
 						if (renderNode.pipelineNames[0] == "sky") {
 							colorAttachments.push_back(createColorAttachment(
-								image->view(), VK_ATTACHMENT_LOAD_OP_LOAD,
-								{0.0f, 0.0f, 0.5f, 0.0f}));
+								image->view(), VK_ATTACHMENT_LOAD_OP_LOAD, {0.0f, 0.0f, 0.5f, 0.0f}));
 						}
 						else {
 							colorAttachments.push_back(createColorAttachment(
@@ -409,7 +424,7 @@ namespace BinRenderer::Vulkan {
 
 					// 🆕 NEW SYSTEM: Use Handle (now safe!)
 					ImageHandle handle = getImageHandleByName(renderNode.depthAttachment);
-					Image2D* image = resourceRegistry_.getResourceAs<Image2D>(handle);
+					Image2D* image = resourceRegistry_->getResourceAs<Image2D>(handle);
 
 					if (image) {
 						image->transitionToDepthStencilAttachment(cmd);
@@ -446,7 +461,7 @@ namespace BinRenderer::Vulkan {
 			if (!mainTarget.empty()) {
 				// 🆕 NEW SYSTEM: Use Handle for width/height
 				ImageHandle handle = getImageHandleByName(mainTarget);
-				Image2D* image = resourceRegistry_.getResourceAs<Image2D>(handle);
+				Image2D* image = resourceRegistry_->getResourceAs<Image2D>(handle);
 
 				if (image) {
 					width = image->width();
@@ -658,7 +673,7 @@ namespace BinRenderer::Vulkan {
 				auto prefilteredMap = std::make_unique<Image2D>(ctx_);
 				prefilteredMap->createTextureFromKtx2(path + "specularGGX.ktx2", true);
 				prefilteredMap->setSampler(samplerLinearRepeat_.handle());
-				resourceHandles_.prefilteredMap = resourceRegistry_.registerImage(
+				resourceHandles_.prefilteredMap = resourceRegistry_->registerImage(  // ✅ -> 사용
 					"prefilteredMap", std::move(prefilteredMap)
 				);
 			}
@@ -668,7 +683,7 @@ namespace BinRenderer::Vulkan {
 				auto irradianceMap = std::make_unique<Image2D>(ctx_);
 				irradianceMap->createTextureFromKtx2(path + "diffuseLambertian.ktx2", true);
 				irradianceMap->setSampler(samplerLinearRepeat_.handle());
-				resourceHandles_.irradianceMap = resourceRegistry_.registerImage(
+				resourceHandles_.irradianceMap = resourceRegistry_->registerImage(  // ✅ -> 사용
 					"irradianceMap", std::move(irradianceMap)
 				);
 			}
@@ -678,7 +693,7 @@ namespace BinRenderer::Vulkan {
 				auto brdfLut = std::make_unique<Image2D>(ctx_);
 				brdfLut->createTextureFromImage(path + "outputLUT.png", false, false);
 				brdfLut->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.brdfLut = resourceRegistry_.registerImage(
+				resourceHandles_.brdfLut = resourceRegistry_->registerImage(  // ✅ -> 사용
 					"brdfLut", std::move(brdfLut)
 				);
 			}
@@ -709,7 +724,7 @@ namespace BinRenderer::Vulkan {
 					selectedHDRFormat_, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT,
 					storageUsage, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
 				floatColor1->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.floatColor1 = resourceRegistry_.registerImage(
+				resourceHandles_.floatColor1 = resourceRegistry_->registerImage(  // ✅ -> 사용
 					"floatColor1", std::move(floatColor1)
 				);
 			}
@@ -721,7 +736,7 @@ namespace BinRenderer::Vulkan {
 					selectedHDRFormat_, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT,
 					storageUsage, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
 				floatColor2->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.floatColor2 = resourceRegistry_.registerImage(
+				resourceHandles_.floatColor2 = resourceRegistry_->registerImage(  // ✅ -> 사용
 					"floatColor2", std::move(floatColor2)
 				);
 			}
@@ -763,7 +778,7 @@ namespace BinRenderer::Vulkan {
 					VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
 					VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
 				gAlbedo->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.gAlbedo = resourceRegistry_.registerImage(
+				resourceHandles_.gAlbedo = resourceRegistry_->registerImage(  // ✅ -> 사용
 					"gAlbedo", std::move(gAlbedo)
 				);
 			}
@@ -774,7 +789,7 @@ namespace BinRenderer::Vulkan {
 					VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
 					VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
 				gNormal->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.gNormal = resourceRegistry_.registerImage(
+				resourceHandles_.gNormal = resourceRegistry_->registerImage(  // ✅ -> 사용
 					"gNormal", std::move(gNormal)
 				);
 			}
@@ -785,7 +800,7 @@ namespace BinRenderer::Vulkan {
 					VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
 					VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
 				gPosition->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.gPosition = resourceRegistry_.registerImage(
+				resourceHandles_.gPosition = resourceRegistry_->registerImage(  // ✅ -> 사용
 					"gPosition", std::move(gPosition)
 				);
 			}
@@ -796,7 +811,7 @@ namespace BinRenderer::Vulkan {
 					VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
 					VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
 				gMaterial->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.gMaterial = resourceRegistry_.registerImage(
+				resourceHandles_.gMaterial = resourceRegistry_->registerImage(  // ✅ -> 사용
 					"gMaterial", std::move(gMaterial)
 				);
 			}
@@ -812,7 +827,7 @@ namespace BinRenderer::Vulkan {
 				auto depthStencil = std::make_unique<Image2D>(ctx_);
 				depthStencil->createDepthBuffer(swapchainWidth, swapchainHeight);
 				depthStencil->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.depthStencil = resourceRegistry_.registerImage(
+				resourceHandles_.depthStencil = resourceRegistry_->registerImage(  // ✅ -> 사용
 					"depthStencil", std::move(depthStencil)
 				);
 			}
@@ -822,7 +837,7 @@ namespace BinRenderer::Vulkan {
 				auto shadowMap = std::make_unique<Image2D>(ctx_);
 				shadowMap->createShadow(shadowMapSize, shadowMapSize);
 				shadowMap->setSampler(samplerShadow_.handle());
-				resourceHandles_.shadowMap = resourceRegistry_.registerImage(
+				resourceHandles_.shadowMap = resourceRegistry_->registerImage(  // ✅ -> 사용
 					"shadowMap", std::move(shadowMap)
 				);
 			}
@@ -1149,26 +1164,26 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 			TRACY_CPU_SCOPE("Update Uniform Buffers");
 
 			// 🆕 NEW SYSTEM: Update scene UBO
-			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.sceneData[currentFrame])) {
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.sceneData[currentFrame])) {
 				sceneUBO_.projection = camera.matrices.perspective;
 				sceneUBO_.view = camera.matrices.view;
 				sceneUBO_.cameraPos = camera.position;
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.options[currentFrame])) {
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.options[currentFrame])) {
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.skyOptions[currentFrame])) {
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.skyOptions[currentFrame])) {
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.postOptions[currentFrame])) {
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.postOptions[currentFrame])) {
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.ssaoOptions[currentFrame])) {
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.ssaoOptions[currentFrame])) {
 				buffer->updateFromCpuData();
 			}
 		}
@@ -1213,7 +1228,8 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 			lastHasAnimation = hasAnyAnimation;
 		}
 
-		if (auto* buffer = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.boneData[currentFrame])) {
+		// 🆕 NEW SYSTEM: Update via Handle
+		if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.boneData[currentFrame])) {
 			buffer->updateFromCpuData();
 		}
 	}
@@ -1252,7 +1268,7 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 
 					// 🆕 NEW SYSTEM: Use Handle
 					ImageHandle handle = getImageHandleByName(colorTarget);
-					Image2D* image = resourceRegistry_.getResourceAs<Image2D>(handle);
+					Image2D* image = resourceRegistry_->getResourceAs<Image2D>(handle);
 
 					if (image) {
 						if (renderNode.pipelineNames[0] == "sky") {
@@ -1278,7 +1294,7 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 
 					// 🆕 NEW SYSTEM: Use Handle (now safe!)
 					ImageHandle handle = getImageHandleByName(renderNode.depthAttachment);
-					Image2D* image = resourceRegistry_.getResourceAs<Image2D>(handle);
+					Image2D* image = resourceRegistry_->getResourceAs<Image2D>(handle);
 
 					if (image) {
 						image->transitionToDepthStencilAttachment(cmd);
@@ -1313,7 +1329,7 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 			
 			if (!mainTarget.empty()) {
 				ImageHandle handle = getImageHandleByName(mainTarget);
-				Image2D* image = resourceRegistry_.getResourceAs<Image2D>(handle);
+				Image2D* image = resourceRegistry_->getResourceAs<Image2D>(handle);
 
 				if (image) {
 					width = image->width();
@@ -1401,8 +1417,9 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 								for (auto& mesh : model->meshes()) {
 									totalMeshCount++;
 									
-									if (mesh.isCulled) continue;
-									
+									if (mesh.isCulled) {
+										continue;
+									}
 									visibleMeshCount++;
 
 									PbrPushConstants pushConstants;

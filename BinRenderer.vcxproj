@@ -252,10 +252,12 @@
     <ClInclude Include="Vulkan\TracyProfiler.h" />
     <ClInclude Include="Vulkan\Vertex.h" />
     <ClInclude Include="Vulkan\ViewFrustum.h" />
+    <ClInclude Include="Vulkan\VulkanResourceManager.h" />
     <ClInclude Include="Vulkan\VulkanTools.h" />
     <ClInclude Include="Vulkan\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Resources\ResourceManager.cpp" />
     <ClCompile Include="Vulkan\Animation.cpp" />
     <ClCompile Include="Vulkan\Application.cpp" />
     <ClCompile Include="Vulkan\BarrierHelper.cpp" />
@@ -340,6 +342,7 @@
     <ClCompile Include="Vulkan\TracyProfiler.cpp" />
     <ClCompile Include="Vulkan\Vertex.cpp" />
     <ClCompile Include="Vulkan\ViewFrustum.cpp" />
+    <ClCompile Include="Vulkan\VulkanResourceManager.cpp" />
     <ClCompile Include="Vulkan\VulkanTools.cpp" />
     <ClCompile Include="Vulkan\Window.cpp" />
   </ItemGroup>

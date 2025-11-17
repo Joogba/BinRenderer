@@ -24,14 +24,12 @@ public:
 	{
 		printLog("=== GPU Instancing Test (Auto): 3 Helmets ===");
 
-		auto& ctx = renderer.getContext();
-
 		const string helmetPath = "../../assets/models/DamagedHelmet.glb";
 		
 		printLog("Testing automatic GPU instancing via Scene::addModelInstance()...");
 		
 		// ========================================
-		// ✅ GPU Instancing: Step B - Scene이 자동으로 인스턴싱 처리
+		// ✅ GPU Instancing: VulkanResourceManager가 자동으로 처리
 		// ========================================
 		
 		// 첫 번째 헬멧: 왼쪽
@@ -42,7 +40,7 @@ public:
 			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			glm::mat4 transform = translate * scale * rotation;
 			
-			scene.addModelInstance(helmetPath, "Helmet_Left", transform, ctx);
+			scene.addModelInstance(helmetPath, "Helmet_Left", transform);  // ✅ Context 제거
 		}
 		
 		// 두 번째 헬멧: 중앙
@@ -53,7 +51,7 @@ public:
 			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			glm::mat4 transform = translate * scale * rotation;
 			
-			scene.addModelInstance(helmetPath, "Helmet_Center", transform, ctx);
+			scene.addModelInstance(helmetPath, "Helmet_Center", transform);  // ✅ Context 제거
 		}
 		
 		// 세 번째 헬멧: 오른쪽
@@ -64,10 +62,10 @@ public:
 			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			glm::mat4 transform = translate * scale * rotation;
 			
-			scene.addModelInstance(helmetPath, "Helmet_Right", transform, ctx);
+			scene.addModelInstance(helmetPath, "Helmet_Right", transform);  // ✅ Context 제거
 		}
 		
-		printLog("✅ Scene automatically handled GPU instancing!");
+		printLog("✅ VulkanResourceManager automatically handled GPU instancing!");
 		printLog("   Expected: 1 model loaded, 3 instances, 1 draw call");
 
 		// 카메라 설정

@@ -10,6 +10,11 @@
 #include <vector>
 #include <glm/glm.hpp>
 
+// Forward declaration
+namespace BinRenderer::Vulkan {
+	class VulkanResourceManager;
+}
+
 namespace BinRenderer::Vulkan {
 
 	using namespace std;
@@ -44,6 +49,18 @@ namespace BinRenderer::Vulkan {
 		~Scene() = default;
 
 		// ========================================
+		// Initialization
+		// ========================================
+
+		/**
+		 * @brief VulkanResourceManager 설정 (Application에서 주입)
+		 */
+		void setVulkanResourceManager(VulkanResourceManager* resourceManager)
+		{
+			vulkanResourceManager_ = resourceManager;
+		}
+
+		// ========================================
 		// Model Management
 		// ========================================
 
@@ -57,21 +74,18 @@ namespace BinRenderer::Vulkan {
 		 * @param resourcePath 모델 파일 경로 (캐시 키)
 		 * @param instanceName 인스턴스 이름
 		 * @param transform 인스턴스별 Transform
-		 * @param ctx Vulkan Context (모델 로드 시 필요)
 		 * @return 성공 여부
-	   */
+		 */
 		bool addModelInstance(const string& resourcePath,
 			const string& instanceName,
-			const glm::mat4& transform,
-			Context& ctx);
+			const glm::mat4& transform);
 
 		/**
 		 * @brief 모델 리소스 미리 로드 (캐싱)
 		 * @param resourcePath 모델 파일 경로
-		 * @param ctx Vulkan Context
-	 * @return 캐시된 모델의 shared_ptr
+		 * @return 캐시된 모델의 shared_ptr
 		 */
-		shared_ptr<Model> loadOrGetModel(const string& resourcePath, Context& ctx);
+		shared_ptr<Model> loadOrGetModel(const string& resourcePath);
 
 		/**
 		 * @brief 인덱스로 노드 접근
@@ -113,6 +127,7 @@ namespace BinRenderer::Vulkan {
 		void clear()
 		{
 			nodes_.clear();
+			// ⚠️ modelCache_는 ResourceManager로 이동됨
 		}
 
 		// ========================================
@@ -144,12 +159,11 @@ namespace BinRenderer::Vulkan {
 		void cleanup()
 		{
 			nodes_.clear();
-			modelCache_.clear();
 		}
 
 	private:
-		vector<SceneNode> nodes_;           // 모든 씬 노드
-		unordered_map<string, shared_ptr<Model>> modelCache_;  // 모델 캐시 (리소스 경로 → Model)
+		vector<SceneNode> nodes_;  // 모든 씬 노드
+		VulkanResourceManager* vulkanResourceManager_ = nullptr;  // ✅ VulkanResourceManager로 변경
 		Camera camera_;
 	};
 

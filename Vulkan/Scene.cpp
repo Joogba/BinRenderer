@@ -1,5 +1,6 @@
 ﻿#include "Scene.h"
 #include "Logger.h"
+#include "VulkanResourceManager.h"
 
 namespace BinRenderer::Vulkan {
 
@@ -9,36 +10,28 @@ namespace BinRenderer::Vulkan {
 		nodes_.push_back(node);
 	}
 
-	shared_ptr<Model> Scene::loadOrGetModel(const string& resourcePath, Context& ctx)
+	shared_ptr<Model> Scene::loadOrGetModel(const string& resourcePath)
 	{
-		// 캐시 확인
-		if (modelCache_.find(resourcePath) != modelCache_.end()) {
-			printLog("✅ Model cache HIT: {}", resourcePath);
-			return modelCache_[resourcePath];
+		// VulkanResourceManager 사용 (주입받지 않았으면 경고)
+		if (!vulkanResourceManager_) {
+			printLog("❌ ERROR: VulkanResourceManager not set in Scene!");
+			return nullptr;
 		}
 
-		// 캐시 미스 - 새로 로드
-		printLog("📦 Loading model: {}", resourcePath);
-		auto model = std::make_shared<Model>(ctx);
-		model->loadFromModelFile(resourcePath, false);
-		
-		// 캐시에 저장
-		modelCache_[resourcePath] = model;
-		
-		return model;
+		// VulkanResourceManager에 위임
+		return vulkanResourceManager_->LoadOrGetModel(resourcePath);
 	}
 
 	bool Scene::addModelInstance(const string& resourcePath,
 		const string& instanceName,
-		const glm::mat4& transform,
-		Context& ctx)
+		const glm::mat4& transform)
 	{
 		// ========================================
-		// ✅ FIX: 각 인스턴스마다 개별 노드 생성 (Transform 적용)
+		// ✅ VulkanResourceManager를 통한 캐싱 + GPU Instancing
 		// ========================================
 		
-		// 1. 캐시된 모델 확인 (메모리 절약)
-		shared_ptr<Model> cachedModel = loadOrGetModel(resourcePath, ctx);
+		// 1. 캐시된 모델 확인 (VulkanResourceManager가 Context를 가지고 있음)
+		shared_ptr<Model> cachedModel = loadOrGetModel(resourcePath);
 		
 		if (!cachedModel) {
 			printLog("❌ Failed to load model: {}", resourcePath);

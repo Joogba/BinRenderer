@@ -23,6 +23,9 @@ namespace BinRenderer::Vulkan {
 
 	using namespace std;
 
+	// Forward declaration
+	class VulkanResourceManager;
+
 
 	struct SceneUniform // Layout matches pbrForward.vert
 	{
@@ -133,7 +136,8 @@ namespace BinRenderer::Vulkan {
 		Renderer(Context& ctx, ShaderManager& shaderManager, const uint32_t& kMaxFramesInFlight,
 			const string& kAssetsPathPrefix, const string& kShaderPathPrefix_,
 			vector<unique_ptr<Model>>& models, VkFormat outColorFormat, VkFormat depthFormat,
-			uint32_t swapChainWidth, uint32_t swapChainHeight);
+			uint32_t swapChainWidth, uint32_t swapChainHeight,
+			VulkanResourceManager* resourceManager = nullptr);  // ✅ VulkanResourceManager 추가
 
 		~Renderer() = default;
 
@@ -193,15 +197,16 @@ namespace BinRenderer::Vulkan {
 		auto& ssaoOptionsUBO() { return ssaoOptionsUBO_; }
 
 	private:
-		const uint32_t& kMaxFramesInFlight_; // 2;
-		const string& kAssetsPathPrefix_;    // "../../assets/";
-		const string& kShaderPathPrefix_;    // kAssetsPathPrefix + "shaders/";
+		const uint32_t& kMaxFramesInFlight_;
+		const string& kAssetsPathPrefix_;
+		const string& kShaderPathPrefix_;
 
 		Context& ctx_;
 		ShaderManager& shaderManager_;
+		VulkanResourceManager* resourceManager_ = nullptr;  // ✅ VulkanResourceManager 포인터 추가
 
 		// 🆕 Resource Registry for handle-based resource management
-		ResourceRegistry resourceRegistry_;
+		ResourceRegistry* resourceRegistry_ = nullptr;  // ✅ 포인터로 변경 (VulkanResourceManager에서 가져옴)
 
 		// 🆕 Named handles for quick access
 		struct ResourceHandles {
@@ -279,41 +284,47 @@ namespace BinRenderer::Vulkan {
 		void addResource(string resourceName, uint32_t frameNumber,
 			vector<reference_wrapper<Resource>>& resources)
 		{
+			// ✅ Null check 추가
+			if (!resourceRegistry_) {
+				printLog("❌ ERROR: ResourceRegistry not available!");
+				return;
+			}
+
 			// 🆕 NEW SYSTEM: Get from ResourceRegistry
 			{
 				// Check if it's a per-frame buffer
 				if (resourceName == "sceneData" && frameNumber != uint32_t(-1)) {
-					if (auto* res = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.sceneData[frameNumber])) {
+					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.sceneData[frameNumber])) {  // ✅ -> 사용
 						resources.push_back(*res);
 						return;
 					}
 				}
 				else if (resourceName == "options" && frameNumber != uint32_t(-1)) {
-					if (auto* res = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.options[frameNumber])) {
+					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.options[frameNumber])) {  // ✅ -> 사용
 						resources.push_back(*res);
 						return;
 					}
 				}
 				else if (resourceName == "skyOptions" && frameNumber != uint32_t(-1)) {
-					if (auto* res = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.skyOptions[frameNumber])) {
+					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.skyOptions[frameNumber])) {  // ✅ -> 사용
 						resources.push_back(*res);
 						return;
 					}
 				}
 				else if (resourceName == "postOptions" && frameNumber != uint32_t(-1)) {
-					if (auto* res = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.postOptions[frameNumber])) {
+					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.postOptions[frameNumber])) {  // ✅ -> 사용
 						resources.push_back(*res);
 						return;
 					}
 				}
 				else if (resourceName == "ssaoOptions" && frameNumber != uint32_t(-1)) {
-					if (auto* res = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.ssaoOptions[frameNumber])) {
+					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.ssaoOptions[frameNumber])) {  // ✅ -> 사용
 						resources.push_back(*res);
 						return;
 					}
 				}
 				else if (resourceName == "boneData" && frameNumber != uint32_t(-1)) {
-					if (auto* res = resourceRegistry_.getResourceAs<MappedBuffer>(resourceHandles_.boneData[frameNumber])) {
+					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.boneData[frameNumber])) {  // ✅ -> 사용
 						resources.push_back(*res);
 						return;
 					}
@@ -322,7 +333,7 @@ namespace BinRenderer::Vulkan {
 				// Check if it's an image resource
 				ImageHandle imgHandle = getImageHandleByName(resourceName);
 				if (imgHandle.isValid()) {
-					if (auto* res = resourceRegistry_.getResourceAs<Image2D>(imgHandle)) {
+					if (auto* res = resourceRegistry_->getResourceAs<Image2D>(imgHandle)) {  // ✅ -> 사용
 						resources.push_back(*res);
 						return;
 					}

@@ -26,6 +26,9 @@ namespace BinRenderer::Vulkan {
 using namespace std;
 using namespace glm;
 
+// Forward declaration
+class VulkanResourceManager;
+
 // ========================================
 // ✅ GPU Instancing: Step 1
 // ========================================
@@ -38,10 +41,10 @@ struct InstanceData {
 
 class Model
 {
-    friend class ModelLoader;
+  friend class ModelLoader;
 
   public:
-    Model(Context& ctx);
+    Model(Context& ctx, VulkanResourceManager* resourceManager = nullptr);  // ✅ VulkanResourceManager 추가
     Model(const Model&) = delete;
     Model& operator=(const Model&) = delete;
     Model& operator=(Model&&) = delete;
@@ -165,12 +168,13 @@ Animation* getAnimation() const
 
   private:
     Context& ctx_;
+    VulkanResourceManager* resourceManager_ = nullptr;
 
     // Model asset data
     vector<Mesh> meshes_;
     vector<Material> materials_;
 
-    vector<unique_ptr<Image2D>> textures_;
+    vector<shared_ptr<Image2D>> textures_;  // ✅ unique_ptr → shared_ptr 변경 (캐싱 지원)
     vector<string> textureFilenames_;
     vector<bool> textureSRgb_; // sRGB 여부
 
