@@ -210,6 +210,21 @@
     <ClCompile Include="Vulkan\VulkanResourceManager.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Vulkan\SceneRenderPass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\PostProcessRenderPass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\GuiRenderPass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\MainRenderPass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\RenderGraphBuilder.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h">
@@ -471,6 +486,21 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Vulkan\VulkanResourceManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\SceneRenderPass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\PostProcessRenderPass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\GuiRenderPass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\MainRenderPass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\RenderGraphBuilder.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

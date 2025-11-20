@@ -21,6 +21,7 @@
 #include "TracyProfiler.h"
 #include "Window.h"
 #include "VulkanResourceManager.h"  // ✅ VulkanResourceManager 추가
+#include "RenderPassManager.h" // ✅ NEW: RenderPass system
 
 #include "../Resources/ResourceManager.h"
 

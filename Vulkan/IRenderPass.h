@@ -6,6 +6,11 @@
 
 namespace BinRenderer::Vulkan {
 
+    struct RenderPassContext {
+        // 렌더 패스 실행에 필요한 외부 컨텍스트 (Renderer에서 전달)
+        // 예: 뷰 행렬, 라이트 정보가 담긴 버퍼, 디스크립터 세트 등
+        // Context::GetGlobalDescriptorSet() 등으로 대체될 수 있음.
+    };
 /**
  * @brief 모든 렌더 패스의 기본 인터페이스
  * 

@@ -154,6 +154,7 @@
     <ClInclude Include="Camera.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Vulkan\RenderGraphBuilder.h" />
     <ClInclude Include="Vulkan\Animation.h" />
     <ClInclude Include="Vulkan\Application.h" />
     <ClInclude Include="Vulkan\BarrierHelper.h" />
@@ -257,6 +258,7 @@
     <ClInclude Include="Vulkan\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Vulkan\RenderGraphBuilder.cpp" />
     <ClCompile Include="Resources\ResourceManager.cpp" />
     <ClCompile Include="Vulkan\Animation.cpp" />
     <ClCompile Include="Vulkan\Application.cpp" />

@@ -2,6 +2,8 @@
 #include "Logger.h"
 #include "TracyProfiler.h"
 #include "VulkanResourceManager.h"  // ✅ VulkanResourceManager 헤더 추가
+
+#include <optional>
 #include <stb_image.h>
 
 namespace BinRenderer::Vulkan {
@@ -25,7 +27,8 @@ namespace BinRenderer::Vulkan {
 		if (resourceManager_) {
 			resourceRegistry_ = &resourceManager_->GetGpuResources();
 			printLog("✅ Renderer using VulkanResourceManager's ResourceRegistry");
-		} else {
+		}
+		else {
 			printLog("⚠️ Renderer created without VulkanResourceManager");
 		}
 
@@ -57,7 +60,7 @@ namespace BinRenderer::Vulkan {
 			// ========================================
 			if (allMaterials.empty()) {
 				printLog("WARNING: No models provided, creating dummy material buffer");
-				
+
 				// 더미 Material 추가 (최소 1개 필요)
 				MaterialUBO dummyMaterial{};
 				allMaterials.push_back(dummyMaterial);
@@ -235,7 +238,7 @@ namespace BinRenderer::Vulkan {
 				);
 			}
 		}
-		
+
 		printLog("✅ Created {} uniform buffer types × {} frames = {} total buffers",
 			6, kMaxFramesInFlight_, 6 * kMaxFramesInFlight_);
 	}
@@ -384,7 +387,7 @@ namespace BinRenderer::Vulkan {
 				for (const auto& colorTarget : renderNode.colorAttachments) {
 					if (colorTarget == "swapchain") {
 						colorAttachments.push_back(createColorAttachment(
-							swapchainImageView, VK_ATTACHMENT_LOAD_OP_CLEAR, {0.0f, 0.0f, 1.0f, 0.0f}));
+							swapchainImageView, VK_ATTACHMENT_LOAD_OP_CLEAR, { 0.0f, 0.0f, 1.0f, 0.0f }));
 						continue;
 					}
 
@@ -399,12 +402,12 @@ namespace BinRenderer::Vulkan {
 					if (image) {
 						if (renderNode.pipelineNames[0] == "sky") {
 							colorAttachments.push_back(createColorAttachment(
-								image->view(), VK_ATTACHMENT_LOAD_OP_LOAD, {0.0f, 0.0f, 0.5f, 0.0f}));
+								image->view(), VK_ATTACHMENT_LOAD_OP_LOAD, { 0.0f, 0.0f, 0.5f, 0.0f }));
 						}
 						else {
 							colorAttachments.push_back(createColorAttachment(
 								image->view(), VK_ATTACHMENT_LOAD_OP_CLEAR,
-								{0.0f, 0.0f, 0.5f, 0.0f}));
+								{ 0.0f, 0.0f, 0.5f, 0.0f }));
 						}
 					}
 					else {
@@ -482,8 +485,8 @@ namespace BinRenderer::Vulkan {
 				renderingInfo.pColorAttachments = colorAttachments.data();
 			}
 
-			VkViewport vp{0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f};
-			VkRect2D sc{0, 0, width, height};
+			VkViewport vp{ 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
+			VkRect2D sc{ 0, 0, width, height };
 
 			{
 				TRACY_CPU_SCOPE("Begin Rendering");
@@ -603,34 +606,46 @@ namespace BinRenderer::Vulkan {
 
 		{
 			TRACY_CPU_SCOPE("Create Graphics Pipelines");
-			// All pipelines use 1x samples (no MSAA) for educational simplicity
+
+			// Create PBR deferred pipeline with multiple render targets (G-buffer)
+			std::vector<VkFormat> pbrDeferredFormats = {
+				VK_FORMAT_R8G8B8A8_UNORM,
+				VK_FORMAT_R16G16B16A16_SFLOAT,
+				VK_FORMAT_R32G32B32A32_SFLOAT,
+				VK_FORMAT_R8G8B8A8_UNORM
+			};
+
 			pipelines_["pbrDeferred"] = std::make_unique<Pipeline>(
 				ctx_, shaderManager_, PipelineConfig::createPbrDeferred(),
-				vector<VkFormat>{VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_R16G16B16A16_SFLOAT,
-				VK_FORMAT_R32G32B32A32_SFLOAT, VK_FORMAT_R8G8B8A8_UNORM},
-				depthFormat, VK_SAMPLE_COUNT_1_BIT);
+				pbrDeferredFormats, depthFormat, VK_SAMPLE_COUNT_1_BIT
+			);
 
-			pipelines_["sky"] = std::make_unique<Pipeline>(ctx_, shaderManager_, PipelineConfig::createSky(),
-				vector<VkFormat>{selectedHDRFormat}, depthFormat,
-				VK_SAMPLE_COUNT_1_BIT);
+			// Sky pipeline (renders to HDR target)
+			pipelines_["sky"] = std::make_unique<Pipeline>(
+				ctx_, shaderManager_, PipelineConfig::createSky(),
+				std::vector<VkFormat>{ selectedHDRFormat }, depthFormat, VK_SAMPLE_COUNT_1_BIT
+			);
 
-			pipelines_["post"] = std::make_unique<Pipeline>(ctx_, shaderManager_, PipelineConfig::createPost(),
-				vector<VkFormat>{swapChainColorFormat}, depthFormat,
-				VK_SAMPLE_COUNT_1_BIT);
+			// Post-processing pipeline (renders to swapchain color format)
+			pipelines_["post"] = std::make_unique<Pipeline>(
+				ctx_, shaderManager_, PipelineConfig::createPost(),
+				std::vector<VkFormat>{ swapChainColorFormat }, depthFormat, VK_SAMPLE_COUNT_1_BIT
+			);
 
-			// Fix shadow map pipeline: depth-only pipelines should have no color attachments
-			// Pass depth format as depthFormat parameter, not in outColorFormats
-			pipelines_["shadowMap"] =
-				std::make_unique<Pipeline>(ctx_, shaderManager_, PipelineConfig::createShadowMap(),
-					vector<VkFormat>{}, VK_FORMAT_D16_UNORM, VK_SAMPLE_COUNT_1_BIT);
+			// Shadow map pipeline: depth-only
+			pipelines_["shadowMap"] = std::make_unique<Pipeline>(
+				ctx_, shaderManager_, PipelineConfig::createShadowMap(),
+				std::vector<VkFormat>{}, VK_FORMAT_D16_UNORM, VK_SAMPLE_COUNT_1_BIT
+			);
 		}
 
 		{
 			TRACY_CPU_SCOPE("Create Compute Pipelines");
-			// Fix deferred lighting pipeline: compute pipelines don't need color/depth formats
-			pipelines_["deferredLighting"] =
-				std::make_unique<Pipeline>(ctx_, shaderManager_, PipelineConfig::createDeferredLighting(),
-					vector<VkFormat>{}, nullopt, VK_SAMPLE_COUNT_1_BIT);
+			// Deferred lighting is a compute pipeline - no color/depth formats required
+			pipelines_["deferredLighting"] = std::make_unique<Pipeline>(
+				ctx_, shaderManager_, PipelineConfig::createDeferredLighting(),
+				std::vector<VkFormat>{}, std::optional<VkFormat>(std::nullopt), VK_SAMPLE_COUNT_1_BIT
+			);
 		}
 
 		// Store the selected format for texture creation
@@ -697,7 +712,7 @@ namespace BinRenderer::Vulkan {
 					"brdfLut", std::move(brdfLut)
 				);
 			}
-			
+
 			printLog("✅ IBL textures loaded successfully");
 		}
 
@@ -740,7 +755,7 @@ namespace BinRenderer::Vulkan {
 					"floatColor2", std::move(floatColor2)
 				);
 			}
-			
+
 			printLog("✅ HDR render targets created successfully");
 		}
 
@@ -841,10 +856,10 @@ namespace BinRenderer::Vulkan {
 					"shadowMap", std::move(shadowMap)
 				);
 			}
-			
+
 			printLog("✅ Depth and shadow buffers created successfully");
 		}
-		
+
 		printLog("✅ All textures and render targets created successfully");
 	}
 
@@ -858,32 +873,28 @@ namespace BinRenderer::Vulkan {
 		if (!needsAlpha && !fullPrecision) {
 			// Memory-efficient HDR formats (no alpha, moderate precision)
 			candidateFormats = {
-				VK_FORMAT_B10G11R11_UFLOAT_PACK32, // 4 bytes - 50% savings, packed float (correct
-				// format)
-VK_FORMAT_R16G16B16_SFLOAT,        // 6 bytes - 25% savings, half precision
-VK_FORMAT_R16G16B16A16_SFLOAT,     // 8 bytes - standard HDR with alpha
-VK_FORMAT_R32G32B32A32_SFLOAT,        // 12 bytes - full precision RGB
-// R8G8B8A8_UNORM is LAST - not a float format, poor for HDR
-VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
+				VK_FORMAT_B10G11R11_UFLOAT_PACK32,
+				VK_FORMAT_R16G16B16_SFLOAT,
+				VK_FORMAT_R16G16B16A16_SFLOAT,
+				VK_FORMAT_R32G32B32A32_SFLOAT,
+				VK_FORMAT_R8G8B8A8_UNORM
 			};
 		}
 		else if (!fullPrecision) {
 			// Standard HDR with alpha channel
 			candidateFormats = {
-				VK_FORMAT_R16G16B16A16_SFLOAT, // 8 bytes - standard HDR
-				VK_FORMAT_R32G32B32A32_SFLOAT, // 16 bytes - full precision
-				// R8G8B8A8_UNORM is LAST - not suitable for HDR
-				VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
+				VK_FORMAT_R16G16B16A16_SFLOAT,
+				VK_FORMAT_R32G32B32A32_SFLOAT,
+				VK_FORMAT_R8G8B8A8_UNORM
 			};
 		}
 		else {
 			// Full precision required
 			candidateFormats = {
-				VK_FORMAT_R32G32B32A32_SFLOAT, // 16 bytes - full precision
-				VK_FORMAT_R32G32B32_SFLOAT,    // 12 bytes - full precision RGB
-				VK_FORMAT_R16G16B16A16_SFLOAT, // 8 bytes - half precision fallback
-				// R8G8B8A8_UNORM is LAST - inadequate for full precision HDR
-				VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, emergency fallback
+				VK_FORMAT_R32G32B32A32_SFLOAT,
+				VK_FORMAT_R32G32B32_SFLOAT,
+				VK_FORMAT_R16G16B16A16_SFLOAT,
+				VK_FORMAT_R8G8B8A8_UNORM
 			};
 		}
 
@@ -1053,11 +1064,59 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 		}
 	}
 
+	void Renderer::performFrustumCulling(vector<Model*>& models)
+	{
+		TRACY_CPU_SCOPE("Renderer::performFrustumCulling (Model*)");
+
+		cullingStats_.totalMeshes = 0;
+		cullingStats_.culledMeshes = 0;
+		cullingStats_.renderedMeshes = 0;
+
+		if (!frustumCullingEnabled_) {
+			for (auto* model : models) {
+				if (!model) continue;
+				for (auto& mesh : model->meshes()) {
+					mesh.isCulled = false;
+					cullingStats_.totalMeshes++;
+					cullingStats_.renderedMeshes++;
+				}
+			}
+			return;
+		}
+
+		for (auto* model : models) {
+			if (!model) continue;
+			for (auto& mesh : model->meshes()) {
+				cullingStats_.totalMeshes++;
+				bool isVisible = viewFrustum_.intersects(mesh.worldBounds);
+				mesh.isCulled = !isVisible;
+				if (isVisible) cullingStats_.renderedMeshes++; else cullingStats_.culledMeshes++;
+			}
+		}
+
+		// Update Tracy plots
+		TRACY_PLOT("FrustumCulling_TotalMeshes", static_cast<int64_t>(cullingStats_.totalMeshes));
+		TRACY_PLOT("FrustumCulling_RenderedMeshes", static_cast<int64_t>(cullingStats_.renderedMeshes));
+		TRACY_PLOT("FrustumCulling_CulledMeshes", static_cast<int64_t>(cullingStats_.culledMeshes));
+	}
+
 	void Renderer::updateWorldBounds(vector<unique_ptr<Model>>& models)
 	{
 		TRACY_CPU_SCOPE("Renderer::updateWorldBounds");
 
 		for (auto& model : models) {
+			for (auto& mesh : model->meshes()) {
+				mesh.updateWorldBounds(model->modelMatrix());
+			}
+		}
+	}
+
+	void Renderer::updateWorldBounds(vector<Model*>& models)
+	{
+		TRACY_CPU_SCOPE("Renderer::updateWorldBounds (Model*)");
+
+		for (auto* model : models) {
+			if (!model) continue;
 			for (auto& mesh : model->meshes()) {
 				mesh.updateWorldBounds(model->modelMatrix());
 			}
@@ -1118,7 +1177,7 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 	// ========================================
 	// ✅ NEW API: Model* 기반 오버로드 구현
 	// ========================================
-	
+
 	void Renderer::update(Camera& camera, vector<Model*>& models, uint32_t currentFrame, double time)
 	{
 		TRACY_CPU_SCOPE("Renderer::update (Model*)");
@@ -1129,7 +1188,7 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 		{
 			TRACY_CPU_SCOPE("Detect GPU Instancing");
 			bool anyInstancedModel = false;
-			for (const auto* model : models) {
+			for (auto* model : models) {
 				if (model && model->getInstanceCount() > 1) {
 					anyInstancedModel = true;
 					break;
@@ -1258,7 +1317,7 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 				for (const auto& colorTarget : renderNode.colorAttachments) {
 					if (colorTarget == "swapchain") {
 						colorAttachments.push_back(createColorAttachment(
-							swapchainImageView, VK_ATTACHMENT_LOAD_OP_CLEAR, {0.0f, 0.0f, 1.0f, 0.0f}));
+							swapchainImageView, VK_ATTACHMENT_LOAD_OP_CLEAR, { 0.0f, 0.0f, 1.0f, 0.0f }));
 						continue;
 					}
 
@@ -1273,12 +1332,14 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 					if (image) {
 						if (renderNode.pipelineNames[0] == "sky") {
 							colorAttachments.push_back(createColorAttachment(
-								image->view(), VK_ATTACHMENT_LOAD_OP_LOAD, {0.0f, 0.0f, 0.5f, 0.0f}));
-						} else {
-							colorAttachments.push_back(createColorAttachment(
-								image->view(), VK_ATTACHMENT_LOAD_OP_CLEAR, {0.0f, 0.0f, 0.5f, 0.0f}));
+								image->view(), VK_ATTACHMENT_LOAD_OP_LOAD, { 0.0f, 0.0f, 0.5f, 0.0f }));
 						}
-					} else {
+						else {
+							colorAttachments.push_back(createColorAttachment(
+								image->view(), VK_ATTACHMENT_LOAD_OP_CLEAR, { 0.0f, 0.0f, 0.5f, 0.0f }));
+						}
+					}
+					else {
 						printLog("ERROR: Color target '{}' not found in ResourceRegistry!", colorTarget);
 					}
 				}
@@ -1298,19 +1359,21 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 
 					if (image) {
 						image->transitionToDepthStencilAttachment(cmd);
-						
+
 						if (renderNode.pipelineNames[0] == "sky") {
 							depthAttachment = createDepthAttachment(
 								image->attachmentView(),
 								VK_ATTACHMENT_LOAD_OP_LOAD, 1.0f);
-						} else {
+						}
+						else {
 							depthAttachment = createDepthAttachment(
 								image->attachmentView(),
 								VK_ATTACHMENT_LOAD_OP_CLEAR, 1.0f);
 						}
-						
+
 						renderingInfo.pDepthAttachment = &depthAttachment;
-					} else {
+					}
+					else {
 						printLog("ERROR: Depth attachment '{}' not found in ResourceRegistry!", renderNode.depthAttachment);
 					}
 				}
@@ -1326,7 +1389,7 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 			// ✅ FIX: Get dimensions properly
 			uint32_t width = uint32_t(viewport.width);
 			uint32_t height = uint32_t(viewport.height);
-			
+
 			if (!mainTarget.empty()) {
 				ImageHandle handle = getImageHandleByName(mainTarget);
 				Image2D* image = resourceRegistry_->getResourceAs<Image2D>(handle);
@@ -1334,23 +1397,24 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 				if (image) {
 					width = image->width();
 					height = image->height();
-				} else {
+				}
+				else {
 					printLog("WARNING: Main target '{}' not found, using viewport dimensions", mainTarget);
 				}
 			}
 
 			// Setup rendering info
-			VkRect2D renderArea = {0, 0, width, height};
+			VkRect2D renderArea = { 0, 0, width, height };
 			renderingInfo.renderArea = renderArea;
 			renderingInfo.layerCount = 1;
-			
+
 			if (!colorAttachments.empty()) {
 				renderingInfo.colorAttachmentCount = uint32_t(colorAttachments.size());
 				renderingInfo.pColorAttachments = colorAttachments.data();
 			}
 
-			VkViewport vp{0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f};
-			VkRect2D sc{0, 0, width, height};
+			VkViewport vp{ 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
+			VkRect2D sc{ 0, 0, width, height };
 
 			{
 				TRACY_CPU_SCOPE("Begin Rendering");
@@ -1362,12 +1426,12 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 			// Process pipelines
 			{
 				TRACY_CPU_SCOPE("ProcessPipelines");
-				
+
 				for (auto& pipelineName : renderNode.pipelineNames) {
 					{
 						TRACY_CPU_SCOPE("Pipeline Processing");
-						
-						vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, 
+
+						vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
 							pipelines_.at(pipelineName)->pipeline());
 						pipelines_.at(pipelineName)->bindDescriptorSets(cmd, currentFrame);
 
@@ -1391,11 +1455,11 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 						// ✅ Render models (Model* version)
 						{
 							TRACY_CPU_SCOPE("DrawModels");
-							
-							VkDeviceSize offsets[1]{0};
+
+							VkDeviceSize offsets[1]{ 0 };
 							size_t visibleMeshCount = 0;
 							size_t totalMeshCount = 0;
-							
+
 							for (auto* model : models) {
 								if (!model || !model->visible()) continue;
 
@@ -1404,11 +1468,11 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 								// ========================================
 								uint32_t instanceCount = model->getInstanceCount();
 								VkBuffer instanceBuffer = model->getInstanceBuffer();
-								
+
 								if (instanceCount == 0) {
 									instanceCount = 1; // Fallback for non-instanced models
 								}
-								
+
 								// ========================================
 								// ✅ GPU Instancing: Set shader flag
 								// ========================================
@@ -1416,7 +1480,7 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 
 								for (auto& mesh : model->meshes()) {
 									totalMeshCount++;
-									
+
 									if (mesh.isCulled) {
 										continue;
 									}
@@ -1435,22 +1499,22 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 									// ✅ GPU Instancing: Bind vertex + instance buffers
 									// ========================================
 									vkCmdBindVertexBuffers(cmd, 0, 1, &mesh.vertexBuffer_, offsets);
-									
+
 									// Bind instance buffer if available
 									if (isInstanced) {
 										vkCmdBindVertexBuffers(cmd, 1, 1, &instanceBuffer, offsets);
 									}
-									
+
 									vkCmdBindIndexBuffer(cmd, mesh.indexBuffer_, 0, VK_INDEX_TYPE_UINT32);
-									
+
 									// ========================================
 									// ✅ GPU Instancing: Draw with instanceCount
 									// ========================================
-									vkCmdDrawIndexed(cmd, static_cast<uint32_t>(mesh.indices_.size()), 
+									vkCmdDrawIndexed(cmd, static_cast<uint32_t>(mesh.indices_.size()),
 										instanceCount, 0, 0, 0);
 								}
 							}
-							
+
 							// Track rendering statistics
 							TRACY_PLOT("VisibleMeshes", static_cast<int64_t>(visibleMeshCount));
 							TRACY_PLOT("TotalMeshes", static_cast<int64_t>(totalMeshCount));
@@ -1467,154 +1531,118 @@ VK_FORMAT_R8G8B8A8_UNORM // 4 bytes - NOT FLOAT, last resort
 		}
 	}
 
-	void Renderer::performFrustumCulling(vector<Model*>& models)
-	{
-		cullingStats_ = {};
-		for (auto* model : models) {
-			if (!model) continue;
-			for (auto& mesh : model->meshes()) {
-				cullingStats_.totalMeshes++;
-				mesh.isCulled = !viewFrustum_.intersects(mesh.worldBounds);  // ✅ intersects 사용
-				if (mesh.isCulled) {
-					cullingStats_.culledMeshes++;
-				} else {
-					cullingStats_.renderedMeshes++;
-				}
-			}
-		}
-	}
-
-	void Renderer::updateWorldBounds(vector<Model*>& models)
-	{
-		for (auto* model : models) {
-			if (!model) continue;
-			for (auto& mesh : model->meshes()) {
-				mesh.updateWorldBounds(model->modelMatrix());
-			}
-		}
-	}
-
 	// ========================================
 	// ✅ NEW: Material 동적 업데이트
+	// ✅ NEW: RenderPass system helper methods
 	// ========================================
-	
+
 	void Renderer::updateMaterials(const vector<unique_ptr<Model>>& models)
 	{
 		TRACY_CPU_SCOPE("Renderer::updateMaterials (unique_ptr)");
-		
+
 		vector<MaterialUBO> allMaterials;
-		
+
 		for (const auto& model : models) {
 			if (model) {
 				model->prepareForBindlessRendering(samplerLinearRepeat_, allMaterials, *materialTextures_);
 			}
 		}
-		
+
 		if (allMaterials.empty()) {
 			printLog("WARNING: No materials to update, keeping dummy material");
 			return;
 		}
-		
+
 		// Recreate material buffer with new data
 		materialBuffer_ = std::make_unique<StorageBuffer>(ctx_, allMaterials.data(),
 			sizeof(MaterialUBO) * allMaterials.size());
-		
+
 		printLog("Updated material buffer with {} materials", allMaterials.size());
 	}
-	
+
 	void Renderer::updateMaterials(const vector<Model*>& models)
 	{
 		TRACY_CPU_SCOPE("Renderer::updateMaterials (Model*)");
-		
+
 		vector<MaterialUBO> allMaterials;
-		
+
 		for (auto* model : models) {
 			if (model) {
 				model->prepareForBindlessRendering(samplerLinearRepeat_, allMaterials, *materialTextures_);
 			}
 		}
-		
+
 		if (allMaterials.empty()) {
 			printLog("WARNING: No materials to update, keeping dummy material");
 			return;
 		}
-		
+
 		// Recreate material buffer with new data
 		materialBuffer_ = std::make_unique<StorageBuffer>(ctx_, allMaterials.data(),
 			sizeof(MaterialUBO) * allMaterials.size());
-		
+
 		printLog("Updated material buffer with {} materials", allMaterials.size());
-		
-		// ========================================
-		// ✅ FIX: Recreate descriptor sets that reference materialBuffer_
-		// ========================================
+
+		// Recreate descriptor sets that reference materialBuffer_
 		updateMaterialDescriptorSets();
 	}
-	
+
 	void Renderer::updateMaterialDescriptorSets()
 	{
 		TRACY_CPU_SCOPE("Renderer::updateMaterialDescriptorSets");
-		
+
 		printLog("Recreating material descriptor sets...");
-		
+
 		// "material" descriptor set을 다시 생성
-		vector<string> bindingNames = {"materialBuffer", "materialTextures"};
-		
+		vector<string> bindingNames = { "materialBuffer", "materialTextures" };
+
 		vector<reference_wrapper<Resource>> resources;
 		for (const string& resourceName : bindingNames) {
 			addResource(resourceName, uint32_t(-1), resources);
 		}
-		
+
 		// Recreate descriptor set
 		if (pipelines_.find("pbrDeferred") != pipelines_.end()) {
 			descriptorSets_["material"].create(
-				ctx_, 
-				pipelines_["pbrDeferred"]->layouts()[1], 
+				ctx_,
+				pipelines_["pbrDeferred"]->layouts()[1],
 				resources
 			);
-			
+
 			printLog("✅ Recreated 'material' descriptor set");
-			
-			// ========================================
-			// ✅ FIX: 파이프라인에 다시 바인딩
-			// ========================================
-			for (const string& pipelineName : {"pbrDeferred", "pbrForward"}) {
+
+			// Rebind to relevant pipelines
+			for (const string& pipelineName : { string("pbrDeferred"), string("pbrForward") }) {
 				if (pipelines_.find(pipelineName) == pipelines_.end()) continue;
-				
-				// 파이프라인의 descriptor set 이름들
+
 				vector<string> setNames;
 				if (pipelineName == "pbrDeferred") {
-					setNames = {"sceneOptions", "material"};
-				} else if (pipelineName == "pbrForward") {
-					setNames = {"sceneOptions", "material", "sky", "shadowMap"};
+					setNames = { "sceneOptions", "material" };
 				}
-				
-				// 각 프레임에 대해 descriptor set 재구성
+				else if (pipelineName == "pbrForward") {
+					setNames = { "sceneOptions", "material", "sky", "shadowMap" };
+				}
+
 				vector<vector<reference_wrapper<DescriptorSet>>> pipelineDescriptorSets;
 				pipelineDescriptorSets.resize(kMaxFramesInFlight_);
-				
+
 				for (uint32_t frameIndex = 0; frameIndex < kMaxFramesInFlight_; ++frameIndex) {
 					pipelineDescriptorSets[frameIndex].reserve(setNames.size());
-					
 					for (const string& setName : setNames) {
-						// Per-frame descriptor set
 						if (perFrameDescriptorSets_.find(setName) != perFrameDescriptorSets_.end()) {
 							pipelineDescriptorSets[frameIndex].emplace_back(
 								std::ref(perFrameDescriptorSets_[setName][frameIndex]));
 						}
-						// Non-per-frame descriptor set
 						else if (descriptorSets_.find(setName) != descriptorSets_.end()) {
 							pipelineDescriptorSets[frameIndex].emplace_back(
 								std::ref(descriptorSets_[setName]));
 						}
 					}
 				}
-				
-				// 파이프라인에 재바인딩
+
 				pipelines_[pipelineName]->setDescriptorSets(pipelineDescriptorSets);
 				printLog("✅ Rebound descriptor sets to pipeline '{}'", pipelineName);
 			}
 		}
 	}
-
 } // namespace BinRenderer::Vulkan

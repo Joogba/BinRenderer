@@ -2,6 +2,7 @@
 #include "Logger.h"
 #include "GpuTimer.h"
 #include "TracyProfiler.h" // Add Tracy macros wrapper
+#include "Cloth/ClothRenderPass.h" // ✅ For future cloth integration
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <format>
@@ -648,8 +649,7 @@ namespace BinRenderer::Vulkan {
 				if (tracyProfiler_) {
 					TRACY_GPU_SCOPE(*tracyProfiler_, cmd.handle(), "GUI Rendering");
 				}
-				guiRenderer_.draw(cmd.handle(), swapchain_.imageView(imageIndex), viewport,
-					currentFrame);
+				// GUI is now drawn by MainRenderPass; skip direct guiRenderer_.draw call
 			}
 
 			{
@@ -732,7 +732,7 @@ namespace BinRenderer::Vulkan {
 					char message[128];
 					snprintf(message, sizeof(message), "Frame %u - FPS: %.1f, GPU: %.2fms",
 						frameCounter, currentFPS_, currentGpuTimeMs_);
-					tracyProfiler_->messageL(message);
+				 tracyProfiler_->messageL(message);
 				}
 			}
 
@@ -938,7 +938,7 @@ namespace BinRenderer::Vulkan {
 		// HDR Environment Controls
 		if (ImGui::CollapsingHeader("HDR Environment", ImGuiTreeNodeFlags_DefaultOpen)) {
 			ImGui::SliderFloat("Environment Intensity",
-				&renderer_->skyOptionsUBO().environmentIntensity, 0.0f, 10.0f, "*.2f");
+				&renderer_->skyOptionsUBO().environmentIntensity, 0.0f, 10.0f, "%.2f");
 		}
 
 		// Environment Map Controls

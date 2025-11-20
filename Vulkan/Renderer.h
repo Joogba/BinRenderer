@@ -19,6 +19,7 @@
 #include <functional>
 #include <memory>
 
+
 namespace BinRenderer::Vulkan {
 
 	using namespace std;
@@ -137,7 +138,7 @@ namespace BinRenderer::Vulkan {
 			const string& kAssetsPathPrefix, const string& kShaderPathPrefix_,
 			vector<unique_ptr<Model>>& models, VkFormat outColorFormat, VkFormat depthFormat,
 			uint32_t swapChainWidth, uint32_t swapChainHeight,
-			VulkanResourceManager* resourceManager = nullptr);  // ✅ VulkanResourceManager 추가
+			VulkanResourceManager* resourceManager = nullptr); // ✅ VulkanResourceManager 추가
 
 		~Renderer() = default;
 
@@ -181,7 +182,7 @@ namespace BinRenderer::Vulkan {
 		void updateMaterials(const vector<unique_ptr<Model>>& models);
 
 	private:
-		void updateMaterialDescriptorSets();  // ✅ Helper method
+		void updateMaterialDescriptorSets(); // ✅ Helper method
 
 	public:
 		// Accessors
@@ -398,7 +399,7 @@ namespace BinRenderer::Vulkan {
 		VkRenderingAttachmentInfo
 			createColorAttachment(VkImageView imageView,
 				VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-				VkClearColorValue clearColor = { 0.0f, 0.0f, 0.0f, 0.0f },
+				VkClearColorValue clearColor = { 0.0f,0.0f,0.0f,0.0f },
 				VkImageView resolveImageView = VK_NULL_HANDLE,
 				VkResolveModeFlagBits resolveMode = VK_RESOLVE_MODE_NONE) const;
 
@@ -407,6 +408,9 @@ namespace BinRenderer::Vulkan {
 				VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 				float clearDepth = 1.0f, VkImageView resolveImageView = VK_NULL_HANDLE,
 				VkResolveModeFlagBits resolveMode = VK_RESOLVE_MODE_NONE) const;
+
+		// NEW: RenderPassManager instance
+		RenderPassManager renderPassManager_;
 	};
 
 } // namespace BinRenderer::Vulkan
