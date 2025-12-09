@@ -154,6 +154,44 @@
     <ClInclude Include="Camera.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="RHI\Commands\RHICommandBuffer.h" />
+    <ClInclude Include="RHI\Commands\RHICommandPool.h" />
+    <ClInclude Include="RHI\Commands\RHICommandQueue.h" />
+    <ClInclude Include="RHI\Core\RHI.h" />
+    <ClInclude Include="RHI\Core\RHIDefinitions.h" />
+    <ClInclude Include="RHI\Pipeline\RHIDescriptor.h" />
+    <ClInclude Include="RHI\Pipeline\RHIFramebuffer.h" />
+    <ClInclude Include="RHI\Pipeline\RHIPipeline.h" />
+    <ClInclude Include="RHI\Pipeline\RHIPipelineLayout.h" />
+    <ClInclude Include="RHI\Pipeline\RHIPipelineState.h" />
+    <ClInclude Include="RHI\Pipeline\RHIRenderPass.h" />
+    <ClInclude Include="RHI\Resources\RHIBuffer.h" />
+    <ClInclude Include="RHI\Resources\RHICommand.h" />
+    <ClInclude Include="RHI\Resources\RHIDescriptor.h" />
+    <ClInclude Include="RHI\Resources\RHIDevice.h" />
+    <ClInclude Include="RHI\Resources\RHIImage.h" />
+    <ClInclude Include="RHI\Resources\RHIPipeline.h" />
+    <ClInclude Include="RHI\Resources\RHIRenderTarget.h" />
+    <ClInclude Include="RHI\Resources\RHIResource.h" />
+    <ClInclude Include="RHI\Resources\RHIResources.h" />
+    <ClInclude Include="RHI\Core\RHIStruct.h" />
+    <ClInclude Include="RHI\Core\RHIStructs.h" />
+    <ClInclude Include="RHI\Resources\RHISampler.h" />
+    <ClInclude Include="RHI\Resources\RHIShader.h" />
+    <ClInclude Include="RHI\Resources\RHITexture.h" />
+    <ClInclude Include="RHI\Structs\RHIBufferCreateInfo.h" />
+    <ClInclude Include="RHI\Structs\RHIDescriptorCreateInfo.h" />
+    <ClInclude Include="RHI\Structs\RHIImageCreateInfo.h" />
+    <ClInclude Include="RHI\Structs\RHIPipelineCreateInfo.h" />
+    <ClInclude Include="RHI\Structs\RHIShaderCreateInfo.h" />
+    <ClInclude Include="RHI\Structs\RHIStructs.h" />
+    <ClInclude Include="RHI\Synchronization\RHIEvent.h" />
+    <ClInclude Include="RHI\Synchronization\RHIFence.h" />
+    <ClInclude Include="RHI\Synchronization\RHISemaphore.h" />
+    <ClInclude Include="RHI\Vulkan\VulkanRHI.h" />
+    <ClInclude Include="RHI\Vulkan\VulkanRHIResource.h" />
+    <ClInclude Include="RHI\Vulkan\VulkanStructs.h" />
+    <ClInclude Include="RHI\Vulkan\VulkanUtil.h" />
     <ClInclude Include="Vulkan\RenderGraphBuilder.h" />
     <ClInclude Include="Vulkan\Animation.h" />
     <ClInclude Include="Vulkan\Application.h" />
@@ -258,6 +296,10 @@
     <ClInclude Include="Vulkan\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="RHI\Core\RHI.cpp" />
+    <ClCompile Include="RHI\Core\RHIType.h" />
+    <ClCompile Include="RHI\Vulkan\VulkanRHI.cpp" />
+    <ClCompile Include="RHI\Vulkan\VulkanUtil.cpp" />
     <ClCompile Include="Vulkan\RenderGraphBuilder.cpp" />
     <ClCompile Include="Resources\ResourceManager.cpp" />
     <ClCompile Include="Vulkan\Animation.cpp" />
@@ -365,6 +407,7 @@
     <None Include="assets\shaders\cloth\cloth_constraints.comp" />
     <None Include="assets\shaders\cloth\cloth_integrate.comp" />
     <None Include="assets\shaders\cloth\cloth_normals.comp" />
+    <None Include="ClassDiagram.cd" />
     <None Include="compile_cloth_shaders.bat" />
     <None Include="Docs\BinRenderer\BarrierHelper.md" />
     <None Include="Docs\BinRenderer\Camera.md" />

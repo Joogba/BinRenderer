@@ -433,6 +433,14 @@ namespace BinRenderer
 		RHI_VERTEX_INPUT_RATE_INSTANCE = 1,
 	};
 
+	enum RHIPresentMode : int
+	{
+		RHI_PRESENT_MODE_IMMEDIATE_KHR = 0,
+		RHI_PRESENT_MODE_MAILBOX_KHR = 1,
+		RHI_PRESENT_MODE_FIFO_KHR = 2,
+		RHI_PRESENT_MODE_FIFO_RELAXED_KHR = 3,
+	};
+
 	// Typedefs for flag types
 	typedef uint32_t RHIAccessFlags;
 	typedef uint32_t RHIPipelineStageFlags;

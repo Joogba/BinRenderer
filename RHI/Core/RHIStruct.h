@@ -1129,20 +1129,42 @@ namespace BinRenderer
 		RHIFormat depthFormat;
     };
 
-	// TODO : move to platform specific file
-    /*struct QueueFamilyIndices
+    /**
+     * @brief 플랫폼 독립적 스왑체인 설정
+     *
+     * Vulkan, D3D11, D3D12 모두 지원
+     */
+    struct RHISwapChainDesc
     {
-        std::optional<uint32_t> graphics_family;
-        std::optional<uint32_t> present_family;
-        std::optional<uint32_t> m_compute_family;
+        RHIExtent2D extent;
+        RHIFormat   imageFormat;
+        RHIViewport* viewport;
+        RHIRect2D* scissor;
+        std::vector<RHIImageView*> imageViews;
 
-        bool isComplete() { return graphics_family.has_value() && present_family.has_value() && m_compute_family.has_value();; }
+        // 선택적 설정
+        uint32_t minImageCount = 2;
+        uint32_t maxImageCount = 3;
+        RHIPresentMode presentMode = RHIPresentMode::RHI_PRESENT_MODE_FIFO_KHR; // VSync
     };
 
-    struct SwapChainSupportDetails
+    /**
+     * @brief 플랫폼 독립적 큐 패밀리 정보
+     *
+     * 각 플랫폼별로 다르게 해석됨:
+     * - Vulkan: Queue Family Index
+     * - D3D11: Command Queue Type (Direct, Compute, Copy)
+     * - D3D12: Command Queue Type
+     */
+    struct RHIQueueFamilyInfo
     {
-        VkSurfaceCapabilitiesKHR        capabilities;
-        std::vector<VkSurfaceFormatKHR> formats;
-        std::vector<VkPresentModeKHR>   presentModes;
-    };*/
+        std::optional<uint32_t> graphicsQueueIndex;
+        std::optional<uint32_t> computeQueueIndex;
+        std::optional<uint32_t> transferQueueIndex;
+
+        bool isComplete() const
+        {
+            return graphicsQueueIndex.has_value(); // Graphics는 필수
+        }
+    };
 }

@@ -650,6 +650,8 @@ namespace BinRenderer::Vulkan {
 					TRACY_GPU_SCOPE(*tracyProfiler_, cmd.handle(), "GUI Rendering");
 				}
 				// GUI is now drawn by MainRenderPass; skip direct guiRenderer_.draw call
+				guiRenderer_.draw(cmd.handle(), swapchain_.imageView(imageIndex), viewport,
+					currentFrame);
 			}
 
 			{
