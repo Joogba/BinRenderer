@@ -83,6 +83,8 @@ namespace BinRenderer
 		RHI_FORMAT_UNDEFINED = 0,
 		RHI_FORMAT_R8G8B8A8_UNORM = 37,
 		RHI_FORMAT_B8G8R8A8_UNORM = 44,
+		RHI_FORMAT_R16G16B16A16_SFLOAT = 97,
+		RHI_FORMAT_R32G32B32A32_SFLOAT = 109,
 		RHI_FORMAT_D32_SFLOAT = 126,
 	};
 
@@ -474,7 +476,7 @@ namespace BinRenderer
 	typedef uint32_t RHICommandPoolCreateFlags;
 	typedef uint32_t RHIDescriptorPoolCreateFlags;
 	typedef uint32_t RHIDeviceCreateFlags;
-	typedef uint32_t RHIDeviceQueueCreateFlags;
+ typedef uint32_t RHIDeviceQueueCreateFlags;
 	typedef uint32_t RHIFormatFeatureFlags;
 	typedef uint32_t RHIFramebufferCreateFlags;
 	typedef uint32_t RHIPipelineCreateFlags;

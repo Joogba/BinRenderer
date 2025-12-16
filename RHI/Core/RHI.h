@@ -2,6 +2,7 @@
 
 #include "RHIDefinitions.h"
 #include "RHIType.h"
+#include "RHISwapchain.h"
 #include "../Structs/RHIStructs.h"
 #include "../Resources/RHIBuffer.h"
 #include "../Resources/RHIImage.h"
@@ -29,6 +30,9 @@ namespace BinRenderer
 		virtual bool beginFrame(uint32_t& imageIndex) = 0;
 		virtual void endFrame(uint32_t imageIndex) = 0;
 		virtual uint32_t getCurrentFrameIndex() const = 0;
+
+		// 스왑체인 접근
+		virtual RHISwapchain* getSwapchain() const = 0;
 
 		// 리소스 생성
 		virtual RHIBuffer* createBuffer(const RHIBufferCreateInfo& createInfo) = 0;
@@ -59,15 +63,6 @@ namespace BinRenderer
 
 		// API 타입
 		virtual RHIApiType getApiType() const = 0;
-	};
-
-	/**
-	 * @brief RHI 팩토리
-	 */
-	class RHIFactory
-	{
-	public:
-		static RHI* createRHI(RHIApiType apiType);
 	};
 
 } // namespace BinRenderer

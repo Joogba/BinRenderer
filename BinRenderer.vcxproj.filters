@@ -216,13 +216,100 @@
     <ClCompile Include="RHI\Core\RHIType.h">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="RHI\Vulkan\VulkanRHI.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="RHI\Vulkan\VulkanUtil.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="RHI\Core\RHI.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Util\RHIFactory.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Util\RHIValidation.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Util\RHIDebug.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Resources\VulkanBuffer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Resources\VulkanShader.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Conversion\TypeConversion.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Resources\VulkanImage.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Pipeline\VulkanPipeline.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Pipeline\VulkanRenderPass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Pipeline\VulkanFramebuffer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Pipeline\VulkanDescriptor.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Commands\VulkanCommandBuffer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Commands\VulkanCommandPool.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Commands\VulkanQueue.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Sync\VulkanFence.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Sync\VulkanSemaphore.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Sync\VulkanEvent.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Resources\VulkanSampler.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Resources\VulkanTexture.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Utilities\VulkanMemoryAllocator.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Utilities\VulkanDebug.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Core\VulkanContext.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\RenderPassBase.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\GBufferPass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\LightingPass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\PostProcessPass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\ShadowPass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\ForwardPass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\DeferredRenderer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\VulkanRHI.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -503,9 +590,6 @@
     <ClInclude Include="RHI\Vulkan\VulkanRHI.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RHI\Vulkan\VulkanRHIResource.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="RHI\Vulkan\VulkanUtil.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -603,6 +687,96 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="RHI\Structs\RHIStructs.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Util\RHIFactory.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Util\RHIValidation.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Util\RHIDebug.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Resources\VulkanBuffer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Resources\VulkanImage.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Resources\VulkanShader.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Conversion\TypeConversion.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Pipeline\VulkanPipeline.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Pipeline\VulkanRenderPass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Pipeline\VulkanFramebuffer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Pipeline\VulkanDescriptor.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Commands\VulkanCommandBuffer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Commands\VulkanCommandPool.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Commands\VulkanQueue.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Sync\VulkanFence.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Sync\VulkanSemaphore.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Sync\VulkanEvent.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Resources\VulkanSampler.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Resources\VulkanTexture.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Utilities\VulkanMemoryAllocator.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Utilities\VulkanDebug.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Core\RHISwapchain.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Core\VulkanContext.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\RenderPassBase.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\GBufferPass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\LightingPass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\PostProcessPass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\ShadowPass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\ForwardPass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\DeferredRenderer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
