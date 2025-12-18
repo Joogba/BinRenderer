@@ -61,6 +61,16 @@ namespace BinRenderer::Vulkan
 
 	bool VulkanDescriptorPool::create(uint32_t maxSets, const std::vector<VkDescriptorPoolSize>& poolSizes)
 	{
+		maxSets_ = maxSets;
+		remainingSets_ = maxSets;
+
+		// ✅ 용량 추적 초기화
+		for (const auto& poolSize : poolSizes)
+		{
+			totalDescriptors_[poolSize.type] = poolSize.descriptorCount;
+			remainingDescriptors_[poolSize.type] = poolSize.descriptorCount;
+		}
+
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
@@ -72,6 +82,7 @@ namespace BinRenderer::Vulkan
 			return false;
 		}
 
+		printLog("✅ Descriptor pool created: {} sets, {} types", maxSets, poolSizes.size());
 		return true;
 	}
 
@@ -82,6 +93,12 @@ namespace BinRenderer::Vulkan
 			vkDestroyDescriptorPool(device_, pool_, nullptr);
 			pool_ = VK_NULL_HANDLE;
 		}
+
+		// ✅ 용량 추적 초기화
+		maxSets_ = 0;
+		remainingSets_ = 0;
+		totalDescriptors_.clear();
+		remainingDescriptors_.clear();
 	}
 
 	void VulkanDescriptorPool::reset()
@@ -89,6 +106,10 @@ namespace BinRenderer::Vulkan
 		if (pool_ != VK_NULL_HANDLE)
 		{
 			vkResetDescriptorPool(device_, pool_, 0);
+
+			// ✅ 용량 리셋
+			remainingSets_ = maxSets_;
+			remainingDescriptors_ = totalDescriptors_;
 		}
 	}
 
@@ -166,6 +187,51 @@ namespace BinRenderer::Vulkan
 		descriptorWrite.pImageInfo = &imageInfo;
 
 		vkUpdateDescriptorSets(device_, 1, &descriptorWrite, 0, nullptr);
+	}
+
+	// ========================================
+	// ✅ 자동 풀 관리 메서드 구현
+	// ========================================
+
+	bool VulkanDescriptorPool::canAllocate(const std::vector<VkDescriptorSetLayoutBinding>& bindings, uint32_t setCount) const
+	{
+		// Set 개수 확인
+		if (remainingSets_ < setCount)
+		{
+			return false;
+		}
+
+		// 각 Descriptor 타입별 개수 계산
+		std::unordered_map<VkDescriptorType, uint32_t> requiredDescriptors;
+		for (const auto& binding : bindings)
+		{
+			requiredDescriptors[binding.descriptorType] += binding.descriptorCount * setCount;
+		}
+
+		// 남은 Descriptor 개수 확인
+		for (const auto& [type, required] : requiredDescriptors)
+		{
+			auto it = remainingDescriptors_.find(type);
+			if (it == remainingDescriptors_.end() || it->second < required)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	void VulkanDescriptorPool::updateCapacity(const std::vector<VkDescriptorSetLayoutBinding>& bindings, uint32_t setCount)
+	{
+		// Set 개수 감소
+		remainingSets_ -= setCount;
+
+		// 각 Descriptor 타입별 개수 감소
+		for (const auto& binding : bindings)
+		{
+			uint32_t totalUsed = binding.descriptorCount * setCount;
+			remainingDescriptors_[binding.descriptorType] -= totalUsed;
+		}
 	}
 
 } // namespace BinRenderer::Vulkan

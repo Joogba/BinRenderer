@@ -3,6 +3,7 @@
 #include "../../Pipeline/RHIDescriptor.h"
 #include <vulkan/vulkan.h>
 #include <vector>
+#include <unordered_map>
 
 namespace BinRenderer::Vulkan
 {
@@ -49,9 +50,40 @@ namespace BinRenderer::Vulkan
 		// Vulkan 네이티브 접근
 		VkDescriptorPool getVkDescriptorPool() const { return pool_; }
 
+		// ========================================
+		// ✅ 자동 풀 관리 기능
+		// ========================================
+
+		/**
+		 * @brief 현재 풀에서 할당 가능한지 확인
+		 * @param bindings 필요한 바인딩
+		 * @param setCount 필요한 set 개수
+		 * @return 할당 가능 여부
+		 */
+		bool canAllocate(const std::vector<VkDescriptorSetLayoutBinding>& bindings, uint32_t setCount = 1) const;
+
+		/**
+		 * @brief 풀 용량 업데이트 (할당 후)
+		 * @param bindings 할당된 바인딩
+		 * @param setCount 할당된 set 개수
+		 */
+		void updateCapacity(const std::vector<VkDescriptorSetLayoutBinding>& bindings, uint32_t setCount = 1);
+
+		/**
+		 * @brief 남은 용량 확인
+		 */
+		uint32_t getRemainingSetCount() const { return remainingSets_; }
+		const std::unordered_map<VkDescriptorType, uint32_t>& getRemainingDescriptors() const { return remainingDescriptors_; }
+
 	private:
 		VkDevice device_;
 		VkDescriptorPool pool_ = VK_NULL_HANDLE;
+
+		// ✅ 용량 추적
+		uint32_t maxSets_ = 0;
+		uint32_t remainingSets_ = 0;
+		std::unordered_map<VkDescriptorType, uint32_t> totalDescriptors_;
+		std::unordered_map<VkDescriptorType, uint32_t> remainingDescriptors_;
 	};
 
 	/**
