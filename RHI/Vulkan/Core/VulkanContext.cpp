@@ -134,9 +134,12 @@ namespace BinRenderer::Vulkan
 		// 간단하게 첫 번째 디바이스 선택 (실제로는 점수 매기기 필요)
 		physicalDevice_ = devices[0];
 
-		VkPhysicalDeviceProperties properties;
-		vkGetPhysicalDeviceProperties(physicalDevice_, &properties);
-		printLog("Selected GPU: {}", properties.deviceName);
+		// ✅ 디바이스 속성 저장
+		vkGetPhysicalDeviceProperties(physicalDevice_, &deviceProperties_);
+		vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
+		vkGetPhysicalDeviceFeatures(physicalDevice_, &deviceFeatures_);
+
+		printLog("Selected GPU: {}", deviceProperties_.deviceName);
 
 		return true;
 	}
@@ -240,6 +243,80 @@ namespace BinRenderer::Vulkan
 		}
 
 		return indices;
+	}
+
+	// ========================================
+	// ✅ 헬퍼 메서드 구현
+	// ========================================
+
+	uint32_t VulkanContext::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const
+	{
+		for (uint32_t i = 0; i < memoryProperties_.memoryTypeCount; i++)
+		{
+			if ((typeFilter & (1 << i)) &&
+				(memoryProperties_.memoryTypes[i].propertyFlags & properties) == properties)
+			{
+				return i;
+			}
+		}
+
+		printLog("ERROR: Failed to find suitable memory type!");
+		return 0;
+	}
+
+	VkFormat VulkanContext::findSupportedFormat(
+		const std::vector<VkFormat>& candidates,
+		VkImageTiling tiling,
+		VkFormatFeatureFlags features) const
+	{
+		for (VkFormat format : candidates)
+		{
+			VkFormatProperties props;
+			vkGetPhysicalDeviceFormatProperties(physicalDevice_, format, &props);
+
+			if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features)
+			{
+				return format;
+			}
+			else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)
+			{
+				return format;
+			}
+		}
+
+		printLog("ERROR: Failed to find supported format!");
+		return VK_FORMAT_UNDEFINED;
+	}
+
+	VkFormat VulkanContext::findDepthFormat() const
+	{
+		std::vector<VkFormat> candidates = {
+			VK_FORMAT_D32_SFLOAT,
+			VK_FORMAT_D32_SFLOAT_S8_UINT,
+			VK_FORMAT_D24_UNORM_S8_UINT
+		};
+
+		return findSupportedFormat(
+			candidates,
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+		);
+	}
+
+	VkSampleCountFlagBits VulkanContext::getMaxUsableSampleCount() const
+	{
+		VkSampleCountFlags counts =
+			deviceProperties_.limits.framebufferColorSampleCounts &
+			deviceProperties_.limits.framebufferDepthSampleCounts;
+
+		if (counts & VK_SAMPLE_COUNT_64_BIT) return VK_SAMPLE_COUNT_64_BIT;
+		if (counts & VK_SAMPLE_COUNT_32_BIT) return VK_SAMPLE_COUNT_32_BIT;
+		if (counts & VK_SAMPLE_COUNT_16_BIT) return VK_SAMPLE_COUNT_16_BIT;
+		if (counts & VK_SAMPLE_COUNT_8_BIT) return VK_SAMPLE_COUNT_8_BIT;
+		if (counts & VK_SAMPLE_COUNT_4_BIT) return VK_SAMPLE_COUNT_4_BIT;
+		if (counts & VK_SAMPLE_COUNT_2_BIT) return VK_SAMPLE_COUNT_2_BIT;
+
+		return VK_SAMPLE_COUNT_1_BIT;
 	}
 
 } // namespace BinRenderer::Vulkan
