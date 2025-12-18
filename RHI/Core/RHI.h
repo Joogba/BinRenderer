@@ -39,12 +39,21 @@ namespace BinRenderer
 		virtual RHIImage* createImage(const RHIImageCreateInfo& createInfo) = 0;
 		virtual RHIShader* createShader(const RHIShaderCreateInfo& createInfo) = 0;
 		virtual RHIPipeline* createPipeline(const RHIPipelineCreateInfo& createInfo) = 0;
+		virtual RHIImageView* createImageView(RHIImage* image, const RHIImageViewCreateInfo& createInfo) = 0;
+		virtual RHISampler* createSampler(const RHISamplerCreateInfo& createInfo) = 0;
 
 		// 리소스 해제
 		virtual void destroyBuffer(RHIBuffer* buffer) = 0;
 		virtual void destroyImage(RHIImage* image) = 0;
 		virtual void destroyShader(RHIShader* shader) = 0;
 		virtual void destroyPipeline(RHIPipeline* pipeline) = 0;
+		virtual void destroyImageView(RHIImageView* imageView) = 0;
+		virtual void destroySampler(RHISampler* sampler) = 0;
+
+		// 버퍼 매핑
+		virtual void* mapBuffer(RHIBuffer* buffer) = 0;
+		virtual void unmapBuffer(RHIBuffer* buffer) = 0;
+		virtual void flushBuffer(RHIBuffer* buffer, RHIDeviceSize offset = 0, RHIDeviceSize size = 0) = 0;
 
 		// 커맨드 기록
 		virtual void beginCommandRecording() = 0;
@@ -56,6 +65,7 @@ namespace BinRenderer
 		virtual void cmdBindVertexBuffer(RHIBuffer* buffer, RHIDeviceSize offset = 0) = 0;
 		virtual void cmdBindIndexBuffer(RHIBuffer* buffer, RHIDeviceSize offset = 0) = 0;
 		virtual void cmdBindDescriptorSets(RHIPipelineLayout* layout, RHIDescriptorSet** sets, uint32_t setCount) = 0;
+		virtual void cmdPushConstants(RHIPipelineLayout* layout, RHIShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues) = 0;
 		virtual void cmdSetViewport(const RHIViewport& viewport) = 0;
 		virtual void cmdSetScissor(const RHIRect2D& scissor) = 0;
 		virtual void cmdDraw(uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t firstInstance = 0) = 0;
@@ -65,4 +75,4 @@ namespace BinRenderer
 		virtual RHIApiType getApiType() const = 0;
 	};
 
-} // namespace BinRenderer
+} // namespace BinRenderer} // namespace BinRenderer

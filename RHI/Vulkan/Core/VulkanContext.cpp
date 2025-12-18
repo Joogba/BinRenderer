@@ -14,9 +14,10 @@ namespace BinRenderer::Vulkan
 		shutdown();
 	}
 
-	bool VulkanContext::initialize(const std::vector<const char*>& instanceExtensions, bool enableValidation)
+	bool VulkanContext::initialize(const std::vector<const char*>& instanceExtensions, bool enableValidation, bool requireSwapchain)
 	{
 		validationEnabled_ = enableValidation;
+		requireSwapchain_ = requireSwapchain;  // ✅ 저장
 
 		if (!createInstance(instanceExtensions))
 		{
@@ -145,8 +146,8 @@ namespace BinRenderer::Vulkan
 		auto indices = findQueueFamilies(physicalDevice_);
 
 		std::set<uint32_t> uniqueQueueFamilies = {
-		 indices.graphicsFamily,
-			  indices.presentFamily,
+			indices.graphicsFamily,
+			indices.presentFamily,
 			indices.computeFamily
 		};
 
@@ -166,15 +167,22 @@ namespace BinRenderer::Vulkan
 		VkPhysicalDeviceFeatures deviceFeatures{};
 		deviceFeatures.samplerAnisotropy = VK_TRUE;
 
-		const char* deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+		// ✅ 헤드리스 모드 지원: 스왑체인이 필요할 때만 확장 추가
+		std::vector<const char*> deviceExtensions;
+		if (requireSwapchain_) {
+			deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+			printLog("  Enabling device extension: VK_KHR_swapchain");
+		} else {
+			printLog("  Headless mode: Skipping VK_KHR_swapchain");
+		}
 
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 		createInfo.pQueueCreateInfos = queueCreateInfos.data();
 		createInfo.pEnabledFeatures = &deviceFeatures;
-		createInfo.enabledExtensionCount = 1;
-		createInfo.ppEnabledExtensionNames = deviceExtensions;
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+		createInfo.ppEnabledExtensionNames = deviceExtensions.empty() ? nullptr : deviceExtensions.data();
 
 		if (vkCreateDevice(physicalDevice_, &createInfo, nullptr, &device_) != VK_SUCCESS)
 		{

@@ -103,6 +103,16 @@ namespace BinRenderer::Vulkan
 		}
 	}
 
+	void VulkanBuffer::flush(RHIDeviceSize offset, RHIDeviceSize size)
+	{
+		VkMappedMemoryRange mappedRange{};
+		mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+		mappedRange.memory = memory_;
+		mappedRange.offset = offset;
+		mappedRange.size = (size == 0) ? VK_WHOLE_SIZE : size;
+		vkFlushMappedMemoryRanges(device_, 1, &mappedRange);
+	}
+
 	void VulkanBuffer::updateData(const void* data, RHIDeviceSize size, RHIDeviceSize offset)
 	{
 		void* mapped = map();

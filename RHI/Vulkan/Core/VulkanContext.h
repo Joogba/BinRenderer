@@ -16,7 +16,7 @@ namespace BinRenderer::Vulkan
 		~VulkanContext();
 
 		// 초기화
-		bool initialize(const std::vector<const char*>& instanceExtensions, bool enableValidation = true);
+		bool initialize(const std::vector<const char*>& instanceExtensions, bool enableValidation = true, bool requireSwapchain = true);
 		void shutdown();
 
 		// 디바이스 및 큐 접근
@@ -50,6 +50,7 @@ namespace BinRenderer::Vulkan
 		uint32_t computeQueueFamily_ = 0;
 
 		bool validationEnabled_ = false;
+		bool requireSwapchain_ = true;  // ✅ 추가: 스왑체인 필요 여부
 
 		// 초기화 헬퍼
 		bool createInstance(const std::vector<const char*>& extensions);

@@ -4,6 +4,8 @@
 
 #include "RHIBufferCreateInfo.h"
 #include "RHIImageCreateInfo.h"
+#include "RHIImageViewCreateInfo.h"
+#include "RHISamplerCreateInfo.h"
 #include "RHIShaderCreateInfo.h"
 #include "RHIPipelineCreateInfo.h"
 #include "RHIDescriptorCreateInfo.h"

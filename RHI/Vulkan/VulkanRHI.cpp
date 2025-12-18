@@ -2,7 +2,9 @@
 #include "Resources/VulkanBuffer.h"
 #include "Resources/VulkanImage.h"
 #include "Resources/VulkanShader.h"
+#include "Resources/VulkanSampler.h"
 #include "Pipeline/VulkanPipeline.h"
+#include "Pipeline/VulkanPipelineLayout.h"
 #include "Vulkan/Logger.h"
 
 #include <GLFW/glfw3.h>
@@ -22,17 +24,26 @@ namespace BinRenderer::Vulkan
 		maxFramesInFlight_ = initInfo.maxFramesInFlight;
 
 		try {
-			// VulkanContext 초기화
+			// ✅ 헤드리스 모드 여부 확인
+			bool requireSwapchain = (initInfo.window != nullptr);
+			
+			// VulkanContext 초기화 (스왑체인 필요 여부 전달)
 			context_ = std::make_unique<VulkanContext>();
-			if (!context_->initialize(initInfo.requiredInstanceExtensions, initInfo.enableValidationLayer))
+			if (!context_->initialize(initInfo.requiredInstanceExtensions, initInfo.enableValidationLayer, requireSwapchain))
 			{
 				printLog("Failed to initialize Vulkan context");
 				return false;
 			}
 
-			createSurface();
-			createSwapchain();
-			createSwapchainImageViews();
+			// ✅ 헤드리스 모드 체크: window가 있을 때만 스왑체인 생성
+			if (initInfo.window != nullptr) {
+				printLog("Creating swapchain for window mode...");
+				createSurface();
+				createSwapchain();
+				createSwapchainImageViews();
+			} else {
+				printLog("⚠️  Headless mode: Skipping swapchain creation");
+			}
 
 			// 커맨드 풀 생성
 			commandPool_ = std::make_unique<VulkanCommandPool>(context_->getDevice());
@@ -47,7 +58,8 @@ namespace BinRenderer::Vulkan
 
 			createSyncObjects();
 
-			printLog("VulkanRHI initialized successfully");
+			printLog("✅ VulkanRHI initialized successfully ({})", 
+			  initInfo.window ? "Window Mode" : "Headless Mode");
 			return true;
 		}
 		catch (const std::exception& e) {
@@ -213,10 +225,59 @@ namespace BinRenderer::Vulkan
 		return vulkanPipeline;
 	}
 
+	RHIImageView* VulkanRHI::createImageView(RHIImage* image, const RHIImageViewCreateInfo& createInfo)
+	{
+		if (!image)
+		{
+			return nullptr;
+		}
+
+		auto* vulkanImage = static_cast<VulkanImage*>(image);
+		auto* imageView = new VulkanImageView(context_->getDevice(), vulkanImage);
+  
+    // createInfo를 Vulkan 타입으로 변환
+   VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
+        if (createInfo.viewType == RHI_IMAGE_VIEW_TYPE_CUBE)
+    viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+  else if (createInfo.viewType == RHI_IMAGE_VIEW_TYPE_3D)
+      viewType = VK_IMAGE_VIEW_TYPE_3D;
+
+        VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+    if (createInfo.aspectMask == RHI_IMAGE_ASPECT_DEPTH_BIT)
+   aspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
+     else if (createInfo.aspectMask == RHI_IMAGE_ASPECT_STENCIL_BIT)
+  aspectFlags = VK_IMAGE_ASPECT_STENCIL_BIT;
+
+if (!imageView->create(viewType, aspectFlags))
+ {
+      delete imageView;
+            return nullptr;
+      }
+    
+ return imageView;
+	}
+
+	RHISampler* VulkanRHI::createSampler(const RHISamplerCreateInfo& createInfo)
+	{
+		auto* sampler = new VulkanSampler(context_->getDevice());
+		
+		// TODO: createInfo 파라미터 사용하여 Sampler 생성
+		// 현재는 기본 Linear 설정
+		if (!sampler->createLinear())
+		{
+			delete sampler;
+			return nullptr;
+		}
+	 
+		return sampler;
+	}
+
 	void VulkanRHI::destroyBuffer(RHIBuffer* buffer) { delete buffer; }
 	void VulkanRHI::destroyImage(RHIImage* image) { delete image; }
 	void VulkanRHI::destroyShader(RHIShader* shader) { delete shader; }
 	void VulkanRHI::destroyPipeline(RHIPipeline* pipeline) { delete pipeline; }
+	void VulkanRHI::destroyImageView(RHIImageView* imageView) { delete imageView; }
+	void VulkanRHI::destroySampler(RHISampler* sampler) { delete sampler; }
 
 	void VulkanRHI::beginCommandRecording()
 	{
@@ -276,6 +337,23 @@ namespace BinRenderer::Vulkan
 		cmdBuffer->bindDescriptorSets(layout, 0, setCount, sets);
 	}
 
+	void VulkanRHI::cmdPushConstants(RHIPipelineLayout* layout, RHIShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues)
+	{
+		VkCommandBuffer cmdBuffer = commandBuffers_[currentFrameIndex_]->getVkCommandBuffer();
+		
+		// layout이 VulkanPipelineLayout인 경우
+		auto* vulkanLayout = dynamic_cast<VulkanPipelineLayout*>(layout);
+		if (vulkanLayout)
+		{
+			vkCmdPushConstants(cmdBuffer, vulkanLayout->getVkPipelineLayout(), 
+				static_cast<VkShaderStageFlags>(stageFlags), offset, size, pValues);
+			return;
+		}
+		
+		// layout이 nullptr이거나 다른 타입인 경우 - 에러 처리
+		// TODO: 에러 로깅
+	}
+
 	void VulkanRHI::cmdSetViewport(const RHIViewport& viewport)
 	{
 		VkCommandBuffer cmdBuffer = commandBuffers_[currentFrameIndex_]->getVkCommandBuffer();
@@ -310,7 +388,40 @@ namespace BinRenderer::Vulkan
 		cmdBuffer->drawIndexed(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}
 
-	void VulkanRHI::createSurface()
+	void* VulkanRHI::mapBuffer(RHIBuffer* buffer)
+	{
+      if (!buffer)
+ {
+     return nullptr;
+        }
+
+auto* vulkanBuffer = static_cast<VulkanBuffer*>(buffer);
+        return vulkanBuffer->map();
+ }
+
+    void VulkanRHI::unmapBuffer(RHIBuffer* buffer)
+    {
+   if (!buffer)
+  {
+     return;
+        }
+
+        auto* vulkanBuffer = static_cast<VulkanBuffer*>(buffer);
+   vulkanBuffer->unmap();
+    }
+
+    void VulkanRHI::flushBuffer(RHIBuffer* buffer, RHIDeviceSize offset, RHIDeviceSize size)
+    {
+        if (!buffer)
+   {
+      return;
+  }
+
+        auto* vulkanBuffer = static_cast<VulkanBuffer*>(buffer);
+   vulkanBuffer->flush(offset, size);
+    }
+
+    void VulkanRHI::createSurface()
 	{
 		if (!initInfo_.window)
 		{

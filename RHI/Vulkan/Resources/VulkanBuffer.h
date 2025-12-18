@@ -23,6 +23,7 @@ namespace BinRenderer::Vulkan
 		// RHIBuffer 인터페이스 구현
 		void* map() override;
 		void unmap() override;
+		void flush(RHIDeviceSize offset = 0, RHIDeviceSize size = 0);
 		void updateData(const void* data, RHIDeviceSize size, RHIDeviceSize offset = 0) override;
 
 		RHIDeviceSize getSize() const override { return size_; }
