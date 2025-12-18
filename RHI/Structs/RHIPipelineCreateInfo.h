@@ -130,8 +130,18 @@ namespace BinRenderer
 		RHIPipelineDepthStencilStateCreateInfo depthStencilState;
 		RHIPipelineColorBlendStateCreateInfo colorBlendState;
 		std::vector<RHIPipelineDynamicState> dynamicStates;
-		RHIRenderPass* renderPass = nullptr;
+		
+		// ========================================
+		// Render Pass (Legacy) vs Dynamic Rendering (Vulkan 1.3+)
+		// ========================================
+		RHIRenderPass* renderPass = nullptr;  // Legacy render pass (VK_NULL_HANDLE면 Dynamic Rendering 사용)
 		uint32_t subpass = 0;
+
+		// ✅ Dynamic Rendering 지원 (Vulkan 1.3+)
+		bool useDynamicRendering = false;
+		std::vector<RHIFormat> colorAttachmentFormats;  // Dynamic rendering color formats
+		RHIFormat depthAttachmentFormat = RHI_FORMAT_UNDEFINED;  // Dynamic rendering depth format
+		RHIFormat stencilAttachmentFormat = RHI_FORMAT_UNDEFINED;  // Dynamic rendering stencil format
 
 		// ✅ GPU Instancing 지원
 		bool enableInstancing = false;

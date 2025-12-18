@@ -213,6 +213,30 @@ namespace BinRenderer::Vulkan
 		dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 		dynamicState.pDynamicStates = dynamicStates.data();
 
+		// ========================================
+		// ✅ Dynamic Rendering (Vulkan 1.3+)
+		// ========================================
+		VkPipelineRenderingCreateInfo renderingInfo{};
+		std::vector<VkFormat> colorFormats;
+
+		if (createInfo.useDynamicRendering)
+		{
+			// Color attachment formats
+			for (auto format : createInfo.colorAttachmentFormats)
+			{
+				colorFormats.push_back(static_cast<VkFormat>(format));
+			}
+
+			renderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+			renderingInfo.colorAttachmentCount = static_cast<uint32_t>(colorFormats.size());
+			renderingInfo.pColorAttachmentFormats = colorFormats.empty() ? nullptr : colorFormats.data();
+			renderingInfo.depthAttachmentFormat = static_cast<VkFormat>(createInfo.depthAttachmentFormat);
+			renderingInfo.stencilAttachmentFormat = static_cast<VkFormat>(createInfo.stencilAttachmentFormat);
+
+			printLog("✅ Dynamic Rendering enabled: {} color attachments, depth format: {}",
+				colorFormats.size(), static_cast<int>(createInfo.depthAttachmentFormat));
+		}
+
 		// 그래픽스 파이프라인 생성
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -227,8 +251,20 @@ namespace BinRenderer::Vulkan
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.pDynamicState = dynamicStates.empty() ? nullptr : &dynamicState;
 		pipelineInfo.layout = pipelineLayout_;
-		pipelineInfo.renderPass = renderPass_ ? renderPass_->getVkRenderPass() : VK_NULL_HANDLE;
-		pipelineInfo.subpass = createInfo.subpass;
+		
+		// ✅ Dynamic Rendering 사용 시 pNext에 renderingInfo 연결, 아니면 legacy renderPass 사용
+		if (createInfo.useDynamicRendering)
+		{
+			pipelineInfo.pNext = &renderingInfo;
+			pipelineInfo.renderPass = VK_NULL_HANDLE;
+			pipelineInfo.subpass = 0;
+		}
+		else
+		{
+			pipelineInfo.pNext = nullptr;
+			pipelineInfo.renderPass = renderPass_ ? renderPass_->getVkRenderPass() : VK_NULL_HANDLE;
+			pipelineInfo.subpass = createInfo.subpass;
+		}
 
 		if (vkCreateGraphicsPipelines(device_, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline_) != VK_SUCCESS)
 		{
