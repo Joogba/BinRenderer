@@ -1,5 +1,6 @@
 ﻿#include "VulkanPipeline.h"
 #include "VulkanRenderPass.h"
+#include "../../Structs/RHIPipelineCreateInfo.h"
 #include "Vulkan/Logger.h"
 
 namespace BinRenderer::Vulkan
@@ -85,6 +86,7 @@ namespace BinRenderer::Vulkan
 		std::vector<VkVertexInputBindingDescription> vertexBindings;
 		std::vector<VkVertexInputAttributeDescription> vertexAttributes;
 
+		// 기본 vertex bindings/attributes 추가
 		for (const auto& binding : createInfo.vertexInputState.bindings)
 		{
 			VkVertexInputBindingDescription vkBinding{};
@@ -102,6 +104,33 @@ namespace BinRenderer::Vulkan
 			vkAttribute.format = static_cast<VkFormat>(attribute.format);
 			vkAttribute.offset = attribute.offset;
 			vertexAttributes.push_back(vkAttribute);
+		}
+
+		// ✅ GPU Instancing: enableInstancing이 true면 instance binding/attributes 자동 추가
+		if (createInfo.enableInstancing)
+		{
+			// Instance binding 추가 (binding = 1)
+			auto instanceBinding = RHIInstanceHelper::getInstanceBinding();
+			VkVertexInputBindingDescription vkInstanceBinding{};
+			vkInstanceBinding.binding = instanceBinding.binding;
+			vkInstanceBinding.stride = instanceBinding.stride;
+			vkInstanceBinding.inputRate = static_cast<VkVertexInputRate>(instanceBinding.inputRate);
+			vertexBindings.push_back(vkInstanceBinding);
+
+			// Instance attributes 추가 (location 10-14)
+			auto instanceAttributes = RHIInstanceHelper::getInstanceAttributes();
+			for (const auto& attr : instanceAttributes)
+			{
+				VkVertexInputAttributeDescription vkAttr{};
+				vkAttr.location = attr.location;
+				vkAttr.binding = attr.binding;
+				vkAttr.format = static_cast<VkFormat>(attr.format);
+				vkAttr.offset = attr.offset;
+				vertexAttributes.push_back(vkAttr);
+			}
+
+			printLog("✅ GPU Instancing enabled: {} bindings, {} attributes",
+				vertexBindings.size(), vertexAttributes.size());
 		}
 
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};

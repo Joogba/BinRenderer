@@ -4,6 +4,7 @@
 
 #include "../Core/RHI.h"
 #include "Core/VulkanContext.h"
+#include "Core/VulkanSwapchain.h"
 #include "Commands/VulkanCommandBuffer.h"
 #include "Commands/VulkanCommandPool.h"
 #include "Resources/VulkanBuffer.h"
@@ -33,8 +34,9 @@ namespace BinRenderer::Vulkan
 		void endFrame(uint32_t imageIndex) override;
 		uint32_t getCurrentFrameIndex() const override;
 
-		// 스왑체인 접근 (임시: nullptr 반환)
-		RHISwapchain* getSwapchain() const override { return nullptr; } // TODO: VulkanSwapchain 래퍼 구현
+		// 스왑체인 접근
+		RHISwapchain* getSwapchain() const override { return nullptr; } // TODO: RHISwapchain 래퍼 구현
+		VulkanSwapchain* getVulkanSwapchain() const { return swapchain_.get(); }
 
 		RHIBuffer* createBuffer(const RHIBufferCreateInfo& createInfo) override;
 		RHIImage* createImage(const RHIImageCreateInfo& createInfo) override;
@@ -73,7 +75,6 @@ namespace BinRenderer::Vulkan
 
 		// Vulkan 네이티브 접근 (RHI/Vulkan 클래스)
 		VulkanContext* getContext() const { return context_.get(); }
-		VkSwapchainKHR getVulkanSwapchain() const { return swapchain_; }
 
 		// 단일 시간 커맨드 헬퍼 (텍스처 로딩 등에 사용)
 		VkCommandBuffer beginSingleTimeCommands();
@@ -83,15 +84,11 @@ namespace BinRenderer::Vulkan
 	private:
 		// RHI/Vulkan 클래스 사용
 		std::unique_ptr<VulkanContext> context_;
+		std::unique_ptr<VulkanSwapchain> swapchain_;
 		std::unique_ptr<VulkanCommandPool> commandPool_;
 
-		// Vulkan 네이티브 객체 (스왑체인은 나중에 래퍼로 교체)
-		VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
+		// Surface (윈도우 시스템)
 		VkSurfaceKHR surface_ = VK_NULL_HANDLE;
-		std::vector<VkImage> swapchainImages_;
-		std::vector<VkImageView> swapchainImageViews_;
-		VkFormat swapchainImageFormat_ = VK_FORMAT_UNDEFINED;
-		VkExtent2D swapchainExtent_ = {};
 
 		// 커맨드 버퍼 (RHI/Vulkan 래퍼)
 		std::vector<VulkanCommandBuffer*> commandBuffers_;
@@ -110,7 +107,6 @@ namespace BinRenderer::Vulkan
 
 		void createSurface();
 		void createSwapchain();
-		void createSwapchainImageViews();
 		void destroySwapchain();
 		void createSyncObjects();
 		void createTransferCommandPool();

@@ -54,6 +54,21 @@
     <ClCompile Include="InputTest.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="RenderGraphTest.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderGraphTest_Integrated.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="DeferredRendererRGTest.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="PBRTest_RHI_Migration.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="PBRTest_Full_RHI.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SkyBoxExample.h">
@@ -62,6 +77,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="RenderGraph.json" />
+    <None Include="README_RenderGraphTest.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="log.txt" />

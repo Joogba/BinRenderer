@@ -132,6 +132,54 @@ namespace BinRenderer
 		std::vector<RHIPipelineDynamicState> dynamicStates;
 		RHIRenderPass* renderPass = nullptr;
 		uint32_t subpass = 0;
+
+		// ✅ GPU Instancing 지원
+		bool enableInstancing = false;
 	};
+
+	/**
+	 * @brief GPU Instancing용 Vertex Input 헬퍼
+	 */
+	namespace RHIInstanceHelper
+	{
+		/**
+		 * @brief Instance buffer의 Binding Description 반환
+		 * @return Binding 1에 대한 설정
+		 */
+		inline RHIVertexInputBinding getInstanceBinding()
+		{
+			RHIVertexInputBinding binding;
+			binding.binding = 1;  // Instance buffer는 binding 1
+			binding.stride = 80;  // sizeof(InstanceData) = 80
+			binding.inputRate = RHI_VERTEX_INPUT_RATE_INSTANCE;
+			return binding;
+		}
+
+		/**
+		 * @brief Instance attributes (location 10-14) 반환
+		 * @return 5개의 attribute (mat4 = 4개 + materialOffset = 1개)
+		 */
+		inline std::vector<RHIVertexInputAttribute> getInstanceAttributes()
+		{
+			std::vector<RHIVertexInputAttribute> attributes(5);
+
+			// mat4 modelMatrix - 4개의 vec4로 분할
+			for (uint32_t i = 0; i < 4; i++)
+			{
+				attributes[i].location = 10 + i;
+				attributes[i].binding = 1;
+				attributes[i].format = RHI_FORMAT_R32G32B32A32_SFLOAT;
+				attributes[i].offset = sizeof(float) * 4 * i;
+			}
+
+			// uint32_t materialOffset
+			attributes[4].location = 14;
+			attributes[4].binding = 1;
+			attributes[4].format = RHI_FORMAT_R32_UINT;
+			attributes[4].offset = 64;  // sizeof(glm::mat4)
+
+			return attributes;
+		}
+	}
 
 } // namespace BinRenderer
