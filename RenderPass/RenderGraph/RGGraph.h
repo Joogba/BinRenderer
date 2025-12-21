@@ -168,6 +168,11 @@ namespace BinRenderer
 		 */
 		void printResourceUsage() const;
 
+		/**
+		 * @brief 등록된 패스 개수 반환
+		 */
+		size_t getPassCount() const { return passes_.size(); }
+
 	private:
 		RHI* rhi_;
 		RenderGraphBuilder builder_;

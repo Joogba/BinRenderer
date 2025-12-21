@@ -4,6 +4,10 @@
 
 namespace BinRenderer
 {
+	// Forward declarations
+	class RHIScene;
+	class RHIRenderer;
+
 	/**
 	 * @brief Forward Pass 데이터
 	 */
@@ -35,7 +39,7 @@ namespace BinRenderer
 	class ForwardPassRG : public RGPass<ForwardPassData>
 	{
 	public:
-		ForwardPassRG(RHI* rhi);
+		ForwardPassRG(RHI* rhi, RHIScene* scene = nullptr, RHIRenderer* renderer = nullptr);
 		~ForwardPassRG() override;
 
 		// RGPass 인터페이스
@@ -46,6 +50,10 @@ namespace BinRenderer
 		bool initialize() override;
 		void shutdown() override;
 
+		// Scene/Renderer 설정
+		void setScene(RHIScene* scene) { scene_ = scene; }
+		void setRenderer(RHIRenderer* renderer) { renderer_ = renderer; }
+
 		// 입력 핸들 설정 (setup 전에 호출)
 		void setLightingHandle(RGTextureHandle handle) { lightingHandle_ = handle; }
 		void setDepthHandle(RGTextureHandle handle) { depthHandle_ = handle; }
@@ -54,17 +62,37 @@ namespace BinRenderer
 		RGTextureHandle getForwardHandle() const { return getData().forwardOut; }
 
 	private:
+		// Scene/Renderer 참조
+		RHIScene* scene_ = nullptr;
+		RHIRenderer* renderer_ = nullptr;
+
 		// 입력 핸들
 		RGTextureHandle lightingHandle_;
 		RGTextureHandle depthHandle_;
 
-		// 파이프라인
+		// 파이프라인 리소스
 		RHIPipeline* pipeline_ = nullptr;
+		RHIPipelineLayout* pipelineLayout_ = nullptr;
 		RHIShader* vertexShader_ = nullptr;
 		RHIShader* fragmentShader_ = nullptr;
 
+		// ✅ Descriptor Sets (PBR용)
+		RHIDescriptorSetLayout* sceneDescriptorLayout_ = nullptr;     // Set 0: Scene UBO
+		RHIDescriptorSetLayout* materialDescriptorLayout_ = nullptr;  // Set 1: Materials
+		RHIDescriptorSetLayout* iblDescriptorLayout_ = nullptr;       // Set 2: IBL
+		RHIDescriptorSetLayout* shadowDescriptorLayout_ = nullptr;    // Set 3: Shadow
+		
+		RHIDescriptorPool* descriptorPool_ = nullptr;
+		std::vector<RHIDescriptorSet*> sceneDescriptorSets_;  // Per-frame
+		RHIDescriptorSet* materialDescriptorSet_ = nullptr;   // 공유
+		RHIDescriptorSet* iblDescriptorSet_ = nullptr;        // 공유
+		RHIDescriptorSet* shadowDescriptorSet_ = nullptr;     // 공유
+
 		void createPipeline();
 		void destroyPipeline();
+		void createDescriptorSets();
+		void destroyDescriptorSets();
+		void updateDescriptorSets(uint32_t frameIndex);
 	};
 
 } // namespace BinRenderer
