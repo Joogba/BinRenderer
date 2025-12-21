@@ -236,6 +236,16 @@ namespace BinRenderer::Vulkan
 		);
 	}
 
+	void VulkanBarrier::transitionColorToPresent(VkCommandBuffer cmd)
+	{
+		transitionLayout(
+			cmd,
+			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			VK_ACCESS_2_NONE,
+			VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT
+		);
+	}
+
 	// ========================================
 	// Private 메서드
 	// ========================================

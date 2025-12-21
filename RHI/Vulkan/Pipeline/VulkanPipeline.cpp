@@ -1,5 +1,7 @@
 ﻿#include "VulkanPipeline.h"
+#include "../Resources/VulkanShader.h"
 #include "VulkanRenderPass.h"
+#include "VulkanDescriptor.h"
 #include "../../Structs/RHIPipelineCreateInfo.h"
 #include "Vulkan/Logger.h"
 
@@ -56,18 +58,48 @@ namespace BinRenderer::Vulkan
 
 	bool VulkanPipeline::createPipelineLayout(const RHIPipelineCreateInfo& createInfo)
 	{
-		// 간단한 파이프라인 레이아웃 생성 (디스크립터 셋 없음)
+		// ✅ Descriptor Set Layouts 변환
+		std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
+		vkDescriptorSetLayouts.reserve(createInfo.descriptorSetLayouts.size());
+		
+		for (auto* layout : createInfo.descriptorSetLayouts)
+		{
+			if (layout)
+			{
+				auto* vulkanLayout = static_cast<VulkanDescriptorSetLayout*>(layout);
+				vkDescriptorSetLayouts.push_back(vulkanLayout->getVkDescriptorSetLayout());
+			}
+		}
+
+		// ✅ Push Constant Ranges 변환
+		std::vector<VkPushConstantRange> vkPushConstantRanges;
+		vkPushConstantRanges.reserve(createInfo.pushConstantRanges.size());
+		
+		for (const auto& range : createInfo.pushConstantRanges)
+		{
+			VkPushConstantRange vkRange{};
+			vkRange.stageFlags = static_cast<VkShaderStageFlags>(range.stageFlags);
+			vkRange.offset = range.offset;
+			vkRange.size = range.size;
+			vkPushConstantRanges.push_back(vkRange);
+		}
+
+		// Pipeline Layout 생성
 		VkPipelineLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		layoutInfo.setLayoutCount = 0;
-		layoutInfo.pSetLayouts = nullptr;
-		layoutInfo.pushConstantRangeCount = 0;
-		layoutInfo.pPushConstantRanges = nullptr;
+		layoutInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
+		layoutInfo.pSetLayouts = vkDescriptorSetLayouts.empty() ? nullptr : vkDescriptorSetLayouts.data();
+		layoutInfo.pushConstantRangeCount = static_cast<uint32_t>(vkPushConstantRanges.size());
+		layoutInfo.pPushConstantRanges = vkPushConstantRanges.empty() ? nullptr : vkPushConstantRanges.data();
 
 		if (vkCreatePipelineLayout(device_, &layoutInfo, nullptr, &pipelineLayout_) != VK_SUCCESS)
 		{
+			printLog("❌ ERROR: Failed to create pipeline layout");
 			return false;
 		}
+
+		printLog("✅ Pipeline layout created with {} descriptor set layouts, {} push constant ranges",
+			vkDescriptorSetLayouts.size(), vkPushConstantRanges.size());
 
 		return true;
 	}

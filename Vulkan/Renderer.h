@@ -18,6 +18,7 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include <unordered_set>
 
 
 namespace BinRenderer::Vulkan {

@@ -99,9 +99,9 @@ namespace BinRenderer
 
 	void RHIMesh::draw(RHI* rhi, uint32_t instanceCount)
 	{
-		if (indexBuffer_)
+		if (indexBuffer_ && !indices_.empty())
 		{
-			rhi->cmdDrawIndexed(static_cast<uint32_t>(indices_.size()), instanceCount);
+			rhi->cmdDrawIndexed(static_cast<uint32_t>(indices_.size()), instanceCount, 0, 0, 0);
 		}
 	}
 

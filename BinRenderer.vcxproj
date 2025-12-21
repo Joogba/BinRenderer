@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -154,13 +154,33 @@
     <ClInclude Include="Camera.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="RenderPass\DeferredRenderer.h" />
-    <ClInclude Include="RenderPass\ForwardPass.h" />
-    <ClInclude Include="RenderPass\GBufferPass.h" />
-    <ClInclude Include="RenderPass\LightingPass.h" />
-    <ClInclude Include="RenderPass\PostProcessPass.h" />
-    <ClInclude Include="RenderPass\RenderPassBase.h" />
-    <ClInclude Include="RenderPass\ShadowPass.h" />
+    <ClInclude Include="Core\EngineConfig.h" />
+    <ClInclude Include="Core\IApplicationListener.h" />
+    <ClInclude Include="Core\InputManager.h" />
+    <ClInclude Include="Core\Logger.h" />
+    <ClInclude Include="Core\RHIApplication.h" />
+    <ClInclude Include="Core\RHIModel.h" />
+    <ClInclude Include="Core\RHIScene.h" />
+    <ClInclude Include="Platform\GLFWWindow.h" />
+    <ClInclude Include="Platform\IWindow.h" />
+    <ClInclude Include="Platform\WindowFactory.h" />
+    <ClInclude Include="Rendering\RHIMaterial.h" />
+    <ClInclude Include="Rendering\RHIMesh.h" />
+    <ClInclude Include="Rendering\RHIRenderer.h" />
+    <ClInclude Include="Rendering\RHIVertex.h" />
+    <ClInclude Include="Rendering\RHIViewFrustum.h" />
+    <ClInclude Include="RenderPass\DeferredRendererRG.h" />
+    <ClInclude Include="RenderPass\ForwardPassRG.h" />
+    <ClInclude Include="RenderPass\GBufferPassRG.h" />
+    <ClInclude Include="RenderPass\GUIPassRG.h" />
+    <ClInclude Include="RenderPass\LightingPassRG.h" />
+    <ClInclude Include="RenderPass\PostProcessPassRG.h" />
+    <ClInclude Include="RenderPass\RenderGraph\RGBuilder.h" />
+    <ClInclude Include="RenderPass\RenderGraph\RGGraph.h" />
+    <ClInclude Include="RenderPass\RenderGraph\RGTypes.h" />
+    <ClInclude Include="RenderPass\RGPassBase.h" />
+    <ClInclude Include="RenderPass\RHIForwardPassRG.h" />
+    <ClInclude Include="RenderPass\ShadowPassRG.h" />
     <ClInclude Include="RHI\Commands\RHICommandBuffer.h" />
     <ClInclude Include="RHI\Commands\RHICommandPool.h" />
     <ClInclude Include="RHI\Commands\RHICommandQueue.h" />
@@ -190,7 +210,10 @@
     <ClInclude Include="RHI\Structs\RHIBufferCreateInfo.h" />
     <ClInclude Include="RHI\Structs\RHIDescriptorCreateInfo.h" />
     <ClInclude Include="RHI\Structs\RHIImageCreateInfo.h" />
+    <ClInclude Include="RHI\Structs\RHIImageViewCreateInfo.h" />
+    <ClInclude Include="RHI\Structs\RHIInstanceData.h" />
     <ClInclude Include="RHI\Structs\RHIPipelineCreateInfo.h" />
+    <ClInclude Include="RHI\Structs\RHISamplerCreateInfo.h" />
     <ClInclude Include="RHI\Structs\RHIShaderCreateInfo.h" />
     <ClInclude Include="RHI\Structs\RHIStructs.h" />
     <ClInclude Include="RHI\Synchronization\RHIEvent.h" />
@@ -204,25 +227,34 @@
     <ClInclude Include="RHI\Vulkan\Commands\VulkanQueue.h" />
     <ClInclude Include="RHI\Vulkan\Conversion\TypeConversion.h" />
     <ClInclude Include="RHI\Vulkan\Core\VulkanContext.h" />
+    <ClInclude Include="RHI\Vulkan\Core\VulkanSwapchain.h" />
     <ClInclude Include="RHI\Vulkan\Pipeline\VulkanDescriptor.h" />
+    <ClInclude Include="RHI\Vulkan\Pipeline\VulkanDescriptorAllocator.h" />
     <ClInclude Include="RHI\Vulkan\Pipeline\VulkanFramebuffer.h" />
     <ClInclude Include="RHI\Vulkan\Pipeline\VulkanPipeline.h" />
+    <ClInclude Include="RHI\Vulkan\Pipeline\VulkanPipelineCache.h" />
+    <ClInclude Include="RHI\Vulkan\Pipeline\VulkanPipelineLayout.h" />
     <ClInclude Include="RHI\Vulkan\Pipeline\VulkanRenderPass.h" />
     <ClInclude Include="RHI\Vulkan\Resources\VulkanBuffer.h" />
     <ClInclude Include="RHI\Vulkan\Resources\VulkanImage.h" />
     <ClInclude Include="RHI\Vulkan\Resources\VulkanSampler.h" />
     <ClInclude Include="RHI\Vulkan\Resources\VulkanShader.h" />
+    <ClInclude Include="RHI\Vulkan\Resources\VulkanShaderReflection.h" />
     <ClInclude Include="RHI\Vulkan\Resources\VulkanTexture.h" />
     <ClInclude Include="RHI\Vulkan\Sync\VulkanEvent.h" />
     <ClInclude Include="RHI\Vulkan\Sync\VulkanFence.h" />
     <ClInclude Include="RHI\Vulkan\Sync\VulkanSemaphore.h" />
+    <ClInclude Include="RHI\Vulkan\Utilities\VulkanBarrier.h" />
     <ClInclude Include="RHI\Vulkan\Utilities\VulkanDebug.h" />
+    <ClInclude Include="RHI\Vulkan\Utilities\VulkanDynamicRendering.h" />
     <ClInclude Include="RHI\Vulkan\Utilities\VulkanMemoryAllocator.h" />
+    <ClInclude Include="RHI\Vulkan\Utilities\VulkanResourceCache.h" />
     <ClInclude Include="RHI\Vulkan\VulkanRHI.h" />
     <ClInclude Include="RHI\Vulkan\VulkanStructs.h" />
     <ClInclude Include="RHI\Vulkan\VulkanUtil.h" />
+    <ClInclude Include="Scene\Animation.h" />
+    <ClInclude Include="Scene\RHICamera.h" />
     <ClInclude Include="Vulkan\RenderGraphBuilder.h" />
-    <ClInclude Include="Vulkan\Animation.h" />
     <ClInclude Include="Vulkan\Application.h" />
     <ClInclude Include="Vulkan\BarrierHelper.h" />
     <ClInclude Include="Vulkan\Camera.h" />
@@ -249,26 +281,6 @@
     <ClInclude Include="Math\MatrixUtil.h" />
     <ClInclude Include="Math\Plane.h" />
     <ClInclude Include="Math\VectorUtil.h" />
-    <ClInclude Include="Platform\D3D11\D3D11PipelineStateRegistry.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="Platform\D3D11\D3D11RenderTargetPool.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="Platform\D3D11\D3D11ResourceRegistry.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="Platform\D3D11\D3D11Utils.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="Core\DrawQueue.h" />
     <ClInclude Include="GeometryGenerator.h" />
     <ClInclude Include="Core\Handle.h" />
@@ -325,13 +337,29 @@
     <ClInclude Include="Vulkan\Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="RenderPass\DeferredRenderer.cpp" />
-    <ClCompile Include="RenderPass\ForwardPass.cpp" />
-    <ClCompile Include="RenderPass\GBufferPass.cpp" />
-    <ClCompile Include="RenderPass\LightingPass.cpp" />
-    <ClCompile Include="RenderPass\PostProcessPass.cpp" />
-    <ClCompile Include="RenderPass\RenderPassBase.cpp" />
-    <ClCompile Include="RenderPass\ShadowPass.cpp" />
+    <ClCompile Include="Core\InputManager.cpp" />
+    <ClCompile Include="Core\Logger.cpp" />
+    <ClCompile Include="Core\RHIApplication.cpp" />
+    <ClCompile Include="Core\RHIModel.cpp" />
+    <ClCompile Include="Core\RHIScene.cpp" />
+    <ClCompile Include="Examples\RenderGraph_Example.cpp" />
+    <ClCompile Include="Platform\GLFWWindow.cpp" />
+    <ClCompile Include="Platform\WindowFactory.cpp" />
+    <ClCompile Include="Rendering\RHIMaterial.cpp" />
+    <ClCompile Include="Rendering\RHIMesh.cpp" />
+    <ClCompile Include="Rendering\RHIRenderer.cpp" />
+    <ClCompile Include="Rendering\RHIViewFrustum.cpp" />
+    <ClCompile Include="RenderPass\DeferredRendererRG.cpp" />
+    <ClCompile Include="RenderPass\ForwardPassRG.cpp" />
+    <ClCompile Include="RenderPass\GBufferPassRG.cpp" />
+    <ClCompile Include="RenderPass\GUIPassRG.cpp" />
+    <ClCompile Include="RenderPass\LightingPassRG.cpp" />
+    <ClCompile Include="RenderPass\PostProcessPassRG.cpp" />
+    <ClCompile Include="RenderPass\RenderGraph\RGBuilder.cpp" />
+    <ClCompile Include="RenderPass\RenderGraph\RGGraph.cpp" />
+    <ClCompile Include="RenderPass\RGPassBase.cpp" />
+    <ClCompile Include="RenderPass\RHIForwardPassRG.cpp" />
+    <ClCompile Include="RenderPass\ShadowPassRG.cpp" />
     <ClCompile Include="RHI\Core\RHI.cpp" />
     <ClCompile Include="RHI\Core\RHIType.h" />
     <ClCompile Include="RHI\Util\RHIDebug.cpp" />
@@ -342,25 +370,34 @@
     <ClCompile Include="RHI\Vulkan\Commands\VulkanQueue.cpp" />
     <ClCompile Include="RHI\Vulkan\Conversion\TypeConversion.cpp" />
     <ClCompile Include="RHI\Vulkan\Core\VulkanContext.cpp" />
+    <ClCompile Include="RHI\Vulkan\Core\VulkanSwapchain.cpp" />
     <ClCompile Include="RHI\Vulkan\Pipeline\VulkanDescriptor.cpp" />
+    <ClCompile Include="RHI\Vulkan\Pipeline\VulkanDescriptorAllocator.cpp" />
     <ClCompile Include="RHI\Vulkan\Pipeline\VulkanFramebuffer.cpp" />
     <ClCompile Include="RHI\Vulkan\Pipeline\VulkanPipeline.cpp" />
+    <ClCompile Include="RHI\Vulkan\Pipeline\VulkanPipelineCache.cpp" />
+    <ClCompile Include="RHI\Vulkan\Pipeline\VulkanPipelineLayout.cpp" />
     <ClCompile Include="RHI\Vulkan\Pipeline\VulkanRenderPass.cpp" />
     <ClCompile Include="RHI\Vulkan\Resources\VulkanBuffer.cpp" />
     <ClCompile Include="RHI\Vulkan\Resources\VulkanImage.cpp" />
     <ClCompile Include="RHI\Vulkan\Resources\VulkanSampler.cpp" />
     <ClCompile Include="RHI\Vulkan\Resources\VulkanShader.cpp" />
+    <ClCompile Include="RHI\Vulkan\Resources\VulkanShaderReflection.cpp" />
     <ClCompile Include="RHI\Vulkan\Resources\VulkanTexture.cpp" />
     <ClCompile Include="RHI\Vulkan\Sync\VulkanEvent.cpp" />
     <ClCompile Include="RHI\Vulkan\Sync\VulkanFence.cpp" />
     <ClCompile Include="RHI\Vulkan\Sync\VulkanSemaphore.cpp" />
+    <ClCompile Include="RHI\Vulkan\Utilities\VulkanBarrier.cpp" />
     <ClCompile Include="RHI\Vulkan\Utilities\VulkanDebug.cpp" />
+    <ClCompile Include="RHI\Vulkan\Utilities\VulkanDynamicRendering.cpp" />
     <ClCompile Include="RHI\Vulkan\Utilities\VulkanMemoryAllocator.cpp" />
+    <ClCompile Include="RHI\Vulkan\Utilities\VulkanResourceCache.cpp" />
     <ClCompile Include="RHI\Vulkan\VulkanRHI.cpp" />
     <ClCompile Include="RHI\Vulkan\VulkanUtil.cpp" />
+    <ClCompile Include="Scene\Animation.cpp" />
+    <ClCompile Include="Scene\RHICamera.cpp" />
     <ClCompile Include="Vulkan\RenderGraphBuilder.cpp" />
     <ClCompile Include="Resources\ResourceManager.cpp" />
-    <ClCompile Include="Vulkan\Animation.cpp" />
     <ClCompile Include="Vulkan\Application.cpp" />
     <ClCompile Include="Vulkan\BarrierHelper.cpp" />
     <ClCompile Include="Vulkan\Camera.cpp" />
@@ -380,42 +417,16 @@
     <ClCompile Include="Core\RenderEnums.h" />
     <ClCompile Include="Core\RenderManager.cpp" />
     <ClCompile Include="Core\StaticBatcher.cpp" />
-    <ClCompile Include="Platform\D3D11\D3D11ConstantBufferAllocator.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="Platform\D3D11\D3D11RenderTargetPool.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="Platform\D3D11\D3D11Utils.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="Platform\D3D11\D3D11RendererAPI.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="Core\DrawCommand.h" />
     <ClCompile Include="GeometryGenerator.cpp" />
     <ClCompile Include="Core\IRenderPass.h" />
     <ClCompile Include="Resources\MeshFactory.cpp" />
-    <ClCompile Include="Platform\D3D11\D3D11VertexBufferAllocator.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="Resources\RenderTargetPool.h" />
     <ClCompile Include="TextureLoader.h" />
-    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="UniformSystem.cpp" />
-    <ClCompile Include="Vulkan\InputManager.cpp" />
+    <ClCompile Include="Vulkan\InputManager.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Vulkan\Logger.cpp" />
     <ClCompile Include="Vulkan\MappedBuffer.cpp" />
     <ClCompile Include="Vulkan\Material.cpp" />
@@ -460,11 +471,19 @@
     <Image Include="..\..\Users\tjdwn\Downloads\checker.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ANALYSIS_Rendering_Logic_vs_RHI_Implementation.md" />
+    <None Include="ANALYSIS_RHI_Vulkan_Detailed.md" />
     <None Include="assets\shaders\cloth\cloth.frag" />
     <None Include="assets\shaders\cloth\cloth.vert" />
     <None Include="assets\shaders\cloth\cloth_constraints.comp" />
     <None Include="assets\shaders\cloth\cloth_integrate.comp" />
     <None Include="assets\shaders\cloth\cloth_normals.comp" />
+    <None Include="assets\shaders\simple.frag" />
+    <None Include="assets\shaders\simple.vert" />
+    <None Include="BUGFIX_GLFW_ACCESS_VIOLATION.md" />
+    <None Include="BUGFIX_RHIRENDERER_RUNTIME_ERROR.md" />
+    <None Include="BUGFIX_SWAPCHAIN_NULL.md" />
+    <None Include="BUGFIX_VULKANRHI_ACCESS_VIOLATION.md" />
     <None Include="ClassDiagram.cd" />
     <None Include="compile_cloth_shaders.bat" />
     <None Include="Docs\BinRenderer\BarrierHelper.md" />
@@ -486,18 +505,54 @@
     <None Include="Docs\BinRenderer\Sampler.md" />
     <None Include="Docs\BinRenderer\ShaderManager.md" />
     <None Include="Docs\BinRenderer\StorageBuffer.md" />
+    <None Include="Docs\CircularInclude_Fix.md" />
+    <None Include="Docs\DeferredRenderer_RenderGraph_Migration.md" />
     <None Include="docs\Device_Lost_Error_Fix.md" />
     <None Include="docs\High_Priority_Refactoring_Guide.md" />
+    <None Include="Docs\Logger_Migration.md" />
     <None Include="docs\Material_Update_Device_Lost_Fix.md" />
     <None Include="docs\Memory_Exhaustion_Fix_Guide.md" />
     <None Include="docs\Phase2_CompletionGuide.md" />
+    <None Include="Docs\Protected_Member_Access_Fix.md" />
+    <None Include="Docs\RenderGraph_Guide.md" />
+    <None Include="Docs\RenderGraph_Implementation_Summary.md" />
+    <None Include="Docs\RenderGraph_Migration_Complete.md" />
     <None Include="docs\RenderPassManager_Guide.md" />
+    <None Include="Docs\RenderPass_Cleanup_Summary.md" />
+    <None Include="Docs\RenderPass_RGPass_Migration.md" />
     <None Include="docs\ResourceHandleSystem.md" />
     <None Include="docs\ResourceHandleSystemProgress.md" />
+    <None Include="Docs\RGPass_Removal_Summary.md" />
+    <None Include="docs\RHI_Migration_Complete_Summary.md" />
+    <None Include="docs\RHI_Migration_Guide.md" />
     <None Include="docs\StorageBuffer_OOM_Debug_Guide.md" />
     <None Include="Docs\VulkanArchitecture.canvas" />
     <None Include="Docs\VulkanClasses.md" />
+    <None Include="Docs\VulkanHeadlessMode_Fix.md" />
+    <None Include="FEATURE_PLATFORM_INDEPENDENT_WINDOW.md" />
+    <None Include="FEATURE_WINDOW_INTEGRATION.md" />
+    <None Include="FINAL_MIGRATION_PLAN.md" />
+    <None Include="FINAL_RHI_Vulkan_Status.md" />
+    <None Include="FOUND_RHI_Vulkan_Already_Implemented.md" />
     <None Include="glsl assets\shaders\pbrForward.vert" />
+    <None Include="GPU_INSTANCING_MIGRATION_COMPLETE.md" />
+    <None Include="MIGRATION_GUIDE_Vulkan_to_RHI.md" />
+    <None Include="MIGRATION_SUMMARY.md" />
+    <None Include="PHASE1_APPLICATION_COMPLETE.md" />
+    <None Include="PHASE1_COMPLETE_SUMMARY.md" />
+    <None Include="PHASE1_RENDERER_MIGRATION_START.md" />
+    <None Include="PHASE1_SCENE_INTEGRATION_COMPLETE.md" />
+    <None Include="PHASE3_COMPLETE.md" />
+    <None Include="PHASE3_PLAN.md" />
+    <None Include="README_RHI.md" />
+    <None Include="RenderPass\RenderGraph\QUICK_START.md" />
+    <None Include="RenderPass\RenderGraph\README.md" />
+    <None Include="SUMMARY_VulkanSwapchain_Complete.md" />
+    <None Include="VULKAN_BARRIER_COMPLETE.md" />
+    <None Include="VULKAN_CONTEXT_HELPERS_COMPLETE.md" />
+    <None Include="VULKAN_DESCRIPTOR_AUTO_POOL_COMPLETE.md" />
+    <None Include="VULKAN_DYNAMIC_RENDERING_COMPLETE.md" />
+    <None Include="VULKAN_SHADER_REFLECTION_COMPLETE.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

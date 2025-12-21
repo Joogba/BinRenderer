@@ -5,6 +5,8 @@
 #include <memory>
 #include <vector>
 
+// TODO : 중복되는 함수 추상화 or 템플릿화 고려
+
 namespace BinRenderer::Vulkan
 {
 	/**

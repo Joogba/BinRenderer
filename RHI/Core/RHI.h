@@ -15,7 +15,7 @@ namespace BinRenderer
 {
 	/**
 	 * @brief 메인 RHI 인터페이스
-   */
+	 */
 	class RHI
 	{
 	public:
@@ -30,6 +30,7 @@ namespace BinRenderer
 		virtual bool beginFrame(uint32_t& imageIndex) = 0;
 		virtual void endFrame(uint32_t imageIndex) = 0;
 		virtual uint32_t getCurrentFrameIndex() const = 0;
+		virtual uint32_t getCurrentImageIndex() const = 0;
 
 		// 스왑체인 접근
 		virtual RHISwapchain* getSwapchain() const = 0;
@@ -42,6 +43,11 @@ namespace BinRenderer
 		virtual RHIImageView* createImageView(RHIImage* image, const RHIImageViewCreateInfo& createInfo) = 0;
 		virtual RHISampler* createSampler(const RHISamplerCreateInfo& createInfo) = 0;
 
+		// ✅ Descriptor Set 생성
+		virtual RHIDescriptorSetLayout* createDescriptorSetLayout(const RHIDescriptorSetLayoutCreateInfo& createInfo) = 0;
+		virtual RHIDescriptorPool* createDescriptorPool(const RHIDescriptorPoolCreateInfo& createInfo) = 0;
+		virtual RHIDescriptorSet* allocateDescriptorSet(RHIDescriptorPool* pool, RHIDescriptorSetLayout* layout) = 0;
+
 		// 리소스 해제
 		virtual void destroyBuffer(RHIBuffer* buffer) = 0;
 		virtual void destroyImage(RHIImage* image) = 0;
@@ -49,6 +55,10 @@ namespace BinRenderer
 		virtual void destroyPipeline(RHIPipeline* pipeline) = 0;
 		virtual void destroyImageView(RHIImageView* imageView) = 0;
 		virtual void destroySampler(RHISampler* sampler) = 0;
+
+		// ✅ Descriptor Set 해제
+		virtual void destroyDescriptorSetLayout(RHIDescriptorSetLayout* layout) = 0;
+		virtual void destroyDescriptorPool(RHIDescriptorPool* pool) = 0;
 
 		// 버퍼 매핑
 		virtual void* mapBuffer(RHIBuffer* buffer) = 0;
@@ -71,8 +81,15 @@ namespace BinRenderer
 		virtual void cmdDraw(uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t firstInstance = 0) = 0;
 		virtual void cmdDrawIndexed(uint32_t indexCount, uint32_t instanceCount = 1, uint32_t firstIndex = 0, int32_t vertexOffset = 0, uint32_t firstInstance = 0) = 0;
 
+		// ✅ Descriptor Sets 바인딩 (Pipeline 사용)
+		virtual void cmdBindDescriptorSets(RHIPipeline* pipeline, uint32_t firstSet, RHIDescriptorSet** sets, uint32_t setCount) = 0;
+
+		// ✅ Dynamic Rendering
+		virtual void cmdBeginRendering(uint32_t width, uint32_t height, RHIImageView* colorAttachment, RHIImageView* depthAttachment = nullptr) = 0;
+		virtual void cmdEndRendering() = 0;
+
 		// API 타입
 		virtual RHIApiType getApiType() const = 0;
 	};
 
-} // namespace BinRenderer} // namespace BinRenderer
+} // namespace BinRenderer

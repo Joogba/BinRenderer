@@ -42,6 +42,7 @@ namespace BinRenderer
 	{
 		RHIShaderStageFlags stage = 0;
 		const char* entryPoint = "main";
+		std::string name;  // 셰이더 이름 (디버깅용)
 		std::vector<uint32_t> code;
 	};
 

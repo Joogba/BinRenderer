@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Platform\D3D11\D3D11RendererAPI.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="Core\DrawCommand.h">
       <Filter>헤더 파일</Filter>
     </ClCompile>
@@ -30,34 +27,16 @@
     <ClCompile Include="Resources\MeshFactory.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.h">
-      <Filter>헤더 파일</Filter>
-    </ClCompile>
     <ClCompile Include="TextureLoader.h">
       <Filter>헤더 파일</Filter>
     </ClCompile>
     <ClCompile Include="Core\IRenderPass.h">
       <Filter>헤더 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Platform\D3D11\D3D11Utils.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="Core\RenderEnums.h">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Resources\RenderTargetPool.h">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform\D3D11\D3D11RenderTargetPool.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform\D3D11\D3D11TransientBufferAllocator.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform\D3D11\D3D11VertexBufferAllocator.h">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform\D3D11\D3D11ConstantBufferAllocator.h">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Core\StaticBatcher.cpp">
@@ -148,9 +127,6 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\Renderer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Vulkan\Animation.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\GpuTimer.cpp">
@@ -288,35 +264,110 @@
     <ClCompile Include="RHI\Vulkan\Core\VulkanContext.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="RenderPass\RenderPassBase.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderPass\GBufferPass.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderPass\LightingPass.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderPass\PostProcessPass.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderPass\ShadowPass.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderPass\ForwardPass.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderPass\DeferredRenderer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="RHI\Vulkan\VulkanRHI.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Pipeline\VulkanPipelineLayout.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\RenderGraph\RGGraph.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Examples\RenderGraph_Example.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Logger.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\DeferredRendererRG.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\RGPassBase.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\GBufferPassRG.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\ShadowPassRG.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\LightingPassRG.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\ForwardPassRG.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\PostProcessPassRG.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\GUIPassRG.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\RenderGraph\RGBuilder.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Animation.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RHIApplication.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RHIScene.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass\RHIForwardPassRG.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RHIModel.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\RHIRenderer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\RHIMaterial.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\RHIMesh.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\InputManager.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\RHICamera.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\RHIViewFrustum.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Core\VulkanSwapchain.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Utilities\VulkanBarrier.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Resources\VulkanShaderReflection.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Pipeline\VulkanDescriptorAllocator.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Utilities\VulkanDynamicRendering.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Pipeline\VulkanPipelineCache.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Utilities\VulkanResourceCache.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\GLFWWindow.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\WindowFactory.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Platform\D3D11\D3D11RendererAPI.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="Core\DrawQueue.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -368,9 +419,6 @@
     <ClInclude Include="Core\RenderStates.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Platform\D3D11\D3D11Utils.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="Core\FlagOps.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -383,22 +431,13 @@
     <ClInclude Include="Resources\RenderTargetRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Platform\D3D11\D3D11RenderTargetPool.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="Core\ITransientBufferAllocator.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Platform\D3D11\D3D11PipelineStateRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Core\StaticBatcher.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Core\RenderManager.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Platform\D3D11\D3D11ResourceRegistry.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Core\ResourceDesc.h">
@@ -501,9 +540,6 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Vulkan\Renderer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Vulkan\Animation.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Vulkan\GpuTimer.h">
@@ -758,25 +794,124 @@
     <ClInclude Include="RHI\Vulkan\Core\VulkanContext.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RenderPass\RenderPassBase.h">
+    <ClInclude Include="RHI\Vulkan\Pipeline\VulkanPipelineLayout.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RenderPass\GBufferPass.h">
+    <ClInclude Include="RHI\Structs\RHIImageViewCreateInfo.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RenderPass\LightingPass.h">
+    <ClInclude Include="RHI\Structs\RHISamplerCreateInfo.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RenderPass\PostProcessPass.h">
+    <ClInclude Include="RenderPass\RenderGraph\RGTypes.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RenderPass\ShadowPass.h">
+    <ClInclude Include="RenderPass\RenderGraph\RGBuilder.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RenderPass\ForwardPass.h">
+    <ClInclude Include="RenderPass\RenderGraph\RGGraph.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RenderPass\DeferredRenderer.h">
+    <ClInclude Include="Core\Logger.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\DeferredRendererRG.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\RGPassBase.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\GBufferPassRG.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\ShadowPassRG.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\LightingPassRG.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\ForwardPassRG.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\PostProcessPassRG.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\GUIPassRG.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Animation.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RHIApplication.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RHIScene.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RHIModel.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass\RHIForwardPassRG.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\RHIRenderer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\RHIMaterial.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\RHIVertex.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\RHIMesh.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\InputManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\EngineConfig.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\RHICamera.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\RHIViewFrustum.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\IApplicationListener.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Core\VulkanSwapchain.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Structs\RHIInstanceData.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Utilities\VulkanBarrier.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Resources\VulkanShaderReflection.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Pipeline\VulkanDescriptorAllocator.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Utilities\VulkanDynamicRendering.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Pipeline\VulkanPipelineCache.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Vulkan\Utilities\VulkanResourceCache.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform\IWindow.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform\GLFWWindow.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform\WindowFactory.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -831,5 +966,49 @@
     <None Include="docs\Material_Update_Device_Lost_Fix.md" />
     <None Include="glsl assets\shaders\pbrForward.vert" />
     <None Include="ClassDiagram.cd" />
+    <None Include="RenderPass\RenderGraph\README.md" />
+    <None Include="RenderPass\RenderGraph\QUICK_START.md" />
+    <None Include="Docs\RenderGraph_Guide.md" />
+    <None Include="Docs\RenderGraph_Implementation_Summary.md" />
+    <None Include="Docs\Logger_Migration.md" />
+    <None Include="Docs\VulkanHeadlessMode_Fix.md" />
+    <None Include="Docs\DeferredRenderer_RenderGraph_Migration.md" />
+    <None Include="Docs\RenderPass_RGPass_Migration.md" />
+    <None Include="Docs\RGPass_Removal_Summary.md" />
+    <None Include="Docs\RenderPass_Cleanup_Summary.md" />
+    <None Include="Docs\RenderGraph_Migration_Complete.md" />
+    <None Include="Docs\CircularInclude_Fix.md" />
+    <None Include="Docs\Protected_Member_Access_Fix.md" />
+    <None Include="docs\RHI_Migration_Guide.md" />
+    <None Include="docs\RHI_Migration_Complete_Summary.md" />
+    <None Include="README_RHI.md" />
+    <None Include="ANALYSIS_RHI_Vulkan_Detailed.md" />
+    <None Include="SUMMARY_VulkanSwapchain_Complete.md" />
+    <None Include="FOUND_RHI_Vulkan_Already_Implemented.md" />
+    <None Include="FINAL_RHI_Vulkan_Status.md" />
+    <None Include="MIGRATION_GUIDE_Vulkan_to_RHI.md" />
+    <None Include="FINAL_MIGRATION_PLAN.md" />
+    <None Include="ANALYSIS_Rendering_Logic_vs_RHI_Implementation.md" />
+    <None Include="GPU_INSTANCING_MIGRATION_COMPLETE.md" />
+    <None Include="VULKAN_CONTEXT_HELPERS_COMPLETE.md" />
+    <None Include="VULKAN_BARRIER_COMPLETE.md" />
+    <None Include="VULKAN_SHADER_REFLECTION_COMPLETE.md" />
+    <None Include="VULKAN_DESCRIPTOR_AUTO_POOL_COMPLETE.md" />
+    <None Include="VULKAN_DYNAMIC_RENDERING_COMPLETE.md" />
+    <None Include="PHASE3_PLAN.md" />
+    <None Include="PHASE3_COMPLETE.md" />
+    <None Include="MIGRATION_SUMMARY.md" />
+    <None Include="PHASE1_RENDERER_MIGRATION_START.md" />
+    <None Include="PHASE1_SCENE_INTEGRATION_COMPLETE.md" />
+    <None Include="PHASE1_APPLICATION_COMPLETE.md" />
+    <None Include="PHASE1_COMPLETE_SUMMARY.md" />
+    <None Include="BUGFIX_RHIRENDERER_RUNTIME_ERROR.md" />
+    <None Include="BUGFIX_VULKANRHI_ACCESS_VIOLATION.md" />
+    <None Include="FEATURE_WINDOW_INTEGRATION.md" />
+    <None Include="FEATURE_PLATFORM_INDEPENDENT_WINDOW.md" />
+    <None Include="BUGFIX_GLFW_ACCESS_VIOLATION.md" />
+    <None Include="BUGFIX_SWAPCHAIN_NULL.md" />
+    <None Include="assets\shaders\simple.vert" />
+    <None Include="assets\shaders\simple.frag" />
   </ItemGroup>
 </Project>

@@ -167,8 +167,20 @@ namespace BinRenderer::Vulkan
 			queueCreateInfos.push_back(queueCreateInfo);
 		}
 
-		VkPhysicalDeviceFeatures deviceFeatures{};
-		deviceFeatures.samplerAnisotropy = VK_TRUE;
+		// ✅ Vulkan 1.3 Features: Dynamic Rendering & Synchronization2
+		VkPhysicalDeviceSynchronization2Features sync2Features{};
+		sync2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
+		sync2Features.synchronization2 = VK_TRUE;
+
+		VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures{};
+		dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
+		dynamicRenderingFeatures.dynamicRendering = VK_TRUE;
+		dynamicRenderingFeatures.pNext = &sync2Features;
+
+		VkPhysicalDeviceFeatures2 deviceFeatures2{};
+		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+		deviceFeatures2.features.samplerAnisotropy = VK_TRUE;
+		deviceFeatures2.pNext = &dynamicRenderingFeatures;
 
 		// ✅ 헤드리스 모드 지원: 스왑체인이 필요할 때만 확장 추가
 		std::vector<const char*> deviceExtensions;
@@ -183,7 +195,8 @@ namespace BinRenderer::Vulkan
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 		createInfo.pQueueCreateInfos = queueCreateInfos.data();
-		createInfo.pEnabledFeatures = &deviceFeatures;
+		createInfo.pEnabledFeatures = nullptr; // ✅ deviceFeatures2 사용 시 nullptr
+		createInfo.pNext = &deviceFeatures2;   // ✅ Feature chain 연결
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 		createInfo.ppEnabledExtensionNames = deviceExtensions.empty() ? nullptr : deviceExtensions.data();
 
@@ -201,6 +214,8 @@ namespace BinRenderer::Vulkan
 		graphicsQueueFamily_ = indices.graphicsFamily;
 		presentQueueFamily_ = indices.presentFamily;
 		computeQueueFamily_ = indices.computeFamily;
+
+		printLog("✅ Vulkan 1.3 features enabled: dynamicRendering, synchronization2");
 
 		return true;
 	}

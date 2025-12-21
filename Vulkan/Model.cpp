@@ -22,8 +22,8 @@ Model::Model(Context& ctx, VulkanResourceManager* resourceManager)
     rootNode_ = make_unique<ModelNode>();
     rootNode_->name = "Root";
 
-    // Initialize animation system
-    animation_ = make_unique<Animation>();
+    // Initialize animation system (BinRenderer namespace)
+    animation_ = make_unique<BinRenderer::Animation>();
     
     if (resourceManager_) {
         printLog("✅ Model created with VulkanResourceManager support");

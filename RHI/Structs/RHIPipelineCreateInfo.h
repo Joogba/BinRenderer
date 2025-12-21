@@ -145,6 +145,18 @@ namespace BinRenderer
 
 		// ✅ GPU Instancing 지원
 		bool enableInstancing = false;
+
+		// ✅ Descriptor Set Layouts
+		std::vector<class RHIDescriptorSetLayout*> descriptorSetLayouts;
+
+		// ✅ Push Constants
+		struct PushConstantRange
+		{
+			RHIShaderStageFlags stageFlags = 0;
+			uint32_t offset = 0;
+			uint32_t size = 0;
+		};
+		std::vector<PushConstantRange> pushConstantRanges;
 	};
 
 	/**

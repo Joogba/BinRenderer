@@ -1,11 +1,16 @@
 ﻿#include "VulkanRHI.h"
+#include "Commands/VulkanCommandPool.h"
+#include "Commands/VulkanCommandBuffer.h"
 #include "Resources/VulkanBuffer.h"
 #include "Resources/VulkanImage.h"
 #include "Resources/VulkanShader.h"
 #include "Resources/VulkanSampler.h"
 #include "Pipeline/VulkanPipeline.h"
 #include "Pipeline/VulkanPipelineLayout.h"
+#include "Pipeline/VulkanDescriptor.h"
+#include "Utilities/VulkanBarrier.h"
 #include "Vulkan/Logger.h"
+#include "../../Platform/IWindow.h"
 
 #include <GLFW/glfw3.h>
 #include <cassert>
@@ -24,8 +29,8 @@ namespace BinRenderer::Vulkan
 		maxFramesInFlight_ = initInfo.maxFramesInFlight;
 
 		try {
-			// ✅ 헤드리스 모드 여부 확인
-			bool requireSwapchain = (initInfo.window != nullptr);
+			// ✅ 헤드레스 모드 여부 확인 (IWindow 우선, 레거시 window 폴백)
+			bool requireSwapchain = (initInfo.windowInterface != nullptr || initInfo.window != nullptr);
 			
 			// VulkanContext 초기화 (스왑체인 필요 여부 전달)
 			context_ = std::make_unique<VulkanContext>();
@@ -35,8 +40,8 @@ namespace BinRenderer::Vulkan
 				return false;
 			}
 
-			// ✅ 헤드리스 모드 체크: window가 있을 때만 스왑체인 생성
-			if (initInfo.window != nullptr) {
+			// ✅ 헤드레스 모드 체크: window가 있을 때만 스왑체인 생성
+			if (requireSwapchain) {
 				printLog("Creating swapchain for window mode...");
 				createSurface();
 				createSwapchain();
@@ -58,7 +63,7 @@ namespace BinRenderer::Vulkan
 			createSyncObjects();
 
 			printLog("✅ VulkanRHI initialized successfully ({})", 
-			  initInfo.window ? "Window Mode" : "Headless Mode");
+			  requireSwapchain ? "Window Mode" : "Headless Mode");
 			return true;
 		}
 		catch (const std::exception& e) {
@@ -165,6 +170,8 @@ namespace BinRenderer::Vulkan
 			return;
 		}
 
+		// submitCommands()가 이미 호출되었으므로 여기서는 present만 수행
+		// Present
 		VkResult result = swapchain_->present(context_->getPresentQueue(), imageIndex, renderFinishedSemaphores_[currentFrameIndex_]);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
@@ -181,6 +188,11 @@ namespace BinRenderer::Vulkan
 	uint32_t VulkanRHI::getCurrentFrameIndex() const
 	{
 		return currentFrameIndex_;
+	}
+
+	uint32_t VulkanRHI::getCurrentImageIndex() const
+	{
+		return currentImageIndex_;
 	}
 
 	RHIBuffer* VulkanRHI::createBuffer(const RHIBufferCreateInfo& createInfo)
@@ -283,82 +295,251 @@ if (!imageView->create(viewType, aspectFlags))
 
 	void VulkanRHI::beginCommandRecording()
 	{
+		// 커맨드 버퍼 유효성 검사
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			printLog("❌ ERROR: Invalid command buffer index {} (size: {})", 
+				currentFrameIndex_, commandBuffers_.size());
+			return;
+		}
+
 		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			printLog("❌ ERROR: Command buffer {} is null", currentFrameIndex_);
+			return;
+		}
+
 		cmdBuffer->reset();
 		cmdBuffer->begin();
 	}
 
 	void VulkanRHI::endCommandRecording()
 	{
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			printLog("❌ ERROR: Invalid command buffer index in endCommandRecording");
+			return;
+		}
+
 		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			printLog("❌ ERROR: Command buffer is null in endCommandRecording");
+			return;
+		}
+
 		cmdBuffer->end();
 	}
 
 	void VulkanRHI::submitCommands()
 	{
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			printLog("❌ ERROR: Invalid command buffer index in submitCommands");
+			return;
+		}
+
 		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			printLog("❌ ERROR: Command buffer is null in submitCommands");
+			return;
+		}
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		
+		// imageAvailable 세마포어 대기
 		VkSemaphore waitSemaphores[] = { imageAvailableSemaphores_[currentFrameIndex_] };
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
+		
+		// 커맨드 버퍼 설정
 		submitInfo.commandBufferCount = 1;
 		VkCommandBuffer vkCmdBuffer = cmdBuffer->getVkCommandBuffer();
 		submitInfo.pCommandBuffers = &vkCmdBuffer;
+		
+		// renderFinished 세마포어 시그널
 		VkSemaphore signalSemaphores[] = { renderFinishedSemaphores_[currentFrameIndex_] };
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
-		vkQueueSubmit(context_->getGraphicsQueue(), 1, &submitInfo, inFlightFences_[currentFrameIndex_]);
+		// Fence와 함께 제출
+		VkResult result = vkQueueSubmit(context_->getGraphicsQueue(), 1, &submitInfo, inFlightFences_[currentFrameIndex_]);
+		if (result != VK_SUCCESS)
+		{
+			printLog("❌ ERROR: Failed to submit commands! Error: {}", static_cast<int>(result));
+		}
 	}
 
 	void VulkanRHI::cmdBindPipeline(RHIPipeline* pipeline)
 	{
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			return;
+		}
+
 		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			return;
+		}
+
 		cmdBuffer->bindPipeline(pipeline);
 	}
 
 	void VulkanRHI::cmdBindVertexBuffer(RHIBuffer* buffer, RHIDeviceSize offset)
 	{
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			return;
+		}
+
 		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			return;
+		}
+
 		cmdBuffer->bindVertexBuffer(0, buffer, offset);
 	}
 
 	void VulkanRHI::cmdBindIndexBuffer(RHIBuffer* buffer, RHIDeviceSize offset)
 	{
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			return;
+		}
+
 		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			return;
+		}
+
 		cmdBuffer->bindIndexBuffer(buffer, offset);
 	}
 
 	void VulkanRHI::cmdBindDescriptorSets(RHIPipelineLayout* layout, RHIDescriptorSet** sets, uint32_t setCount)
 	{
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			return;
+		}
+
 		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			return;
+		}
+
 		cmdBuffer->bindDescriptorSets(layout, 0, setCount, sets);
+	}
+
+	void VulkanRHI::cmdBindDescriptorSets(RHIPipeline* pipeline, uint32_t firstSet, RHIDescriptorSet** sets, uint32_t setCount)
+	{
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			printLog("❌ ERROR: Invalid command buffer index in cmdBindDescriptorSets");
+			return;
+		}
+
+		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			printLog("❌ ERROR: Command buffer is null in cmdBindDescriptorSets");
+			return;
+		}
+
+		if (!pipeline)
+		{
+			printLog("❌ ERROR: Pipeline is null in cmdBindDescriptorSets");
+			return;
+		}
+
+		// Pipeline에서 layout 가져오기
+		auto* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
+		VkPipelineLayout vkPipelineLayout = vulkanPipeline->getVkPipelineLayout();
+		
+		if (vkPipelineLayout == VK_NULL_HANDLE)
+		{
+			printLog("❌ ERROR: Pipeline layout is null in cmdBindDescriptorSets");
+			return;
+		}
+
+		// Vulkan descriptor sets 변환
+		std::vector<VkDescriptorSet> vkDescriptorSets(setCount);
+		for (uint32_t i = 0; i < setCount; i++)
+		{
+			if (sets[i])
+			{
+				auto* vulkanSet = static_cast<VulkanDescriptorSet*>(sets[i]);
+				vkDescriptorSets[i] = vulkanSet->getVkDescriptorSet();
+			}
+			else
+			{
+				vkDescriptorSets[i] = VK_NULL_HANDLE;
+			}
+		}
+
+		// Vulkan 커맨드 버퍼에 바인딩
+		VkCommandBuffer vkCmdBuffer = cmdBuffer->getVkCommandBuffer();
+		vkCmdBindDescriptorSets(
+			vkCmdBuffer,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			vkPipelineLayout,
+			firstSet,
+			setCount,
+			vkDescriptorSets.data(),
+			0, nullptr // dynamic offsets
+		);
 	}
 
 	void VulkanRHI::cmdPushConstants(RHIPipelineLayout* layout, RHIShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues)
 	{
-		VkCommandBuffer cmdBuffer = commandBuffers_[currentFrameIndex_]->getVkCommandBuffer();
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			return;
+		}
+
+		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			return;
+		}
+
+		VkCommandBuffer vkCmdBuffer = cmdBuffer->getVkCommandBuffer();
 		
 		// layout이 VulkanPipelineLayout인 경우
 		auto* vulkanLayout = dynamic_cast<VulkanPipelineLayout*>(layout);
 		if (vulkanLayout)
 		{
-			vkCmdPushConstants(cmdBuffer, vulkanLayout->getVkPipelineLayout(), 
+			vkCmdPushConstants(vkCmdBuffer, vulkanLayout->getVkPipelineLayout(), 
 				static_cast<VkShaderStageFlags>(stageFlags), offset, size, pValues);
 			return;
 		}
 		
 		// layout이 nullptr이거나 다른 타입인 경우 - 에러 처리
-		// TODO: 에러 로깅
+		printLog("❌ ERROR: Invalid pipeline layout in cmdPushConstants");
 	}
 
 	void VulkanRHI::cmdSetViewport(const RHIViewport& viewport)
 	{
-		VkCommandBuffer cmdBuffer = commandBuffers_[currentFrameIndex_]->getVkCommandBuffer();
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			return;
+		}
+
+		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			return;
+		}
+
+		VkCommandBuffer vkCmdBuffer = cmdBuffer->getVkCommandBuffer();
 		VkViewport vkViewport{};
 		vkViewport.x = viewport.x;
 		vkViewport.y = viewport.y;
@@ -366,31 +547,61 @@ if (!imageView->create(viewType, aspectFlags))
 		vkViewport.height = viewport.height;
 		vkViewport.minDepth = viewport.minDepth;
 		vkViewport.maxDepth = viewport.maxDepth;
-		vkCmdSetViewport(cmdBuffer, 0, 1, &vkViewport);
+		vkCmdSetViewport(vkCmdBuffer, 0, 1, &vkViewport);
 	}
 
 	void VulkanRHI::cmdSetScissor(const RHIRect2D& scissor)
 	{
-		VkCommandBuffer cmdBuffer = commandBuffers_[currentFrameIndex_]->getVkCommandBuffer();
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			return;
+		}
+
+		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			return;
+		}
+
+		VkCommandBuffer vkCmdBuffer = cmdBuffer->getVkCommandBuffer();
 		VkRect2D vkScissor{};
 		vkScissor.offset = { scissor.offset.x, scissor.offset.y };
 		vkScissor.extent = { scissor.extent.width, scissor.extent.height };
-		vkCmdSetScissor(cmdBuffer, 0, 1, &vkScissor);
+		vkCmdSetScissor(vkCmdBuffer, 0, 1, &vkScissor);
 	}
 
 	void VulkanRHI::cmdDraw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance)
 	{
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			return;
+		}
+
 		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			return;
+		}
+
 		cmdBuffer->draw(vertexCount, instanceCount, firstVertex, firstInstance);
 	}
 
 	void VulkanRHI::cmdDrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance)
 	{
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			return;
+		}
+
 		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			return;
+		}
+
 		cmdBuffer->drawIndexed(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}
-
-	void* VulkanRHI::mapBuffer(RHIBuffer* buffer)
+    void* VulkanRHI::mapBuffer(RHIBuffer* buffer)
 	{
       if (!buffer)
  {
@@ -425,6 +636,24 @@ auto* vulkanBuffer = static_cast<VulkanBuffer*>(buffer);
 
     void VulkanRHI::createSurface()
 	{
+		// ✅ IWindow 인터페이스 사용
+		if (initInfo_.windowInterface)
+		{
+			int result = initInfo_.windowInterface->createVulkanSurface(
+				context_->getInstance(),
+				reinterpret_cast<void**>(&surface_)
+			);
+			
+			if (result != 0)  // VK_SUCCESS = 0
+			{
+				printLog("❌ ERROR: Failed to create Vulkan surface via IWindow: {}", static_cast<int>(result));
+				exitWithMessage("Failed to create window surface!");
+			}
+			printLog("✅ Vulkan surface created via IWindow");
+			return;
+		}
+
+		// ❌ 레거시: window (void*) 사용 (GLFW 전용, 제거 예정)
 		if (!initInfo_.window)
 		{
 			exitWithMessage("Window is null!");
@@ -434,6 +663,7 @@ auto* vulkanBuffer = static_cast<VulkanBuffer*>(buffer);
 		{
 			exitWithMessage("Failed to create window surface!");
 		}
+		printLog("⚠️  Vulkan surface created via legacy GLFW (deprecated)");
 	}
 
 	void VulkanRHI::createSwapchain()
@@ -531,6 +761,210 @@ auto* vulkanBuffer = static_cast<VulkanBuffer*>(buffer);
 		vkQueueWaitIdle(context_->getGraphicsQueue());
 
 		vkFreeCommandBuffers(context_->getDevice(), transferCommandPool_, 1, &commandBuffer);
+	}
+
+	void VulkanRHI::cmdBeginRendering(uint32_t width, uint32_t height, RHIImageView* colorAttachment, RHIImageView* depthAttachment)
+	{
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			printLog("❌ ERROR: Invalid command buffer in cmdBeginRendering");
+			return;
+		}
+
+		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			printLog("❌ ERROR: Command buffer is null in cmdBeginRendering");
+			return;
+		}
+
+		// ✅ Color attachment 검증
+		if (!colorAttachment)
+		{
+			printLog("❌ ERROR: Color attachment is null in cmdBeginRendering");
+			return;
+		}
+
+		// ✅ RHIImageView*를 VkImageView로 reinterpret_cast
+		VkImageView vkColorImageView = reinterpret_cast<VkImageView>(colorAttachment);
+		if (vkColorImageView == VK_NULL_HANDLE)
+		{
+			printLog("❌ ERROR: VkImageView is null");
+			return;
+		}
+
+		VkCommandBuffer vkCmdBuffer = cmdBuffer->getVkCommandBuffer();
+
+		// ✅ Swapchain image 가져오기
+		VkImage swapchainImage = swapchain_->getVkImage(currentImageIndex_);
+		VkFormat swapchainFormat = swapchain_->getColorFormat();
+
+		// ✅ VulkanBarrier를 사용한 레이아웃 전환
+		VulkanBarrier barrier(swapchainImage, swapchainFormat, 1, 1);
+		barrier.transitionToColorAttachment(vkCmdBuffer);
+
+		// Color attachment 설정
+		VkRenderingAttachmentInfo colorAttachmentInfo{};
+		colorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+		colorAttachmentInfo.imageView = vkColorImageView;
+		colorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		colorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachmentInfo.clearValue.color = {{0.1f, 0.1f, 0.3f, 1.0f}};
+
+		// Depth attachment 설정 (옵션)
+		VkRenderingAttachmentInfo depthAttachmentInfo{};
+		VkImageView vkDepthImageView = VK_NULL_HANDLE;
+		
+		if (depthAttachment)
+		{
+			vkDepthImageView = reinterpret_cast<VkImageView>(depthAttachment);
+			if (vkDepthImageView != VK_NULL_HANDLE)
+			{
+				depthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+				depthAttachmentInfo.imageView = vkDepthImageView;
+				depthAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				depthAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+				depthAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+				depthAttachmentInfo.clearValue.depthStencil = {1.0f, 0};
+			}
+		}
+
+		// Rendering info 설정
+		VkRenderingInfo renderingInfo{};
+		renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+		renderingInfo.renderArea.offset = {0, 0};
+		renderingInfo.renderArea.extent = {width, height};
+		renderingInfo.layerCount = 1;
+		renderingInfo.colorAttachmentCount = 1;
+		renderingInfo.pColorAttachments = &colorAttachmentInfo;
+		renderingInfo.pDepthAttachment = (vkDepthImageView != VK_NULL_HANDLE) ? &depthAttachmentInfo : nullptr;
+		renderingInfo.pStencilAttachment = nullptr;
+
+		// Dynamic rendering 시작
+		vkCmdBeginRendering(vkCmdBuffer, &renderingInfo);
+		
+		printLog("[VulkanRHI] ✅ cmdBeginRendering called successfully");
+	}
+
+	void VulkanRHI::cmdEndRendering()
+	{
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			return;
+		}
+
+		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			return;
+		}
+
+		VkCommandBuffer vkCmdBuffer = cmdBuffer->getVkCommandBuffer();
+
+		// Dynamic rendering 종료
+		vkCmdEndRendering(vkCmdBuffer);
+
+		// ✅ VulkanBarrier를 사용한 레이아웃 전환 (PRESENT_SRC로)
+		VkImage swapchainImage = swapchain_->getVkImage(currentImageIndex_);
+		VkFormat swapchainFormat = swapchain_->getColorFormat();
+
+		VulkanBarrier barrier(swapchainImage, swapchainFormat, 1, 1);
+		barrier.transitionColorToPresent(vkCmdBuffer);
+	}
+
+	// ========================================
+	// ✅ Descriptor Set API 구현
+	// ========================================
+
+	RHIDescriptorSetLayout* VulkanRHI::createDescriptorSetLayout(const RHIDescriptorSetLayoutCreateInfo& createInfo)
+	{
+		auto* layout = new VulkanDescriptorSetLayout(context_->getDevice());
+		
+		// RHI 바인딩을 Vulkan 바인딩으로 변환
+		std::vector<VkDescriptorSetLayoutBinding> vkBindings;
+		vkBindings.reserve(createInfo.bindings.size());
+		
+		for (const auto& binding : createInfo.bindings)
+		{
+			VkDescriptorSetLayoutBinding vkBinding{};
+			vkBinding.binding = binding.binding;
+			vkBinding.descriptorType = static_cast<VkDescriptorType>(binding.descriptorType);
+			vkBinding.descriptorCount = binding.descriptorCount;
+			vkBinding.stageFlags = static_cast<VkShaderStageFlags>(binding.stageFlags);
+			vkBinding.pImmutableSamplers = nullptr;
+			
+			vkBindings.push_back(vkBinding);
+		}
+		
+		if (!layout->create(vkBindings))
+		{
+			delete layout;
+			return nullptr;
+		}
+		
+		return layout;
+	}
+
+	RHIDescriptorPool* VulkanRHI::createDescriptorPool(const RHIDescriptorPoolCreateInfo& createInfo)
+	{
+		auto* pool = new VulkanDescriptorPool(context_->getDevice());
+		
+		// RHI pool size를 Vulkan pool size로 변환
+		std::vector<VkDescriptorPoolSize> vkPoolSizes;
+		vkPoolSizes.reserve(createInfo.poolSizes.size());
+		
+		for (const auto& poolSize : createInfo.poolSizes)
+		{
+			VkDescriptorPoolSize vkPoolSize{};
+			vkPoolSize.type = static_cast<VkDescriptorType>(poolSize.type);
+			vkPoolSize.descriptorCount = poolSize.descriptorCount;
+			
+			vkPoolSizes.push_back(vkPoolSize);
+		}
+		
+		if (!pool->create(createInfo.maxSets, vkPoolSizes))
+		{
+			delete pool;
+			return nullptr;
+		}
+		
+		return pool;
+	}
+
+	RHIDescriptorSet* VulkanRHI::allocateDescriptorSet(RHIDescriptorPool* pool, RHIDescriptorSetLayout* layout)
+	{
+		if (!pool || !layout)
+		{
+			printLog("❌ ERROR: Invalid pool or layout in allocateDescriptorSet");
+			return nullptr;
+		}
+		
+		// RHI → Vulkan 캐스팅
+		auto* vulkanPool = static_cast<VulkanDescriptorPool*>(pool);
+		
+		// VulkanDescriptorPool의 allocateDescriptorSet 사용
+		return vulkanPool->allocateDescriptorSet(layout);
+	}
+
+	void VulkanRHI::destroyDescriptorSetLayout(RHIDescriptorSetLayout* layout)
+	{
+		if (layout)
+		{
+			auto* vulkanLayout = static_cast<VulkanDescriptorSetLayout*>(layout);
+			vulkanLayout->destroy();
+			delete vulkanLayout;
+		}
+	}
+
+	void VulkanRHI::destroyDescriptorPool(RHIDescriptorPool* pool)
+	{
+		if (pool)
+		{
+			auto* vulkanPool = static_cast<VulkanDescriptorPool*>(pool);
+			vulkanPool->destroy();
+			delete vulkanPool;
+		}
 	}
 
 } // namespace BinRenderer::Vulkan

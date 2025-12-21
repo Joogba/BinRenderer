@@ -9,7 +9,7 @@
 #include "TextureManager.h"
 #include "Vertex.h"
 #include "VulkanTools.h"
-#include "Animation.h"
+#include "../Scene/Animation.h"  // ✅ Vulkan/Animation.h → Scene/Animation.h
 #include "StorageBuffer.h"
 
 #include <glm/glm.hpp>
@@ -34,9 +34,9 @@ class VulkanResourceManager;
 // ========================================
 // Per-instance data structure (16-byte aligned for GPU)
 struct InstanceData {
-    glm::mat4 modelMatrix;      // 64 bytes
+    glm::mat4 modelMatrix; // 64 bytes
     uint32_t materialOffset;// 4 bytes (optional: per-instance material override)
-    uint32_t padding[3];      // 12 bytes (padding for 16-byte alignment)
+    uint32_t padding[3];// 12 bytes (padding for 16-byte alignment)
 };
 
 class Model
@@ -73,7 +73,7 @@ class Model
     uint32_t getBoneCount() const
     {
         return animation_ ? animation_->getBoneCount() : 0;
-    }
+ }
 
     // Animation playback control
     void playAnimation()
@@ -83,13 +83,13 @@ class Model
     }
     void pauseAnimation()
     {
-        if (animation_)
+      if (animation_)
      animation_->pause();
     }
     void stopAnimation()
-    {
+  {
         if (animation_)
-            animation_->stop();
+      animation_->stop();
     }
     bool isAnimationPlaying() const
     {
@@ -107,7 +107,7 @@ class Model
     }
     void setAnimationLooping(bool loop)
     {
-   if (animation_)
+if (animation_)
             animation_->setLooping(loop);
   }
 
@@ -117,17 +117,17 @@ class Model
         static const vector<mat4> empty;
         return animation_ ? animation_->getBoneMatrices() : empty;
     }
-Animation* getAnimation() const
+    BinRenderer::Animation* getAnimation() const  // ✅ 네임스페이스 명시
     {
         return animation_.get();
     }
 
     // ========================================
-    // ✅ GPU Instancing: Instance Management
+  // ✅ GPU Instancing: Instance Management
     // ========================================
     void addInstance(const glm::mat4& transform, uint32_t materialOffset = 0);
     void updateInstance(uint32_t index, const glm::mat4& transform);
-    void removeInstance(uint32_t index);
+  void removeInstance(uint32_t index);
     void clearInstances();
     
     uint32_t getInstanceCount() const { return static_cast<uint32_t>(instances_.size()); }
@@ -154,8 +154,8 @@ Animation* getAnimation() const
  // ========================================
     vector<Mesh>& meshes() { return meshes_; }
     vector<Material>& materials() { return materials_; }
-    uint32_t numMaterials() const { return uint32_t(materials_.size()); }
-    ModelNode* rooNode() const { return rootNode_.get(); }
+  uint32_t numMaterials() const { return uint32_t(materials_.size()); }
+  ModelNode* rooNode() const { return rootNode_.get(); }
     vec3 boundingBoxMin() const { return boundingBoxMin_; }
     vec3 boundingBoxMax() const { return boundingBoxMax_; }
 
@@ -179,7 +179,7 @@ Animation* getAnimation() const
     vector<bool> textureSRgb_; // sRGB 여부
 
     unique_ptr<ModelNode> rootNode_;
-    unique_ptr<Animation> animation_;
+    unique_ptr<BinRenderer::Animation> animation_;  // ✅ 네임스페이스 명시
 
     mat4 globalInverseTransform_ = mat4(1.0f);
 
@@ -197,7 +197,7 @@ Animation* getAnimation() const
     // ========================================
  vector<InstanceData> instances_;  // All instance transforms
 
-    // ========================================
+// ========================================
     // ✅ GPU Instancing: Step 2 - Instance Buffer
     // ========================================
     VkBuffer instanceBuffer_ = VK_NULL_HANDLE;

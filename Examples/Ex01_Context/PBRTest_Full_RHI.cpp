@@ -7,6 +7,9 @@
 #include "../../Core/Logger.h"
 #include "../../Core/EngineConfig.h"
 #include "../../Core/InputManager.h"
+#include "../../RenderPass/RenderGraph/RGGraph.h"
+#include "../../RenderPass/ForwardPassRG.h"
+#include "../../Rendering/RHIRenderer.h"
 
 using namespace BinRenderer;
 
@@ -19,6 +22,21 @@ using namespace BinRenderer;
  * - RHIScene을 통한 모델 관리 (GPU 인스턴싱)
  * - RenderGraph를 통한 선언적 렌더링
  * - Animation 시스템 통합 (플랫폼 독립적)
+ * 
+ * 렌더 패스 추가 방법:
+ * - onInit()에서 renderGraph.addPass()를 호출하여 커스텀 패스 추가
+ * - 패스를 추가하지 않으면 기본 ForwardPassRG가 자동으로 추가됨
+ * 
+ * 예제:
+ * ```cpp
+ * void onInit(RHIScene& scene, RenderGraph& renderGraph, RHICamera& camera) override
+ * {
+ *     // 커스텀 패스 추가
+ *     auto myPass = std::make_unique<MyCustomPass>(rhi);
+ *     myPass->initialize();
+ *     renderGraph.addPass(std::move(myPass));
+ * }
+ * ```
  */
 class FullRHITestApp : public IRHIApplicationListener
 {
@@ -40,18 +58,28 @@ public:
 		printLog("==============================================");
 		printLog("");
 
-		// Camera 설정
-		camera.setPosition(glm::vec3(0.0f, 0.0f, 15.0f));
-		camera.setRotation(glm::vec3(0.0f, 0.0f, 0.0f));
-		camera.setMovementSpeed(5.0f);
-		printLog("Camera initialized:");
-		printLog("  - Position: (0, 0, 15)");
-		printLog("  - Movement speed: 5.0");
+		// Camera 설정 (PBRTest_Lightweight 참고)
+		camera.setType(RHICamera::CameraType::FirstPerson);
+		camera.setPosition(glm::vec3(0.0f, 5.0f, -10.0f));
+		camera.setRotation(glm::vec3(-20.0f, 0.0f, 0.0f));
+		camera.setMovementSpeed(10.0f);
+		camera.setRotationSpeed(0.1f);
+		
+		// Perspective 설정
+		const float aspectRatio = 1280.0f / 720.0f;
+		camera.setPerspective(75.0f, aspectRatio, 0.1f, 512.0f);
+		
+		printLog("✅ Camera initialized:");
+		printLog("   - Position: (0, 5, -10)");
+		printLog("   - Rotation: (-20, 0, 0)");
+		printLog("   - FOV: 75°, Aspect: {:.2f}", aspectRatio);
+		printLog("   - Movement speed: 10.0");
 		printLog("");
 
+		// 씬에 모델 추가
 		const std::string helmetPath = "../../assets/models/DamagedHelmet.glb";
 		
-		printLog("Adding 3 helmet instances with GPU instancing...");
+		printLog("📦 Adding 3 helmet instances with GPU instancing...");
 		
 		// 첫 번째 헬멧: 왼쪽
 		{
@@ -87,27 +115,34 @@ public:
 		}
 
 		printLog("");
-		printLog("Scene setup complete:");
-		printLog("  - 3 helmet instances");
-		printLog("  - 1 shared model (GPU instancing)");
-		printLog("  - Automatic resource caching");
+		printLog("✅ Scene setup complete:");
+		printLog("   - {} scene nodes", scene.getNodeCount());
+		printLog("   - GPU instancing enabled");
+		printLog("   - Automatic resource caching");
 		printLog("");
-		printLog("Architecture Benefits:");
-		printLog("  ✅ Platform Independence");
-		printLog("     - RHI abstracts Vulkan/DX12/Metal");
-		printLog("     - Same code works on all platforms");
-		printLog("  ✅ Modular Design");
-		printLog("     - Camera: First-person & LookAt modes");
-		printLog("     - Animation: Pure logic (no rendering)");
-		printLog("     - Material: Data-driven");
-		printLog("  - Mesh: Self-contained");
-		printLog("  ✅ RenderGraph");
-		printLog("     - Automatic resource management");
-		printLog("- Dependency tracking");
-		printLog("   - Performance optimization");
-		printLog("  ✅ Configuration");
-		printLog("     - EngineConfig: Centralized settings");
-		printLog("     - Easy to switch dev/release modes");
+
+		// ✅ RenderGraph에 ForwardPassRG 추가
+		printLog("🎨 Setting up RenderGraph...");
+		printLog("   - ForwardPassRG will be added automatically if no custom passes");
+		printLog("✅ RenderGraph setup complete");
+		printLog("");
+		
+		printLog("🎯 Architecture Benefits:");
+		printLog("   ✅ Platform Independence");
+		printLog("    - RHI abstracts Vulkan/DX12/Metal");
+		printLog("      - Same code works on all platforms");
+		printLog("   ✅ Modular Design");
+		printLog("      - Camera: First-person & LookAt modes");
+		printLog("   - Animation: Pure logic (no rendering)");
+		printLog("      - Material: Data-driven");
+		printLog("      - Mesh: Self-contained");
+		printLog("   ✅ RenderGraph");
+		printLog("      - Automatic resource management");
+		printLog("      - Dependency tracking");
+		printLog("      - Performance optimization");
+		printLog("   ✅ Configuration");
+		printLog("      - EngineConfig: Centralized settings");
+		printLog("      - Easy to switch dev/release modes");
 		printLog("");
 	}
 
@@ -115,24 +150,23 @@ public:
 	{
 		elapsedTime_ += deltaTime;
 		
+		// 60 프레임마다 로그 출력
 		if (frameIndex % 60 == 0)
 		{
-			printLog("Frame {}: Elapsed {:.2f}s", frameIndex, elapsedTime_);
+			printLog("⏱️  Frame {}: Elapsed {:.2f}s, Delta: {:.4f}s", 
+				frameIndex, elapsedTime_, deltaTime);
 		}
 
-		// TODO: Input 처리 예제
-		// auto* input = app->getInputManager();
-		// if (input->isKeyPressed(GLFW_KEY_ESCAPE)) {
-		//     // Exit
-		// }
+		// Camera 회전 (자동 데모)
+		if (frameIndex % 120 == 0)
+		{
+			printLog("📹 Camera auto-rotation demo");
+		}
 	}
 
 	void onGui() override
 	{
 		// TODO: ImGui integration
-		// ImGui::Begin("RHI Test");
-		// ImGui::Text("FPS: %.1f", fps);
-		// ImGui::End();
 	}
 
 	void onShutdown() override
@@ -141,9 +175,12 @@ public:
 		printLog("==============================================");
 		printLog("  Shutting down RHI Application");
 		printLog("==============================================");
-		printLog("Final Statistics:");
-		printLog("  - Total frames rendered: {}", static_cast<int>(elapsedTime_ / 0.016f));
-		printLog("  - Total elapsed time: {:.2f}s", elapsedTime_);
+		printLog("📊 Final Statistics:");
+		printLog("   - Total frames rendered: ~{}", static_cast<int>(elapsedTime_ / 0.016f));
+		printLog("   - Total elapsed time: {:.2f}s", elapsedTime_);
+		printLog("   - Average frame time: {:.4f}s", elapsedTime_ / static_cast<int>(elapsedTime_ / 0.016f));
+		printLog("");
+		printLog("✅ Application shutdown complete");
 		printLog("");
 	}
 
@@ -154,7 +191,7 @@ private:
 int main()
 {
 	printLog("========================================");
-	printLog("BinRenderer - Full RHI System Test");
+	printLog("🎮 BinRenderer - Full RHI System Test");
 	printLog("========================================");
 	printLog("");
 	printLog("This example demonstrates:");
@@ -166,22 +203,25 @@ int main()
 	printLog("     - Rendering/RHIMesh (self-contained)");
 	printLog("  ✅ RenderGraph system");
 	printLog("     - Declarative render passes");
-	printLog("     - Automatic dependency resolution");
+	printLog("   - Automatic dependency resolution");
 	printLog("  ✅ Configuration system");
 	printLog("     - EngineConfig for centralized settings");
 	printLog("  ✅ Input system");
 	printLog("     - Platform-independent InputManager");
 	printLog("");
-	printLog("Next Steps:");
-	printLog("  1. Add real window integration (GLFW/SDL)");
-	printLog("  2. Implement actual rendering");
-	printLog("  3. Add ImGui support");
-	printLog("  4. Integrate with existing Vulkan passes");
-	printLog("  5. Add DirectX 12 / Metal backends");
+	printLog("📋 Next Steps:");
+	printLog("  1. ✅ RHI Application framework");
+	printLog("  2. ✅ RenderGraph system");
+	printLog("  3. 🚧 Window integration (GLFW/SDL)");
+	printLog("  4. 🚧 Actual rendering implementation");
+	printLog("  5. ⏳ ImGui support");
+	printLog("  6. ⏳ DirectX 12 / Metal backends");
+	printLog("");
 
 	// ========================================
 	// EngineConfig 설정
 	// ========================================
+	printLog("⚙️  Configuring Engine...");
 	EngineConfig config = EngineConfig::createDevelopment();
 	config.setAssetsPath("../../assets/")
 		.setWindowSize(1280, 720)
@@ -190,31 +230,49 @@ int main()
 		.setVsync(true)
 		.setValidation(true);
 
-	printLog("Configuration:");
-	printLog("  - Window: {}x{}", config.windowWidth, config.windowHeight);
-	printLog("  - Title: {}", config.windowTitle);
-	printLog("  - Assets: {}", config.assetsPath);
-	printLog("  - Shaders: {}", config.shaderPath);
-	printLog("  - Max Frames: {}", config.maxFramesInFlight);
-	printLog("  - Vsync: {}", config.enableVsync ? "ON" : "OFF");
-	printLog("  - Validation: {}", config.enableValidationLayers ? "ON" : "OFF");
+	printLog("✅ Configuration:");
+	printLog("   - Window: {}x{}", config.windowWidth, config.windowHeight);
+	printLog("   - Title: {}", config.windowTitle);
+	printLog("   - Assets: {}", config.assetsPath);
+	printLog("   - Shaders: {}", config.shaderPath);
+	printLog("   - Max Frames: {}", config.maxFramesInFlight);
+	printLog("   - Vsync: {}", config.enableVsync ? "ON" : "OFF");
+	printLog("   - Validation: {}", config.enableValidationLayers ? "ON" : "OFF");
 	printLog("");
 
 	// ========================================
 	// Application 실행
 	// ========================================
-	printLog("Starting application...");
+	printLog("🚀 Starting application...");
 	printLog("");
 
-	FullRHITestApp listener;
-	RHIApplication app(config, RHIApiType::Vulkan);
-	app.setListener(&listener);
-	app.run();
+	try
+	{
+		FullRHITestApp listener;
+		RHIApplication app(config, RHIApiType::Vulkan);
+		app.setListener(&listener);
+		
+		printLog("📦 Application initialized");
+		printLog("🎬 Running main loop...");
+		printLog("");
+		
+		app.run();
 
-	printLog("");
-	printLog("========================================");
-	printLog("Application finished successfully");
-	printLog("========================================");
+		printLog("");
+		printLog("========================================");
+		printLog("✅ Application finished successfully");
+		printLog("========================================");
+	}
+	catch (const std::exception& e)
+	{
+		printLog("");
+		printLog("========================================");
+		printLog("❌ ERROR: Application failed");
+		printLog("========================================");
+		printLog("Exception: {}", e.what());
+		printLog("");
+		return 1;
+	}
 
 	return 0;
 }

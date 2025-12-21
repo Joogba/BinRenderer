@@ -101,6 +101,11 @@ namespace BinRenderer::Vulkan
 		 */
 		void transitionShaderReadToColor(VkCommandBuffer cmd);
 
+		/**
+		 * @brief COLOR_ATTACHMENT → PRESENT_SRC (Present용)
+		 */
+		void transitionColorToPresent(VkCommandBuffer cmd);
+
 	private:
 		VkImage image_ = VK_NULL_HANDLE;
 		VkFormat format_ = VK_FORMAT_UNDEFINED;
