@@ -1,45 +1,60 @@
 ﻿#pragma once
 
 #include <vulkan/vulkan.h>
+#include "../../Core/RHISwapchain.h"
 #include <vector>
+#include <memory>
 
 namespace BinRenderer::Vulkan
 {
 	// Forward declaration
 	class VulkanContext;
+	class VulkanImageView;
 
 	/**
 	 * @brief Vulkan 스왑체인 래퍼
 	 * 
 	 * Vulkan/Swapchain.h/cpp의 기능을 RHI 구조에 맞게 재구현
 	 */
-	class VulkanSwapchain
+	class VulkanSwapchain : public RHISwapchain
 	{
 	public:
 		VulkanSwapchain(VulkanContext* context);
-		~VulkanSwapchain();
+		~VulkanSwapchain() override;
 
 		// 스왑체인 생성/재생성
 		bool create(VkSurfaceKHR surface, uint32_t width, uint32_t height, bool vsync = false);
 		void destroy();
-		bool recreate(uint32_t width, uint32_t height, bool vsync = false);
+		bool recreate(uint32_t width, uint32_t height) override;
+		bool recreate(uint32_t width, uint32_t height, bool vsync);
 
-		// 이미지 획득 및 Present
+		// 이미지 획득 및 Present (Vulkan 전용)
 		VkResult acquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t& imageIndex);
 		VkResult present(VkQueue queue, uint32_t imageIndex, VkSemaphore waitSemaphore = VK_NULL_HANDLE);
 
-		// 접근자
+		// ✅ RHISwapchain 인터페이스 구현
+		bool acquireNextImage(uint32_t& imageIndex, RHISemaphore* semaphore = nullptr, RHIFence* fence = nullptr) override;
+		bool present(uint32_t imageIndex, RHISemaphore* waitSemaphore = nullptr) override;
+		uint32_t getImageCount() const override { return static_cast<uint32_t>(images_.size()); }
+		RHIFormat getFormat() const override;
+		uint32_t getWidth() const override { return extent_.width; }
+		uint32_t getHeight() const override { return extent_.height; }
+		RHIImage* getImage(uint32_t index) const override { return nullptr; } // TODO: VulkanImage 래퍼
+		RHIImageView* getImageView(uint32_t index) const override;  // ✅ 구현됨
+		RHIPresentMode getPresentMode() const override;
+		void setPresentMode(RHIPresentMode mode) override;
+
+		// Vulkan 전용 접근자
 		VkSwapchainKHR getHandle() const { return swapchain_; }
 		VkFormat getColorFormat() const { return colorFormat_; }
 		VkColorSpaceKHR getColorSpace() const { return colorSpace_; }
 		VkExtent2D getExtent() const { return extent_; }
-		uint32_t getImageCount() const { return static_cast<uint32_t>(images_.size()); }
 
-		const std::vector<VkImage>& getImages() const { return images_; }
-		VkImage getImage(uint32_t index) const { return images_[index]; }
+		const std::vector<VkImage>& getVkImages() const { return images_; }
+		VkImage getVkImage(uint32_t index) const { return images_[index]; }
 
-		const std::vector<VkImageView>& getImageViews() const { return imageViews_; }
-		VkImageView getImageView(uint32_t index) const { return imageViews_[index]; }
+		const std::vector<VkImageView>& getVkImageViews() const { return imageViews_; }
+		VkImageView getVkImageView(uint32_t index) const { return imageViews_[index]; }
 
 	private:
 		VulkanContext* context_;
@@ -55,6 +70,9 @@ namespace BinRenderer::Vulkan
 		// 스왑체인 이미지
 		std::vector<VkImage> images_;
 		std::vector<VkImageView> imageViews_;
+		
+		// ✅ RHIImageView 래퍼들
+		std::vector<std::unique_ptr<RHIImageView>> imageViewWrappers_;
 
 		// 헬퍼 함수
 		struct SwapchainSupportDetails
@@ -72,6 +90,10 @@ namespace BinRenderer::Vulkan
 		bool createSwapchain(uint32_t width, uint32_t height, bool vsync);
 		bool createImageViews();
 		void destroyImageViews();
+		
+		// ✅ RHIImageView 래퍼 생성/삭제
+		void createImageViewWrappers();
+		void destroyImageViewWrappers();
 	};
 
 } // namespace BinRenderer::Vulkan

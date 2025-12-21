@@ -42,6 +42,13 @@ namespace BinRenderer::Vulkan
 		return createSwapchain(width, height, vsync);
 	}
 
+	bool VulkanSwapchain::recreate(uint32_t width, uint32_t height)
+	{
+		// 기본값으로 vsync를 false로 설정하거나, 현재 presentMode_ 유지
+		bool vsync = (presentMode_ == VK_PRESENT_MODE_FIFO_KHR);
+		return recreate(width, height, vsync);
+	}
+
 	VkResult VulkanSwapchain::acquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t& imageIndex)
 	{
 		return vkAcquireNextImageKHR(
@@ -289,16 +296,155 @@ namespace BinRenderer::Vulkan
 			}
 		}
 
+		// ✅ RHIImageView 래퍼 생성
+		createImageViewWrappers();
+
 		return true;
 	}
 
 	void VulkanSwapchain::destroyImageViews()
 	{
+		// ✅ 래퍼 먼저 삭제
+		destroyImageViewWrappers();
+
 		for (auto imageView : imageViews_)
 		{
 			vkDestroyImageView(context_->getDevice(), imageView, nullptr);
 		}
 		imageViews_.clear();
+	}
+
+	void VulkanSwapchain::createImageViewWrappers()
+	{
+		imageViewWrappers_.clear();
+		imageViewWrappers_.reserve(imageViews_.size());
+
+		for (size_t i = 0; i < imageViews_.size(); i++)
+		{
+			// ✅ VkImageView를 RHIImageView*로 캐스팅하여 저장
+			// 실제로는 VkImageView 핸들을 그대로 사용
+			imageViewWrappers_.push_back(
+				std::unique_ptr<RHIImageView>(reinterpret_cast<RHIImageView*>(imageViews_[i]))
+			);
+		}
+
+		printLog("✅ Created {} RHIImageView wrappers", imageViewWrappers_.size());
+	}
+
+	void VulkanSwapchain::destroyImageViewWrappers()
+	{
+		// ✅ unique_ptr을 release()하여 실제 삭제를 방지
+		// (VkImageView는 destroyImageViews()에서 파괴됨)
+		for (auto& wrapper : imageViewWrappers_)
+		{
+			wrapper.release();  // 소유권 해제 (delete 호출 안함)
+		}
+		imageViewWrappers_.clear();
+	}
+
+	RHIImageView* VulkanSwapchain::getImageView(uint32_t index) const
+	{
+		if (index < imageViewWrappers_.size())
+		{
+			return imageViewWrappers_[index].get();
+		}
+		return nullptr;
+	}
+
+	// ========================================
+	// RHISwapchain 인터페이스 구현
+	// ========================================
+
+	bool VulkanSwapchain::acquireNextImage(uint32_t& imageIndex, RHISemaphore* semaphore, RHIFence* fence)
+	{
+		// TODO: RHISemaphore, RHIFence 래퍼 구현 필요
+		// 현재는 내부 세마포어 사용
+		VkResult result = vkAcquireNextImageKHR(
+			context_->getDevice(),
+			swapchain_,
+			UINT64_MAX,
+			VK_NULL_HANDLE,  // TODO: semaphore
+			VK_NULL_HANDLE,  // TODO: fence
+			&imageIndex
+		);
+
+		return (result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR);
+	}
+
+	bool VulkanSwapchain::present(uint32_t imageIndex, RHISemaphore* waitSemaphore)
+	{
+		// TODO: RHISemaphore 래퍼 구현 필요
+		VkPresentInfoKHR presentInfo{};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.waitSemaphoreCount = 0;  // TODO: waitSemaphore
+		presentInfo.pWaitSemaphores = nullptr;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = &swapchain_;
+		presentInfo.pImageIndices = &imageIndex;
+
+		VkResult result = vkQueuePresentKHR(context_->getPresentQueue(), &presentInfo);
+		return (result == VK_SUCCESS);
+	}
+
+	RHIFormat VulkanSwapchain::getFormat() const
+	{
+		// Vulkan VkFormat을 RHIFormat으로 변환
+		switch (colorFormat_)
+		{
+		case VK_FORMAT_B8G8R8A8_UNORM:
+			return RHI_FORMAT_B8G8R8A8_UNORM;
+		case VK_FORMAT_R8G8B8A8_UNORM:
+			return RHI_FORMAT_R8G8B8A8_UNORM;
+		case VK_FORMAT_B8G8R8A8_SRGB:
+			return RHI_FORMAT_B8G8R8A8_SRGB;
+		case VK_FORMAT_R8G8B8A8_SRGB:
+			return RHI_FORMAT_R8G8B8A8_SRGB;
+		default:
+			return RHI_FORMAT_UNDEFINED;
+		}
+	}
+
+	RHIPresentMode VulkanSwapchain::getPresentMode() const
+	{
+		// Vulkan VkPresentModeKHR을 RHIPresentMode로 변환
+		switch (presentMode_)
+		{
+		case VK_PRESENT_MODE_IMMEDIATE_KHR:
+			return RHI_PRESENT_MODE_IMMEDIATE_KHR;
+		case VK_PRESENT_MODE_MAILBOX_KHR:
+			return RHI_PRESENT_MODE_MAILBOX_KHR;
+		case VK_PRESENT_MODE_FIFO_KHR:
+			return RHI_PRESENT_MODE_FIFO_KHR;
+		case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
+			return RHI_PRESENT_MODE_FIFO_RELAXED_KHR;
+		default:
+			return RHI_PRESENT_MODE_FIFO_KHR;
+		}
+	}
+
+	void VulkanSwapchain::setPresentMode(RHIPresentMode mode)
+	{
+		// RHIPresentMode를 Vulkan VkPresentModeKHR로 변환
+		switch (mode)
+		{
+		case RHI_PRESENT_MODE_IMMEDIATE_KHR:
+			presentMode_ = VK_PRESENT_MODE_IMMEDIATE_KHR;
+			break;
+		case RHI_PRESENT_MODE_MAILBOX_KHR:
+			presentMode_ = VK_PRESENT_MODE_MAILBOX_KHR;
+			break;
+		case RHI_PRESENT_MODE_FIFO_KHR:
+			presentMode_ = VK_PRESENT_MODE_FIFO_KHR;
+			break;
+		case RHI_PRESENT_MODE_FIFO_RELAXED_KHR:
+			presentMode_ = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
+			break;
+		default:
+			presentMode_ = VK_PRESENT_MODE_FIFO_KHR;
+			break;
+		}
+
+		// TODO: 스왑체인 재생성 필요
 	}
 
 } // namespace BinRenderer::Vulkan
