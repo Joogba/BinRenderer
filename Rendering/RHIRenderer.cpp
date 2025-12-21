@@ -28,70 +28,121 @@ namespace BinRenderer
 		printLog("RHIRenderer::initialize - {}x{}, color: {}, depth: {}", 
 			width, height, static_cast<int>(colorFormat), static_cast<int>(depthFormat));
 
-		// 1. Uniform buffers 생성
-		createUniformBuffers();
+		try
+		{
+			// 1. Uniform buffers 생성
+			createUniformBuffers();
 
-		// 2. Render targets 생성
-		createRenderTargets(width, height);
+			// 2. Render targets 생성
+			createRenderTargets(width, height);
 
-		// 3. Pipelines 생성
-		createPipelines(colorFormat, depthFormat);
+			// 3. Pipelines 생성
+			createPipelines(colorFormat, depthFormat);
 
-		// 4. Descriptor sets 생성
-		createDescriptorSets();
+			// 4. Descriptor sets 생성
+			createDescriptorSets();
 
-		// 5. RenderGraph 생성
-		renderGraph_ = std::make_unique<RenderGraph>(rhi_);
-		setupRenderPasses();
-		renderGraph_->compile();
+			// RenderGraph는 RHIApplication에서 관리
+			// renderGraph_ = std::make_unique<RenderGraph>(rhi_);
+			// setupRenderPasses();
+			// renderGraph_->compile();
 
-		printLog("RHIRenderer initialized successfully");
-		return true;
+			printLog("✅ RHIRenderer initialized successfully");
+			return true;
+		}
+		catch (const std::exception& e)
+		{
+			printLog("❌ ERROR: RHIRenderer initialization failed: {}", e.what());
+			
+			// 부분적으로 생성된 리소스 정리
+			shutdown();
+			
+			return false;
+		}
 	}
 
 	void RHIRenderer::shutdown()
 	{
-		// RenderGraph 정리
-		if (renderGraph_)
+		printLog("RHIRenderer::shutdown - Starting cleanup");
+
+		// RHI가 없으면 종료
+		if (!rhi_)
 		{
-			renderGraph_.reset();
+			printLog("⚠️  RHIRenderer::shutdown - RHI is null, skipping cleanup");
+			return;
+		}
+
+		// GPU 작업이 완료될 때까지 대기
+		try
+		{
+			rhi_->waitIdle();
+		}
+		catch (const std::exception& e)
+		{
+			printLog("⚠️  Warning: waitIdle failed during shutdown: {}", e.what());
 		}
 
 		// Uniform buffers 정리
+		printLog("   Cleaning up uniform buffers...");
 		for (auto* buffer : sceneUniformBuffers_)
 		{
-			if (buffer) rhi_->destroyBuffer(buffer);
+			if (buffer)
+			{
+				try { rhi_->destroyBuffer(buffer); }
+				catch (...) { printLog("⚠️  Warning: Failed to destroy scene uniform buffer"); }
+			}
 		}
+		sceneUniformBuffers_.clear();
+
 		for (auto* buffer : optionsUniformBuffers_)
 		{
-			if (buffer) rhi_->destroyBuffer(buffer);
+			if (buffer)
+			{
+				try { rhi_->destroyBuffer(buffer); }
+				catch (...) { printLog("⚠️  Warning: Failed to destroy options uniform buffer"); }
+			}
 		}
+		optionsUniformBuffers_.clear();
+
 		for (auto* buffer : boneDataUniformBuffers_)
 		{
-			if (buffer) rhi_->destroyBuffer(buffer);
+			if (buffer)
+			{
+				try { rhi_->destroyBuffer(buffer); }
+				catch (...) { printLog("⚠️  Warning: Failed to destroy bone data uniform buffer"); }
+			}
 		}
+		boneDataUniformBuffers_.clear();
 
 		// Render targets 정리
-		if (depthStencilTexture_) rhi_->destroyImage(depthStencilTexture_);
-		if (shadowMapTexture_) rhi_->destroyImage(shadowMapTexture_);
-
-		// Pipelines 정리
-		for (auto& [name, pipeline] : pipelines_)
+		printLog("   Cleaning up render targets...");
+		if (depthStencilTexture_)
 		{
-			if (pipeline) rhi_->destroyPipeline(pipeline);
+			try { rhi_->destroyImage(depthStencilTexture_); }
+			catch (...) { printLog("⚠️  Warning: Failed to destroy depth/stencil texture"); }
+			depthStencilTexture_ = nullptr;
 		}
 
-		// Descriptor sets 정리
-		// TODO: RHI에 destroyDescriptorSet 추가 필요
-		// for (auto& [name, sets] : descriptorSets_)
-		// {
-		// 	for (auto* set : sets)
-		// 	{
-		// 		if (set) rhi_->destroyDescriptorSet(set);
-		// 	}
-		// }
+		if (shadowMapTexture_)
+		{
+			try { rhi_->destroyImage(shadowMapTexture_); }
+			catch (...) { printLog("⚠️  Warning: Failed to destroy shadow map texture"); }
+			shadowMapTexture_ = nullptr;
+		}
 
-		printLog("RHIRenderer shutdown complete");
+		// Pipelines 정리
+		printLog("   Cleaning up pipelines...");
+		for (auto& [name, pipeline] : pipelines_)
+		{
+			if (pipeline)
+			{
+				try { rhi_->destroyPipeline(pipeline); }
+				catch (...) { printLog("⚠️  Warning: Failed to destroy pipeline: {}", name); }
+			}
+		}
+		pipelines_.clear();
+
+		printLog("✅ RHIRenderer shutdown complete");
 	}
 
 	void RHIRenderer::resize(uint32_t width, uint32_t height)
@@ -164,8 +215,8 @@ namespace BinRenderer
 
 	void RHIRenderer::render(RHICommandBuffer* cmd, RHIScene& scene, uint32_t frameIndex, RHIImageView* swapchainImageView)
 	{
-		// TODO: RHIScene에 getModels() 추가 필요
-		std::vector<RHIModel*> visibleModels; // = scene.getModels();
+		// ✅ RHIScene에서 모델 가져오기
+		auto visibleModels = scene.getModels();
 		
 		// Frustum culling
 		if (frustumCullingEnabled_)
@@ -215,6 +266,8 @@ namespace BinRenderer
 
 	void RHIRenderer::createUniformBuffers()
 	{
+		printLog("Creating uniform buffers (maxFramesInFlight: {})...", maxFramesInFlight_);
+
 		for (uint32_t i = 0; i < maxFramesInFlight_; i++)
 		{
 			// Scene uniform buffer
@@ -222,28 +275,50 @@ namespace BinRenderer
 			sceneBufferInfo.size = sizeof(SceneUniform);
 			sceneBufferInfo.usage = RHI_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 			sceneBufferInfo.memoryProperties = RHI_MEMORY_PROPERTY_HOST_VISIBLE_BIT | RHI_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			
 			sceneUniformBuffers_[i] = rhi_->createBuffer(sceneBufferInfo);
+			if (!sceneUniformBuffers_[i])
+			{
+				printLog("❌ ERROR: Failed to create scene uniform buffer {}", i);
+				throw std::runtime_error("Failed to create scene uniform buffer");
+			}
 
 			// Options uniform buffer
 			RHIBufferCreateInfo optionsBufferInfo{};
 			optionsBufferInfo.size = sizeof(OptionsUniform);
 			optionsBufferInfo.usage = RHI_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 			optionsBufferInfo.memoryProperties = RHI_MEMORY_PROPERTY_HOST_VISIBLE_BIT | RHI_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			
 			optionsUniformBuffers_[i] = rhi_->createBuffer(optionsBufferInfo);
+			if (!optionsUniformBuffers_[i])
+			{
+				printLog("❌ ERROR: Failed to create options uniform buffer {}", i);
+				throw std::runtime_error("Failed to create options uniform buffer");
+			}
 
 			// Bone data uniform buffer
 			RHIBufferCreateInfo boneBufferInfo{};
 			boneBufferInfo.size = sizeof(BoneDataUniform);
 			boneBufferInfo.usage = RHI_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 			boneBufferInfo.memoryProperties = RHI_MEMORY_PROPERTY_HOST_VISIBLE_BIT | RHI_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			
 			boneDataUniformBuffers_[i] = rhi_->createBuffer(boneBufferInfo);
+			if (!boneDataUniformBuffers_[i])
+			{
+				printLog("❌ ERROR: Failed to create bone data uniform buffer {}", i);
+				throw std::runtime_error("Failed to create bone data uniform buffer");
+			}
+
+			printLog("   ✅ Frame {} uniform buffers created", i);
 		}
 
-		printLog("Uniform buffers created");
+		printLog("✅ All uniform buffers created successfully");
 	}
 
 	void RHIRenderer::createRenderTargets(uint32_t width, uint32_t height)
 	{
+		printLog("Creating render targets ({}x{})...", width, height);
+
 		// Depth/Stencil image
 		RHIImageCreateInfo depthInfo{};
 		depthInfo.width = width;
@@ -253,18 +328,30 @@ namespace BinRenderer
 		depthInfo.samples = RHI_SAMPLE_COUNT_1_BIT;
 
 		depthStencilTexture_ = rhi_->createImage(depthInfo);
+		if (!depthStencilTexture_)
+		{
+			printLog("❌ ERROR: Failed to create depth/stencil texture");
+			throw std::runtime_error("Failed to create depth/stencil texture");
+		}
+		printLog("   ✅ Depth/stencil texture created");
 
 		// Shadow map image (2048x2048)
 		RHIImageCreateInfo shadowInfo{};
-		shadowInfo.width = 2048;
-		shadowInfo.height = 2048;
-		shadowInfo.format = RHI_FORMAT_D32_SFLOAT;
-		shadowInfo.usage = RHI_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | RHI_IMAGE_USAGE_SAMPLED_BIT;
-		shadowInfo.samples = RHI_SAMPLE_COUNT_1_BIT;
+	shadowInfo.width = 2048;
+	shadowInfo.height = 2048;
+	shadowInfo.format = RHI_FORMAT_D32_SFLOAT;
+	shadowInfo.usage = RHI_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | RHI_IMAGE_USAGE_SAMPLED_BIT;
+	shadowInfo.samples = RHI_SAMPLE_COUNT_1_BIT;
 
 		shadowMapTexture_ = rhi_->createImage(shadowInfo);
+		if (!shadowMapTexture_)
+		{
+			printLog("❌ ERROR: Failed to create shadow map texture");
+			throw std::runtime_error("Failed to create shadow map texture");
+		}
+		printLog("   ✅ Shadow map texture created");
 
-		printLog("✅ Render targets created: {}x{}", width, height);
+		printLog("✅ Render targets created successfully: {}x{}", width, height);
 	}
 
 	void RHIRenderer::createPipelines(RHIFormat colorFormat, RHIFormat depthFormat)
@@ -281,15 +368,6 @@ namespace BinRenderer
 		// 현재는 플레이스홀더
 
 		printLog("✅ Descriptor sets created");
-	}
-
-	void RHIRenderer::setupRenderPasses()
-	{
-		// Forward Pass 추가
-		auto forwardPass = std::make_unique<RHIForwardPassRG>(rhi_);
-		renderGraph_->addPass(std::move(forwardPass));
-
-		printLog("✅ RenderGraph passes setup complete");
 	}
 
 	// ========================================
@@ -312,6 +390,38 @@ namespace BinRenderer
 	void RHIRenderer::updateMaterialDescriptorSets(const std::vector<RHIModel*>& models)
 	{
 		// TODO: Material descriptor sets 업데이트
+	}
+
+	void RHIRenderer::renderForwardModels(RHI* rhi, RHIScene& scene, RHIPipeline* pipeline, uint32_t frameIndex)
+	{
+		// Pipeline이 이미 바인딩되어 있다고 가정
+		
+		auto models = scene.getModels();
+		
+		// TODO: Descriptor sets 바인딩
+		// - Scene Uniform (Camera, Lighting)
+		// - Material Textures
+		// uint32_t currentFrame = frameIndex % maxFramesInFlight_;
+		// rhi->cmdBindDescriptorSets(pipelineLayout_, descriptorSets_[currentFrame], 1);
+
+		// 모델 렌더링
+		for (auto* model : models)
+		{
+			if (!model)
+				continue;
+
+			// ✅ Push constants (Model matrix)
+			PbrPushConstants pushConstants{};
+			pushConstants.model = model->getTransform();
+			pushConstants.materialIndex = 0;  // TODO: Material index 전달
+			
+			// TODO: Pipeline Layout이 필요 - 현재는 주석 처리
+			// rhi->cmdPushConstants(pipelineLayout_, RHI_SHADER_STAGE_VERTEX_BIT, 
+			//                       0, sizeof(PbrPushConstants), &pushConstants);
+
+			// ✅ Draw
+			model->draw(rhi, 1);
+		}
 	}
 
 } // namespace BinRenderer

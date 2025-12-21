@@ -122,8 +122,24 @@ namespace BinRenderer
 		OptionsUniform& getOptionsUniform() { return optionsUniform_; }
 		BoneDataUniform& getBoneDataUniform() { return boneDataUniform_; }
 
-		// RenderGraph 접근
-		RenderGraph* getRenderGraph() { return renderGraph_.get(); }
+		// ✅ Uniform Buffer 접근자 (Descriptor Set 바인딩용)
+		RHIBuffer* getSceneUniformBuffer(uint32_t frameIndex) const 
+		{ 
+			return frameIndex < sceneUniformBuffers_.size() ? sceneUniformBuffers_[frameIndex] : nullptr; 
+		}
+		RHIBuffer* getOptionsUniformBuffer(uint32_t frameIndex) const 
+		{ 
+			return frameIndex < optionsUniformBuffers_.size() ? optionsUniformBuffers_[frameIndex] : nullptr; 
+		}
+		RHIBuffer* getBoneDataUniformBuffer(uint32_t frameIndex) const 
+		{ 
+			return frameIndex < boneDataUniformBuffers_.size() ? boneDataUniformBuffers_[frameIndex] : nullptr; 
+		}
+
+		// ========================================
+		// Forward Rendering 헬퍼 (ForwardPass에서 사용)
+		// ========================================
+		void renderForwardModels(RHI* rhi, RHIScene& scene, RHIPipeline* pipeline, uint32_t frameIndex);
 
 	private:
 		// ========================================
@@ -133,7 +149,6 @@ namespace BinRenderer
 		void createRenderTargets(uint32_t width, uint32_t height);
 		void createUniformBuffers();
 		void createDescriptorSets();
-		void setupRenderPasses();
 
 		// ========================================
 		// 렌더링 헬퍼
@@ -147,7 +162,6 @@ namespace BinRenderer
 		// ========================================
 		RHI* rhi_;
 		uint32_t maxFramesInFlight_;
-		std::unique_ptr<RenderGraph> renderGraph_;
 
 		uint32_t width_ = 0;
 		uint32_t height_ = 0;
