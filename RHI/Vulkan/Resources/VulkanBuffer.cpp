@@ -19,11 +19,26 @@ namespace BinRenderer::Vulkan
 		size_ = createInfo.size;
 		usage_ = createInfo.usage;
 
+		// ✅ RHI usage flags를 Vulkan usage flags로 변환
+		VkBufferUsageFlags vkUsage = 0;
+		if (createInfo.usage & RHI_BUFFER_USAGE_VERTEX_BUFFER_BIT)
+			vkUsage |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		if (createInfo.usage & RHI_BUFFER_USAGE_INDEX_BUFFER_BIT)
+			vkUsage |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+		if (createInfo.usage & RHI_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+			vkUsage |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		if (createInfo.usage & RHI_BUFFER_USAGE_STORAGE_BUFFER_BIT)
+			vkUsage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+		if (createInfo.usage & RHI_BUFFER_USAGE_TRANSFER_SRC_BIT)
+			vkUsage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		if (createInfo.usage & RHI_BUFFER_USAGE_TRANSFER_DST_BIT)
+			vkUsage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
 		// Vulkan 버퍼 생성 정보
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferInfo.size = createInfo.size;
-		bufferInfo.usage = static_cast<VkBufferUsageFlags>(createInfo.usage);
+		bufferInfo.usage = vkUsage; // ✅ 변환된 usage 사용
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 		if (vkCreateBuffer(device_, &bufferInfo, nullptr, &buffer_) != VK_SUCCESS)

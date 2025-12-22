@@ -24,11 +24,15 @@ namespace BinRenderer::Vulkan
 
 		// Vulkan 네이티브 접근
 		VkDescriptorSetLayout getVkDescriptorSetLayout() const { return layout_; }
+		
+		// ✅ Binding 정보 조회
+		const std::vector<VkDescriptorSetLayoutBinding>& getBindings() const { return bindings_; }
 
 	private:
 		VkDevice device_;
 		VkDescriptorSetLayout layout_ = VK_NULL_HANDLE;
 		uint32_t bindingCount_ = 0;
+		std::vector<VkDescriptorSetLayoutBinding> bindings_;  // ✅ Binding 정보 저장
 	};
 
 	/**
@@ -88,11 +92,11 @@ namespace BinRenderer::Vulkan
 
 	/**
 	 * @brief Vulkan 디스크립터 셋
-  */
+	 */
 	class VulkanDescriptorSet : public RHIDescriptorSet
 	{
 	public:
-		VulkanDescriptorSet(VkDevice device, VkDescriptorSet descriptorSet);
+		VulkanDescriptorSet(VkDevice device, VkDescriptorSet descriptorSet, VulkanDescriptorSetLayout* layout);  // ✅ Layout 추가
 		~VulkanDescriptorSet() override;
 
 		// RHIDescriptorSet 인터페이스 구현
@@ -105,6 +109,7 @@ namespace BinRenderer::Vulkan
 	private:
 		VkDevice device_;
 		VkDescriptorSet descriptorSet_;
+		VulkanDescriptorSetLayout* layout_;  // ✅ Layout 참조 저장
 	};
 
 } // namespace BinRenderer::Vulkan

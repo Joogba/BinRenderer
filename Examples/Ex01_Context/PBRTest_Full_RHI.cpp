@@ -58,35 +58,35 @@ public:
 		printLog("==============================================");
 		printLog("");
 
-		// Camera 설정 (PBRTest_Lightweight 참고)
+		// Camera 설정 (정면 뷰 - Vulkan Y축 고려)
 		camera.setType(RHICamera::CameraType::FirstPerson);
-		camera.setPosition(glm::vec3(0.0f, 5.0f, -10.0f));
-		camera.setRotation(glm::vec3(-20.0f, 0.0f, 0.0f));
-		camera.setMovementSpeed(10.0f);
+		camera.setPosition(glm::vec3(0.0f, 1.0f, 5.0f));  // ✅ Z=5 (헬멧들 뒤)
+		camera.setRotation(glm::vec3(-10.0f, 180.0f, 0.0f)); // ✅ Y=180도 (뒤돌아봄)
+		camera.setMovementSpeed(5.0f);
 		camera.setRotationSpeed(0.1f);
 		
 		// Perspective 설정
 		const float aspectRatio = 1280.0f / 720.0f;
-		camera.setPerspective(75.0f, aspectRatio, 0.1f, 512.0f);
+		camera.setPerspective(60.0f, aspectRatio, 0.1f, 100.0f);
 		
 		printLog("✅ Camera initialized:");
-		printLog("   - Position: (0, 5, -10)");
-		printLog("   - Rotation: (-20, 0, 0)");
-		printLog("   - FOV: 75°, Aspect: {:.2f}", aspectRatio);
-		printLog("   - Movement speed: 10.0");
-		printLog("");
+		printLog("   - Position: (0, 1, 5) - behind helmets");
+		printLog("   - Rotation: (-10, 180, 0) - looking at helmets");
+		printLog("   - FOV: 60°, Aspect: {:.2f}", aspectRatio);
+		printLog("   - Movement speed: 5.0");
+		printLog("");  // ✅ Fix: 빈 문자열 전달
 
 		// 씬에 모델 추가
 		const std::string helmetPath = "../../assets/models/DamagedHelmet.glb";
 		
-		printLog("📦 Adding 3 helmet instances with GPU instancing...");
+		printLog("📦 Adding 3 helmet instances...");
 		
 		// 첫 번째 헬멧: 왼쪽
 		{
-			glm::vec3 position(-5.0f, 0.0f, 0.0f);
+			glm::vec3 position(-2.0f, 0.0f, 0.0f);  // ✅ Z=0 (원점)
 			glm::mat4 translate = glm::translate(glm::mat4(1.0f), position);
-			glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
-			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+			glm::mat4 rotation = glm::mat4(1.0f);
 			glm::mat4 transform = translate * scale * rotation;
 			
 			scene.addModelInstance(helmetPath, "Helmet_Left", transform);
@@ -94,10 +94,10 @@ public:
 		
 		// 두 번째 헬멧: 중앙
 		{
-			glm::vec3 position(0.0f, 0.0f, 0.0f);
+			glm::vec3 position(0.0f, 0.0f, 0.0f);  // ✅ Z=0 (원점 중앙)
 			glm::mat4 translate = glm::translate(glm::mat4(1.0f), position);
-			glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
-			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+			glm::mat4 rotation = glm::mat4(1.0f);
 			glm::mat4 transform = translate * scale * rotation;
 			
 			scene.addModelInstance(helmetPath, "Helmet_Center", transform);
@@ -105,10 +105,10 @@ public:
 		
 		// 세 번째 헬멧: 오른쪽
 		{
-			glm::vec3 position(5.0f, 0.0f, 0.0f);
+			glm::vec3 position(2.0f, 0.0f, 0.0f);  // ✅ Z=0 (원점 우측)
 			glm::mat4 translate = glm::translate(glm::mat4(1.0f), position);
-			glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
-			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+			glm::mat4 rotation = glm::mat4(1.0f);
 			glm::mat4 transform = translate * scale * rotation;
 			
 			scene.addModelInstance(helmetPath, "Helmet_Right", transform);

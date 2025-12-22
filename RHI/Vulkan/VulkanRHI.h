@@ -32,6 +32,7 @@ namespace BinRenderer::Vulkan
 
 		// 스왑체인 접근
 		RHISwapchain* getSwapchain() const override { return swapchain_.get(); }
+		RHIImageView* getSwapchainImageView(uint32_t index) const;
 
 		// 리소스 생성
 		RHIBuffer* createBuffer(const RHIBufferCreateInfo& createInfo) override;
@@ -82,6 +83,9 @@ namespace BinRenderer::Vulkan
 		// ✅ Descriptor Sets 바인딩 (Pipeline 사용)
 		void cmdBindDescriptorSets(RHIPipeline* pipeline, uint32_t firstSet, RHIDescriptorSet** sets, uint32_t setCount) override;
 
+		// ✅ Push Constants (Pipeline 사용)
+		void cmdPushConstants(RHIPipeline* pipeline, RHIShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues) override;
+
 		// ✅ Dynamic Rendering
 		void cmdBeginRendering(uint32_t width, uint32_t height, RHIImageView* colorAttachment, RHIImageView* depthAttachment = nullptr) override;
 		void cmdEndRendering() override;
@@ -102,6 +106,7 @@ namespace BinRenderer::Vulkan
 		std::vector<VkSemaphore> imageAvailableSemaphores_;
 		std::vector<VkSemaphore> renderFinishedSemaphores_;
 		std::vector<VkFence> inFlightFences_;
+		std::vector<VkFence> imagesInFlight_;  // ✅ 각 swapchain image가 사용 중인 fence 추적
 
 		// 프레임 관리
 		uint32_t currentFrameIndex_ = 0;

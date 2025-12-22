@@ -88,11 +88,23 @@ namespace BinRenderer
 		RHIDescriptorSet* iblDescriptorSet_ = nullptr;        // 공유
 		RHIDescriptorSet* shadowDescriptorSet_ = nullptr;     // 공유
 
+		// ✅ Dummy Resources (Material/IBL/Shadow용)
+		RHIBuffer* dummyMaterialBuffer_ = nullptr;
+		RHIImage* dummyTexture_ = nullptr;          // 흰색 1x1 texture
+		RHIImageView* dummyTextureView_ = nullptr;
+		RHISampler* dummySampler_ = nullptr;
+		RHIImage* dummyCubemap_ = nullptr;          // 검은색 1x1 cubemap
+		RHIImageView* dummyCubemapView_ = nullptr;
+		RHIImage* dummyShadowMap_ = nullptr;        // 1x1 depth texture
+		RHIImageView* dummyShadowMapView_ = nullptr;
+
 		void createPipeline();
 		void destroyPipeline();
 		void createDescriptorSets();
 		void destroyDescriptorSets();
 		void updateDescriptorSets(uint32_t frameIndex);
+		void createDummyResources();
+		void destroyDummyResources();
 	};
 
 } // namespace BinRenderer

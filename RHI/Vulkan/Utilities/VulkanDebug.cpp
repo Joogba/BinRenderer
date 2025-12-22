@@ -146,14 +146,35 @@ namespace BinRenderer::Vulkan
 		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 		void* pUserData)
 	{
+		// ✅ printLog()를 사용하여 파일에도 기록되도록 수정
+		const char* severityStr = "";
+		const char* typeStr = "";
+
+		// Severity 문자열
+		if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+			severityStr = "❌ ERROR";
+		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+			severityStr = "⚠️  WARNING";
+		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+			severityStr = "ℹ️  INFO";
+		else
+			severityStr = "🔍 VERBOSE";
+
+		// Type 문자열
+		if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT)
+			typeStr = "[Validation]";
+		else if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
+			typeStr = "[Performance]";
+		else
+			typeStr = "[General]";
+
+		// ✅ printLog() 사용 (파일 + 콘솔 출력)
+		printLog("{} {} {}", severityStr, typeStr, pCallbackData->pMessage);
+
+		// Custom callback 호출
 		if (s_debugCallback)
 		{
 			s_debugCallback(messageSeverity, messageType, pCallbackData->pMessage);
-		}
-		else
-		{
-			// 기본 출력
-			std::cerr << "[Vulkan Validation] " << pCallbackData->pMessage << std::endl;
 		}
 
 		return VK_FALSE;

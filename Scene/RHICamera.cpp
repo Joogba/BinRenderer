@@ -14,22 +14,23 @@ namespace BinRenderer
 	{
 		glm::mat4 currentMatrix = matrices_.view;
 
-		glm::mat4 rotM = glm::mat4(1.0f);
-		glm::mat4 transM;
-
-		rotM = glm::rotate(rotM, glm::radians(rotation_.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		rotM = glm::rotate(rotM, glm::radians(rotation_.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		rotM = glm::rotate(rotM, glm::radians(rotation_.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-		transM = glm::translate(glm::mat4(1.0f), position_);
-
 		if (type_ == CameraType::FirstPerson)
 		{
-			matrices_.view = rotM * transM;
+			// FirstPerson: 카메라 기준 view matrix
+			glm::mat4 rotM = glm::mat4(1.0f);
+			rotM = glm::rotate(rotM, glm::radians(rotation_.x), glm::vec3(1.0f, 0.0f, 0.0f));
+			rotM = glm::rotate(rotM, glm::radians(rotation_.y), glm::vec3(0.0f, 1.0f, 0.0f));
+			rotM = glm::rotate(rotM, glm::radians(rotation_.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+			// view = inverse(translate * rotate) = transpose(rotate) * translate(-position)
+			matrices_.view = glm::transpose(rotM) * glm::translate(glm::mat4(1.0f), -position_);
 		}
 		else
 		{
-			matrices_.view = transM * rotM;
+			// LookAt: 카메라가 원점을 향하도록
+			glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f); // 원점을 봄
+			glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);     // Y축이 위
+			matrices_.view = glm::lookAt(position_, target, up);
 		}
 
 		viewPos_ = glm::vec4(position_, 0.0f) * glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f);

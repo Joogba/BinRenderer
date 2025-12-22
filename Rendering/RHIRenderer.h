@@ -141,6 +141,12 @@ namespace BinRenderer
 		// ========================================
 		void renderForwardModels(RHI* rhi, RHIScene& scene, RHIPipeline* pipeline, uint32_t frameIndex);
 
+		// ========================================
+		// Getters
+		// ========================================
+		uint32_t getWidth() const { return width_; }
+		uint32_t getHeight() const { return height_; }
+
 	private:
 		// ========================================
 		// 초기화 헬퍼

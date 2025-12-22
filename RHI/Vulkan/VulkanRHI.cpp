@@ -83,21 +83,33 @@ namespace BinRenderer::Vulkan
 		VkDevice device = context_ ? context_->getDevice() : VK_NULL_HANDLE;
 		if (device != VK_NULL_HANDLE)
 		{
-			for (size_t i = 0; i < maxFramesInFlight_; i++)
+			// ✅ 모든 semaphores 정리 (maxFramesInFlight가 아니라 실제 개수)
+			for (auto semaphore : imageAvailableSemaphores_)
 			{
-				if (imageAvailableSemaphores_[i] != VK_NULL_HANDLE)
+				if (semaphore != VK_NULL_HANDLE)
 				{
-					vkDestroySemaphore(device, imageAvailableSemaphores_[i], nullptr);
-				}
-				if (renderFinishedSemaphores_[i] != VK_NULL_HANDLE)
-				{
-					vkDestroySemaphore(device, renderFinishedSemaphores_[i], nullptr);
-				}
-				if (inFlightFences_[i] != VK_NULL_HANDLE)
-				{
-					vkDestroyFence(device, inFlightFences_[i], nullptr);
+					vkDestroySemaphore(device, semaphore, nullptr);
 				}
 			}
+			for (auto semaphore : renderFinishedSemaphores_)
+			{
+				if (semaphore != VK_NULL_HANDLE)
+				{
+					vkDestroySemaphore(device, semaphore, nullptr);
+				}
+			}
+			imageAvailableSemaphores_.clear();
+			renderFinishedSemaphores_.clear();
+
+			// ✅ Fences 정리 (maxFramesInFlight 개수)
+			for (auto fence : inFlightFences_)
+			{
+				if (fence != VK_NULL_HANDLE)
+				{
+					vkDestroyFence(device, fence, nullptr);
+				}
+			}
+			inFlightFences_.clear();
 
 			// 전송 커맨드 풀 정리
 			if (transferCommandPool_ != VK_NULL_HANDLE)
@@ -143,13 +155,15 @@ namespace BinRenderer::Vulkan
 		currentFrameIndex_ = (currentFrameIndex_ + 1) % maxFramesInFlight_;
 
 		VkDevice device = context_->getDevice();
+		
+		// ✅ 현재 frame의 fence 대기
 		vkWaitForFences(device, 1, &inFlightFences_[currentFrameIndex_], VK_TRUE, UINT64_MAX);
 
-		VkResult result = swapchain_->acquireNextImage(imageAvailableSemaphores_[currentFrameIndex_], imageIndex);
-
+		// ✅ 먼저 fence만으로 imageIndex 획득
+		VkResult result = swapchain_->acquireNextImage(VK_NULL_HANDLE, imageIndex);
+		
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
-			// 스왑체인 재생성 필요
 			return false;
 		}
 		else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
@@ -158,8 +172,21 @@ namespace BinRenderer::Vulkan
 			return false;
 		}
 
+		// ✅ 이 image가 이전 frame에서 사용 중이면 대기
+		if (imagesInFlight_[imageIndex] != VK_NULL_HANDLE)
+		{
+			vkWaitForFences(device, 1, &imagesInFlight_[imageIndex], VK_TRUE, UINT64_MAX);
+		}
+		
+		// ✅ 이 image를 현재 frame의 fence로 마크
+		imagesInFlight_[imageIndex] = inFlightFences_[currentFrameIndex_];
+
+		// ✅ imageIndex를 저장 (submitCommands와 endFrame에서 사용)
 		currentImageIndex_ = imageIndex;
+		
+		// ✅ fence reset은 acquire 후, submit 전에 수행
 		vkResetFences(device, 1, &inFlightFences_[currentFrameIndex_]);
+		
 		return true;
 	}
 
@@ -171,8 +198,8 @@ namespace BinRenderer::Vulkan
 		}
 
 		// submitCommands()가 이미 호출되었으므로 여기서는 present만 수행
-		// Present
-		VkResult result = swapchain_->present(context_->getPresentQueue(), imageIndex, renderFinishedSemaphores_[currentFrameIndex_]);
+		// ✅ currentImageIndex_로 semaphore 사용 (swapchain image별 semaphore)
+		VkResult result = swapchain_->present(context_->getPresentQueue(), imageIndex, renderFinishedSemaphores_[currentImageIndex_]);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 		{
@@ -193,6 +220,17 @@ namespace BinRenderer::Vulkan
 	uint32_t VulkanRHI::getCurrentImageIndex() const
 	{
 		return currentImageIndex_;
+	}
+
+	RHIImageView* VulkanRHI::getSwapchainImageView(uint32_t index) const
+	{
+		if (!swapchain_)
+		{
+			printLog("❌ ERROR: Swapchain is null in getSwapchainImageView");
+			return nullptr;
+		}
+
+		return swapchain_->getImageView(index);
 	}
 
 	RHIBuffer* VulkanRHI::createBuffer(const RHIBufferCreateInfo& createInfo)
@@ -350,20 +388,18 @@ if (!imageView->create(viewType, aspectFlags))
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		
-		// imageAvailable 세마포어 대기
-		VkSemaphore waitSemaphores[] = { imageAvailableSemaphores_[currentFrameIndex_] };
-		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = waitSemaphores;
-		submitInfo.pWaitDstStageMask = waitStages;
+		// ❌ acquire에서 semaphore를 사용하지 않았으므로 wait 불필요
+		submitInfo.waitSemaphoreCount = 0;
+		submitInfo.pWaitSemaphores = nullptr;
+		submitInfo.pWaitDstStageMask = nullptr;
 		
 		// 커맨드 버퍼 설정
 		submitInfo.commandBufferCount = 1;
 		VkCommandBuffer vkCmdBuffer = cmdBuffer->getVkCommandBuffer();
 		submitInfo.pCommandBuffers = &vkCmdBuffer;
 		
-		// renderFinished 세마포어 시그널
-		VkSemaphore signalSemaphores[] = { renderFinishedSemaphores_[currentFrameIndex_] };
+		// ✅ currentImageIndex_로 semaphore 선택 (present에서 사용)
+		VkSemaphore signalSemaphores[] = { renderFinishedSemaphores_[currentImageIndex_] };
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
@@ -524,6 +560,47 @@ if (!imageView->create(viewType, aspectFlags))
 		
 		// layout이 nullptr이거나 다른 타입인 경우 - 에러 처리
 		printLog("❌ ERROR: Invalid pipeline layout in cmdPushConstants");
+	}
+
+	void VulkanRHI::cmdPushConstants(RHIPipeline* pipeline, RHIShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues)
+	{
+		if (commandBuffers_.empty() || currentFrameIndex_ >= commandBuffers_.size())
+		{
+			return;
+		}
+
+		VulkanCommandBuffer* cmdBuffer = commandBuffers_[currentFrameIndex_];
+		if (!cmdBuffer)
+		{
+			return;
+		}
+
+		if (!pipeline)
+		{
+			printLog("❌ ERROR: Pipeline is null in cmdPushConstants");
+			return;
+		}
+
+		// Pipeline에서 layout 가져오기
+		auto* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
+		VkPipelineLayout vkPipelineLayout = vulkanPipeline->getVkPipelineLayout();
+		
+		if (vkPipelineLayout == VK_NULL_HANDLE)
+		{
+			printLog("❌ ERROR: Pipeline layout is null in cmdPushConstants");
+			return;
+		}
+
+		// Push constants 전송
+		VkCommandBuffer vkCmdBuffer = cmdBuffer->getVkCommandBuffer();
+		vkCmdPushConstants(
+			vkCmdBuffer,
+			vkPipelineLayout,
+			static_cast<VkShaderStageFlags>(stageFlags),
+			offset,
+			size,
+			pValues
+		);
 	}
 
 	void VulkanRHI::cmdSetViewport(const RHIViewport& viewport)
@@ -691,8 +768,11 @@ auto* vulkanBuffer = static_cast<VulkanBuffer*>(buffer);
 
 	void VulkanRHI::createSyncObjects()
 	{
-		imageAvailableSemaphores_.resize(maxFramesInFlight_);
-		renderFinishedSemaphores_.resize(maxFramesInFlight_);
+		// ✅ Swapchain image 개수만큼 semaphores 생성 (Vulkan Best Practice)
+		uint32_t swapchainImageCount = swapchain_ ? swapchain_->getImageCount() : 3;
+		
+		imageAvailableSemaphores_.resize(swapchainImageCount);
+		renderFinishedSemaphores_.resize(swapchainImageCount);
 		inFlightFences_.resize(maxFramesInFlight_);
 
 		VkSemaphoreCreateInfo semaphoreInfo{};
@@ -704,12 +784,23 @@ auto* vulkanBuffer = static_cast<VulkanBuffer*>(buffer);
 
 		VkDevice device = context_->getDevice();
 
-		for (size_t i = 0; i < maxFramesInFlight_; i++)
+		// ✅ Swapchain image 개수만큼 semaphores 생성
+		for (size_t i = 0; i < swapchainImageCount; i++)
 		{
 			vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores_[i]);
 			vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores_[i]);
+		}
+		
+		// ✅ Frame-in-flight만큼 fences 생성
+		for (size_t i = 0; i < maxFramesInFlight_; i++)
+		{
 			vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences_[i]);
 		}
+
+		// ✅ Per-image fence tracking
+		imagesInFlight_.resize(swapchainImageCount, VK_NULL_HANDLE);
+
+		printLog("✅ Sync objects created: {} semaphores (per image), {} fences (per frame)", swapchainImageCount, maxFramesInFlight_);
 
 		// 전송 커맨드 풀 생성
 		createTransferCommandPool();
@@ -778,15 +869,16 @@ auto* vulkanBuffer = static_cast<VulkanBuffer*>(buffer);
 			return;
 		}
 
-		// ✅ Color attachment 검증
+		// ✅ Color attachment 검증 및 올바른 캐스팅
 		if (!colorAttachment)
 		{
 			printLog("❌ ERROR: Color attachment is null in cmdBeginRendering");
 			return;
 		}
 
-		// ✅ RHIImageView*를 VkImageView로 reinterpret_cast
-		VkImageView vkColorImageView = reinterpret_cast<VkImageView>(colorAttachment);
+		auto* vulkanColorImageView = static_cast<VulkanImageView*>(colorAttachment);
+		VkImageView vkColorImageView = vulkanColorImageView->getVkImageView();
+		
 		if (vkColorImageView == VK_NULL_HANDLE)
 		{
 			printLog("❌ ERROR: VkImageView is null");
@@ -794,6 +886,13 @@ auto* vulkanBuffer = static_cast<VulkanBuffer*>(buffer);
 		}
 
 		VkCommandBuffer vkCmdBuffer = cmdBuffer->getVkCommandBuffer();
+
+		// ✅ Swapchain null check 추가
+		if (!swapchain_)
+		{
+			printLog("❌ ERROR: Swapchain is null in cmdBeginRendering");
+			return;
+		}
 
 		// ✅ Swapchain image 가져오기
 		VkImage swapchainImage = swapchain_->getVkImage(currentImageIndex_);
@@ -818,7 +917,9 @@ auto* vulkanBuffer = static_cast<VulkanBuffer*>(buffer);
 		
 		if (depthAttachment)
 		{
-			vkDepthImageView = reinterpret_cast<VkImageView>(depthAttachment);
+			auto* vulkanDepthImageView = static_cast<VulkanImageView*>(depthAttachment);
+			vkDepthImageView = vulkanDepthImageView->getVkImageView();
+			
 			if (vkDepthImageView != VK_NULL_HANDLE)
 			{
 				depthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
@@ -864,6 +965,13 @@ auto* vulkanBuffer = static_cast<VulkanBuffer*>(buffer);
 
 		// Dynamic rendering 종료
 		vkCmdEndRendering(vkCmdBuffer);
+
+		// ✅ Swapchain null check 추가
+		if (!swapchain_)
+		{
+			printLog("❌ ERROR: Swapchain is null in cmdEndRendering");
+			return;
+		}
 
 		// ✅ VulkanBarrier를 사용한 레이아웃 전환 (PRESENT_SRC로)
 		VkImage swapchainImage = swapchain_->getVkImage(currentImageIndex_);

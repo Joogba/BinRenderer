@@ -394,15 +394,18 @@ namespace BinRenderer
 
 	void RHIRenderer::renderForwardModels(RHI* rhi, RHIScene& scene, RHIPipeline* pipeline, uint32_t frameIndex)
 	{
-		// Pipeline이 이미 바인딩되어 있다고 가정
-		
+		if (!pipeline)
+		{
+			printLog("❌ ERROR: Pipeline is null in renderForwardModels");
+			return;
+		}
+
 		auto models = scene.getModels();
 		
-		// TODO: Descriptor sets 바인딩
-		// - Scene Uniform (Camera, Lighting)
-		// - Material Textures
-		// uint32_t currentFrame = frameIndex % maxFramesInFlight_;
-		// rhi->cmdBindDescriptorSets(pipelineLayout_, descriptorSets_[currentFrame], 1);
+		if (frameIndex % 60 == 0)
+		{
+			printLog("[RHIRenderer] Rendering {} models", models.size());
+		}
 
 		// 모델 렌더링
 		for (auto* model : models)
@@ -410,17 +413,34 @@ namespace BinRenderer
 			if (!model)
 				continue;
 
+			// ❌ Simple 셰이더는 Push constants 불필요 - 주석 처리
+			// TODO: PBR 셰이더로 전환 시 다시 활성화
+			/*
 			// ✅ Push constants (Model matrix)
 			PbrPushConstants pushConstants{};
 			pushConstants.model = model->getTransform();
 			pushConstants.materialIndex = 0;  // TODO: Material index 전달
 			
-			// TODO: Pipeline Layout이 필요 - 현재는 주석 처리
-			// rhi->cmdPushConstants(pipelineLayout_, RHI_SHADER_STAGE_VERTEX_BIT, 
-			//                       0, sizeof(PbrPushConstants), &pushConstants);
+			// ✅ Push constants 전송 (Pipeline 사용)
+			rhi->cmdPushConstants(
+				pipeline, 
+				RHI_SHADER_STAGE_VERTEX_BIT | RHI_SHADER_STAGE_FRAGMENT_BIT,
+				0, 
+				sizeof(PbrPushConstants), 
+				&pushConstants
+			);
+			*/
 
 			// ✅ Draw
 			model->draw(rhi, 1);
+			
+			if (frameIndex % 60 == 0)
+			{
+				const auto& meshes = model->getMeshes();
+				printLog("[RHIRenderer]   - Drew model '{}': {} meshes", 
+					model->getName().empty() ? "<unnamed>" : model->getName(), 
+					meshes.size());
+			}
 		}
 	}
 

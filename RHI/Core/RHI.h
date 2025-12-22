@@ -84,6 +84,9 @@ namespace BinRenderer
 		// ✅ Descriptor Sets 바인딩 (Pipeline 사용)
 		virtual void cmdBindDescriptorSets(RHIPipeline* pipeline, uint32_t firstSet, RHIDescriptorSet** sets, uint32_t setCount) = 0;
 
+		// ✅ Push Constants (Pipeline 사용)
+		virtual void cmdPushConstants(RHIPipeline* pipeline, RHIShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues) = 0;
+
 		// ✅ Dynamic Rendering
 		virtual void cmdBeginRendering(uint32_t width, uint32_t height, RHIImageView* colorAttachment, RHIImageView* depthAttachment = nullptr) = 0;
 		virtual void cmdEndRendering() = 0;

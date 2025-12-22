@@ -90,15 +90,16 @@ namespace BinRenderer
 		// 새로 로드
 		auto model = std::make_shared<RHIModel>(rhi_);
 		
-		// TODO: RHIModel::loadFromFile 구현 필요
-		// if (!model->loadFromFile(resourcePath))
-		// {
-		// 	printLog("ERROR: Failed to load model file: {}", resourcePath);
-		// 	return nullptr;
-		// }
+		// ✅ 파일 로드
+		if (!model->loadFromFile(resourcePath))
+		{
+			printLog("❌ ERROR: Failed to load model file: {}", resourcePath);
+			return nullptr;
+		}
 
 		modelCache_[resourcePath] = model;
-		printLog("✅ Loaded and cached model: {}", resourcePath);
+		printLog("✅ Loaded and cached model: {} ({} meshes)", 
+			resourcePath, model->getMeshes().size());
 		return model;
 	}
 

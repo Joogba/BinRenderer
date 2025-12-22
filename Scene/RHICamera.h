@@ -1,5 +1,9 @@
 ﻿#pragma once
 
+// ✅ Vulkan용 GLM 설정
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -51,6 +55,9 @@ namespace BinRenderer
 		const glm::mat4& getViewMatrix() const { return matrices_.view; }
 		const glm::mat4& getProjectionMatrix() const { return matrices_.perspective; }
 		glm::mat4 getViewProjectionMatrix() const { return matrices_.perspective * matrices_.view; }
+
+		// ✅ matrices 구조체 접근 (레거시 호환)
+		const auto& getMatrices() const { return matrices_; }
 
 		// 위치/회전 접근
 		const glm::vec3& getPosition() const { return position_; }

@@ -67,12 +67,21 @@ namespace BinRenderer::Vulkan
 
 		// Vulkan 네이티브 접근
 		VkImageView getVkImageView() const { return imageView_; }
+		
+		// ✅ Swapchain용 - 외부에서 생성된 VkImageView 설정
+		void setVkImageView(VkImageView imageView) { imageView_ = imageView; }
+		void setOwnsImageView(bool owns) { ownsImageView_ = owns; }
+
+		// ✅ 추가
+		void setFormat(RHIFormat format) { swapchainFormat_ = format; }  
 
 	private:
 		VkDevice device_;
 		VulkanImage* image_;
 		VkImageView imageView_ = VK_NULL_HANDLE;
 		RHIImageViewType viewType_;
+		bool ownsImageView_ = true;  // ✅ 소유권 플래그
+		RHIFormat swapchainFormat_ = RHI_FORMAT_UNDEFINED;  // ✅ Swapchain format 저장
 	};
 
 } // namespace BinRenderer::Vulkan
