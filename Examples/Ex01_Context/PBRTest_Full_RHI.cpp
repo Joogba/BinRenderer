@@ -79,7 +79,7 @@ public:
 		// Camera 설정 (정면 뷰 - Vulkan Y축 고려)
 		camera.setType(RHICamera::CameraType::FirstPerson);
 		camera.setPosition(glm::vec3(0.0f, 1.0f, 5.0f));  // ✅ Z=5 (헬멧들 뒤)
-		camera.setRotation(glm::vec3(-10.0f, 180.0f, 0.0f)); // ✅ Y=180도 (뒤돌아봄)
+		camera.setRotation(glm::vec3(-10.0f, 0.0f, 0.0f)); // ✅ Y=180도 (뒤돌아봄)
 		camera.setMovementSpeed(5.0f);
 		camera.setRotationSpeed(0.1f);
 		

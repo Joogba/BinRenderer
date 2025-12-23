@@ -181,9 +181,7 @@ namespace BinRenderer
 			}
 		}
 
-		// ❌ Simple 셰이더는 Descriptor Sets 불필요 - 주석 처리
-		/*
-		// ✅ Descriptor Sets 바인딩 (Set 0: Scene UBO)
+		// ✅ PBR 셰이더용 Descriptor Sets 바인딩
 		if (!sceneDescriptorSets_.empty() && pipeline_)
 		{
 			uint32_t currentFrame = frameIndex % sceneDescriptorSets_.size();
@@ -206,7 +204,6 @@ namespace BinRenderer
 				}
 			}
 		}
-		*/
 
 		// ========================================
 		// Renderer 책임: 실제 렌더링 로직
@@ -247,16 +244,24 @@ namespace BinRenderer
 				// ✅ Model matrix 계산: NodeTransform * ModelTransform
 				glm::mat4 modelMatrix = node.transform * node.model->getTransform();
 				
-				// ✅ MVP 계산: Projection * View * Model (올바른 순서!)
-				glm::mat4 mvp = projection * view * modelMatrix;
-
-				// ✅ Push constants로 MVP 전달
+				// ✅ PBR Push Constants 구조체
+				struct PushConstants {
+					glm::mat4 model;
+					uint32_t materialIndex;
+					float coeffs[15];
+				} pushConstants;
+				
+				pushConstants.model = modelMatrix;
+				pushConstants.materialIndex = 0; // TODO: 실제 material index
+				// coeffs는 0으로 초기화됨
+				
+				// ✅ Push constants 전달 (model + materialIndex + coeffs)
 				rhi->cmdPushConstants(
 					pipeline_,
-					RHI_SHADER_STAGE_VERTEX_BIT,
+					RHI_SHADER_STAGE_VERTEX_BIT | RHI_SHADER_STAGE_FRAGMENT_BIT,
 					0,
-					sizeof(glm::mat4),
-					&mvp
+					sizeof(PushConstants),
+					&pushConstants
 				);
 
 				// ✅ 각 메시 렌더링
@@ -273,7 +278,7 @@ namespace BinRenderer
 			
 			if (frameIndex % 60 == 0)
 			{
-				printLog("[ForwardPassRG]   - {} scene nodes rendered with MVP", nodes.size());
+				printLog("[ForwardPassRG]   - {} scene nodes rendered with PBR", nodes.size());
 			}
 		}
 
@@ -294,49 +299,49 @@ namespace BinRenderer
 	{
 		printLog("[ForwardPassRG] Creating PBR pipeline...");
 
-		// ✅ 임시로 Simple 셰이더 사용 (PBR은 나중에)
-		auto vertCode = readShaderFile("../../assets/shaders/simple.vert.spv");
+		// ✅ PBR 셰이더 사용
+		auto vertCode = readShaderFile("../../assets/shaders/pbrForward.vert.spv");
 		if (vertCode.empty())
 		{
-			printLog("[ForwardPassRG] ❌ Failed to read vertex shader file");
+			printLog("[ForwardPassRG] ❌ Failed to read PBR vertex shader file");
 			return;
 		}
 
 		RHIShaderCreateInfo vertShaderInfo{};
 		vertShaderInfo.stage = RHI_SHADER_STAGE_VERTEX_BIT;
-		vertShaderInfo.name = "simple.vert";
+		vertShaderInfo.name = "pbrForward.vert";
 		vertShaderInfo.entryPoint = "main";
 		vertShaderInfo.code = std::move(vertCode);
 
 		vertexShader_ = rhi_->createShader(vertShaderInfo);
 		if (!vertexShader_)
 		{
-			printLog("[ForwardPassRG] ❌ Failed to create vertex shader");
+			printLog("[ForwardPassRG] ❌ Failed to create PBR vertex shader");
 			return;
 		}
-		printLog("[ForwardPassRG]   - Simple Vertex shader created");
+		printLog("[ForwardPassRG]   ✅ PBR Vertex shader created");
 
 		// Fragment Shader 로드
-		auto fragCode = readShaderFile("../../assets/shaders/simple.frag.spv");
+		auto fragCode = readShaderFile("../../assets/shaders/pbrForward.frag.spv");
 		if (fragCode.empty())
 		{
-			printLog("[ForwardPassRG] ❌ Failed to read fragment shader file");
+			printLog("[ForwardPassRG] ❌ Failed to read PBR fragment shader file");
 			return;
 		}
 
 		RHIShaderCreateInfo fragShaderInfo{};
 		fragShaderInfo.stage = RHI_SHADER_STAGE_FRAGMENT_BIT;
-		fragShaderInfo.name = "simple.frag";
+		fragShaderInfo.name = "pbrForward.frag";
 		fragShaderInfo.entryPoint = "main";
 		fragShaderInfo.code = std::move(fragCode);
 
 		fragmentShader_ = rhi_->createShader(fragShaderInfo);
 		if (!fragmentShader_)
 		{
-			printLog("[ForwardPassRG] ❌ Failed to create fragment shader");
+			printLog("[ForwardPassRG] ❌ Failed to create PBR fragment shader");
 			return;
 		}
-		printLog("[ForwardPassRG]   - Simple Fragment shader created");
+		printLog("[ForwardPassRG]   ✅ PBR Fragment shader created");
 
 		// Pipeline 생성
 		RHIPipelineCreateInfo pipelineInfo{};
@@ -350,9 +355,7 @@ namespace BinRenderer
 		pipelineInfo.shaderStages.push_back(vertexShader_);
 		pipelineInfo.shaderStages.push_back(fragmentShader_);
 		
-		// ❌ Simple 셰이더는 descriptor sets 불필요
-		// (PBR 셰이더 사용 시 다시 활성화)
-		/*
+		// ✅ PBR 셰이더용 descriptor sets (4개 세트)
 		if (sceneDescriptorLayout_)
 		{
 			pipelineInfo.descriptorSetLayouts.push_back(sceneDescriptorLayout_);
@@ -369,32 +372,33 @@ namespace BinRenderer
 		{
 			pipelineInfo.descriptorSetLayouts.push_back(shadowDescriptorLayout_);
 		}
-		*/
 		
 		printLog("[ForwardPassRG]   - Pipeline will use {} descriptor set layouts", 
 			pipelineInfo.descriptorSetLayouts.size());
 
-		// ✅ Simple 셰이더용 Push constants (MVP만)
+		// ✅ PBR 셰이더용 Push constants (model matrix + materialIndex + coeffs)
 		RHIPipelineCreateInfo::PushConstantRange pushConstantRange{};
-		pushConstantRange.stageFlags = RHI_SHADER_STAGE_VERTEX_BIT;
+		pushConstantRange.stageFlags = RHI_SHADER_STAGE_VERTEX_BIT | RHI_SHADER_STAGE_FRAGMENT_BIT;
 		pushConstantRange.offset = 0;
-		pushConstantRange.size = sizeof(glm::mat4);  // MVP matrix only
+		pushConstantRange.size = sizeof(glm::mat4) + sizeof(uint32_t) + sizeof(float) * 15; // 128 bytes
 		pipelineInfo.pushConstantRanges.push_back(pushConstantRange);
 
-		// ✅ Vertex Input State
-		// Binding 0: Vertex data
-		RHIVertexInputBinding vertexBinding{};
-		vertexBinding.binding = 0;
-		vertexBinding.stride = sizeof(RHIVertex);
-		vertexBinding.inputRate = RHI_VERTEX_INPUT_RATE_VERTEX;
+		// ✅ Vertex Input State - RHIVertexHelper 사용 (half precision 지원)
+		auto vertexBinding = RHIVertexHelper::getVertexBinding();
 		pipelineInfo.vertexInputState.bindings.push_back(vertexBinding);
 
-		// Attributes
-		uint32_t offset = 0;
+		// ✅ Animated vertex attributes 사용 (bone data 포함)
+		auto vertexAttributes = RHIVertexHelper::getVertexAttributesAnimated();
+		for (const auto& attr : vertexAttributes)
+		{
+			pipelineInfo.vertexInputState.attributes.push_back(attr);
+		}
 		
-		pipelineInfo.vertexInputState.attributes = RHIVertexHelper::getVertexAttributesAnimated();
+		printLog("[ForwardPassRG]   ✅ Vertex input: {} per-vertex attributes (using RHIVertexHelper, half precision)", 
+			vertexAttributes.size());
 
-		
+		// ⚠️ GPU Instancing 비활성화 (현재 사용하지 않음)
+		pipelineInfo.enableInstancing = false;
 		
 		// Input Assembly State
 		pipelineInfo.inputAssemblyState.topology = RHI_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
