@@ -1,22 +1,19 @@
 #version 450
 
 // ========================================
-// ? GPU Instancing: Step 3 - Vertex Input
+// Vertex Input (Half-precision optimized on CPU side)
 // ========================================
 
-// Per-vertex attributes (기존)
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec2 inTexCoord;
-layout(location = 3) in vec3 inTangent;
-layout(location = 4) in vec3 inBitangent;
-layout(location = 5) in vec4 inBoneWeights;   // Bone weights for skeletal animation
-layout(location = 6) in ivec4 inBoneIndices;  // Bone indices for skeletal animation
-
-// ? NEW: Per-instance attributes (from Instance Buffer)
-// mat4는 4개의 vec4로 구성되므로 4개의 location을 차지함
-layout(location = 10) in mat4 instanceModelMatrix;  // locations 10, 11, 12, 13
-layout(location = 14) in uint instanceMaterialOffset;
+// Per-vertex attributes
+// ? NOTE: CPU side uses half-precision (f16) for memory optimization
+// GPU automatically unpacks to full precision (f32) for shader computation
+layout(location = 0) in vec3 inPosition;      // hvec3 on CPU -> vec3 in shader
+layout(location = 1) in vec3 inNormal;        // hvec3 on CPU -> vec3 in shader
+layout(location = 2) in vec2 inTexCoord;      // hvec2 on CPU -> vec2 in shader
+layout(location = 3) in vec3 inTangent;       // hvec3 on CPU -> vec3 in shader
+layout(location = 4) in vec3 inBitangent;     // hvec3 on CPU -> vec3 in shader
+layout(location = 5) in vec4 inBoneWeights;   // vec4 (full precision for accuracy)
+layout(location = 6) in ivec4 inBoneIndices;  // ivec4 (full precision for indexing)
 
 // Uniform buffers
 layout(set = 0, binding = 0) uniform SceneDataUBO {
@@ -40,7 +37,7 @@ layout(set = 0, binding = 1) uniform OptionsUBO {
     float ssaoBias;
     int ssaoSampleCount;
     float ssaoPower;
-    bool isInstanced;  // ? NEW: GPU Instancing flag
+    bool isInstanced;  // Reserved for future GPU Instancing
 } options;
 
 layout(set = 0, binding = 2) uniform BoneDataUBO {
@@ -49,7 +46,7 @@ layout(set = 0, binding = 2) uniform BoneDataUBO {
 } boneData;
 
 layout(push_constant) uniform PushConstants {
-    mat4 model;  // ?? Legacy: 단일 인스턴스용 (instancing 시 무시됨)
+    mat4 model;
     uint materialIndex;
     float coeffs[15];    
 } pushConstants;
@@ -88,60 +85,50 @@ void main() {
             float weight = inBoneWeights[i];
   
             if (boneIndex >= 0 && boneIndex < 65 && weight > 0.0) {
-        mat4 boneMatrix = boneData.boneMatrices[boneIndex];
+                mat4 boneMatrix = boneData.boneMatrices[boneIndex];
      
-     animatedPosition += weight * (boneMatrix * vec4(inPosition, 1.0));
+                animatedPosition += weight * (boneMatrix * vec4(inPosition, 1.0));
      
-           mat3 boneNormalMatrix = mat3(boneMatrix);
-  animatedNormal += weight * (boneNormalMatrix * inNormal);
-          animatedTangent += weight * (boneNormalMatrix * inTangent);
-          animatedBitangent += weight * (boneNormalMatrix * inBitangent);
+                mat3 boneNormalMatrix = mat3(boneMatrix);
+                animatedNormal += weight * (boneNormalMatrix * inNormal);
+                animatedTangent += weight * (boneNormalMatrix * inTangent);
+                animatedBitangent += weight * (boneNormalMatrix * inBitangent);
 
-      animationApplied = true;
-       }
+                animationApplied = true;
+            }
         }
      
         if (animatedPosition.w > 0.0) {
-   position = animatedPosition.xyz;
-      normal = normalize(animatedNormal);
-      tangent = normalize(animatedTangent);
+            position = animatedPosition.xyz;
+            normal = normalize(animatedNormal);
+            tangent = normalize(animatedTangent);
             bitangent = normalize(animatedBitangent);
-    }
+        }
     }
   
     // DEBUG: Visual indicator for animation
     if (animationApplied && hasAnimationEnabled) {
- position.y += sin(gl_VertexIndex * 0.1) * 0.01;
+        position.y += sin(gl_VertexIndex * 0.1) * 0.01;
     }
 
-    // ========================================
-    // ? GPU Instancing: Step 3 - Use Per-instance Transform
- // ========================================
-    // ? NEW: 조건부 transform 선택
-    mat4 modelMatrix;
-  if (options.isInstanced) {
-        // Instancing: per-instance transform 사용
-        modelMatrix = instanceModelMatrix;
-    } else {
-        // Legacy: push constants transform 사용
-      modelMatrix = pushConstants.model;
-    }
+    // Use push constants transform
+    mat4 modelMatrix = pushConstants.model;
 
     // Transform to world space
- vec4 worldPos = modelMatrix * vec4(position, 1.0);
-fragPos = worldPos.xyz;
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+    fragPos = worldPos.xyz;
     
     const mat4 scaleBias = mat4(
         0.5, 0.0, 0.0, 0.0, 
         0.0, 0.5, 0.0, 0.0, 
         0.0, 0.0, 1.0, 0.0, 
-   0.5, 0.5, 0.0, 1.0
+        0.5, 0.5, 0.0, 1.0
     );
 
     // Shadow mapping
     fragPosLightSpace = scaleBias * sceneData.lightSpaceMatrix * worldPos;
 
-  // Transform normals to world space
+    // Transform normals to world space
     mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
     fragNormal = normalMatrix * normal;
     fragTangent = normalMatrix * tangent;

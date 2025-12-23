@@ -18,6 +18,7 @@ namespace BinRenderer
 		RHIImageUsageFlags usage = 0;
 		RHISampleCountFlagBits samples = RHI_SAMPLE_COUNT_1_BIT;
 		RHIImageTiling tiling = RHI_IMAGE_TILING_OPTIMAL;
+		uint32_t flags = 0;  // RHI_IMAGE_CREATE_CUBE_COMPATIBLE_BIT 등
 	};
 
 } // namespace BinRenderer

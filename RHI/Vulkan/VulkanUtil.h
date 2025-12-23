@@ -5,6 +5,19 @@
 #include <vector>
 #include "RHI/Core/RHI.h"
 
+// ========================================
+// ✅ RHI Type Conversion Guidelines
+// ========================================
+// 
+// RHI enum values are aligned with Vulkan for zero-cost conversion.
+// Direct static_cast is safe and recommended:
+// 
+//   VkFormat vkFormat = static_cast<VkFormat>(rhiFormat);
+//   VkImageViewType vkViewType = static_cast<VkImageViewType>(rhiViewType);
+// 
+// No conversion utility needed for Vulkan backend!
+// DX12/Metal backends should implement their own conversion if needed.
+// ========================================
 
 namespace BinRenderer::Vulkan
 {

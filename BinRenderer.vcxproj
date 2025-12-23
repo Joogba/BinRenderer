@@ -105,7 +105,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;%(PreprocessorDefinitions);TRACY_ENABLE;TRACY_ON_DEMAND;TRACY_NO_CALLSTACK;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);GLFW_INCLUDE_VULKAN;GLM_ENABLE_EXPERIMENTAL;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);TRACY_ENABLE;TRACY_ON_DEMAND;TRACY_NO_CALLSTACK;NDEBUG;GLFW_INCLUDE_VULKAN;GLM_ENABLE_EXPERIMENTAL;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>%VULKAN_SDK%\include;$(ProjectDir)</AdditionalIncludeDirectories>
@@ -164,6 +164,7 @@
     <ClInclude Include="Platform\GLFWWindow.h" />
     <ClInclude Include="Platform\IWindow.h" />
     <ClInclude Include="Platform\WindowFactory.h" />
+    <ClInclude Include="Rendering\ResourceFactory.h" />
     <ClInclude Include="Rendering\RHIMaterial.h" />
     <ClInclude Include="Rendering\RHIMesh.h" />
     <ClInclude Include="Rendering\RHIRenderer.h" />
@@ -206,6 +207,7 @@
     <ClInclude Include="RHI\Core\RHIStructs.h" />
     <ClInclude Include="RHI\Resources\RHISampler.h" />
     <ClInclude Include="RHI\Resources\RHIShader.h" />
+    <ClInclude Include="RHI\Resources\RHIShaderReflection.h" />
     <ClInclude Include="RHI\Resources\RHITexture.h" />
     <ClInclude Include="RHI\Structs\RHIBufferCreateInfo.h" />
     <ClInclude Include="RHI\Structs\RHIDescriptorCreateInfo.h" />
@@ -345,6 +347,7 @@
     <ClCompile Include="Examples\RenderGraph_Example.cpp" />
     <ClCompile Include="Platform\GLFWWindow.cpp" />
     <ClCompile Include="Platform\WindowFactory.cpp" />
+    <ClCompile Include="Rendering\ResourceFactory.cpp" />
     <ClCompile Include="Rendering\RHIMaterial.cpp" />
     <ClCompile Include="Rendering\RHIMesh.cpp" />
     <ClCompile Include="Rendering\RHIRenderer.cpp" />
@@ -362,6 +365,7 @@
     <ClCompile Include="RenderPass\ShadowPassRG.cpp" />
     <ClCompile Include="RHI\Core\RHI.cpp" />
     <ClCompile Include="RHI\Core\RHIType.h" />
+    <ClCompile Include="RHI\Resources\RHIShaderReflection.cpp" />
     <ClCompile Include="RHI\Util\RHIDebug.cpp" />
     <ClCompile Include="RHI\Util\RHIFactory.cpp" />
     <ClCompile Include="RHI\Util\RHIValidation.cpp" />
@@ -534,7 +538,6 @@
     <None Include="FINAL_MIGRATION_PLAN.md" />
     <None Include="FINAL_RHI_Vulkan_Status.md" />
     <None Include="FOUND_RHI_Vulkan_Already_Implemented.md" />
-    <None Include="glsl assets\shaders\pbrForward.vert" />
     <None Include="GPU_INSTANCING_MIGRATION_COMPLETE.md" />
     <None Include="MIGRATION_GUIDE_Vulkan_to_RHI.md" />
     <None Include="MIGRATION_SUMMARY.md" />

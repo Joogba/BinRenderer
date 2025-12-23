@@ -147,6 +147,31 @@ namespace BinRenderer
 		uint32_t getWidth() const { return width_; }
 		uint32_t getHeight() const { return height_; }
 
+		// ========================================
+		// ✅ Material System
+		// ========================================
+		
+		/**
+		 * @brief Scene의 모든 모델에서 material 데이터를 수집하여 GPU 버퍼 생성
+		 * @param scene Scene containing models with materials
+		 */
+		void buildMaterialBuffer(RHIScene& scene);
+
+		/**
+		 * @brief Material buffer 접근자
+		 */
+		RHIBuffer* getMaterialBuffer() const { return materialBuffer_; }
+		
+		/**
+		 * @brief Material 개수
+		 */
+		uint32_t getMaterialCount() const { return materialCount_; }
+
+		/**
+		 * @brief Material textures 접근자 (bindless)
+		 */
+		const std::vector<RHIImageView*>& getMaterialTextures() const { return materialTextures_; }
+
 	private:
 		// ========================================
 		// 초기화 헬퍼
@@ -198,6 +223,13 @@ namespace BinRenderer
 		bool frustumCullingEnabled_ = true;
 		CullingStats cullingStats_;
 		// ViewFrustum 클래스는 나중에 추가
+
+		// ========================================
+		// ✅ Material System
+		// ========================================
+		RHIBuffer* materialBuffer_ = nullptr;
+		uint32_t materialCount_ = 0;
+		std::vector<RHIImageView*> materialTextures_; // Bindless texture array
 	};
 
 } // namespace BinRenderer

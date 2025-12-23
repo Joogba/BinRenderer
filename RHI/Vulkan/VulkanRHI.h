@@ -90,6 +90,18 @@ namespace BinRenderer::Vulkan
 		void cmdBeginRendering(uint32_t width, uint32_t height, RHIImageView* colorAttachment, RHIImageView* depthAttachment = nullptr) override;
 		void cmdEndRendering() override;
 
+		// ✅ Image Layout Transition
+		void cmdTransitionImageLayout(
+			RHIImage* image,
+			RHIImageLayout oldLayout,
+			RHIImageLayout newLayout,
+			RHIImageAspectFlagBits aspectMask = RHI_IMAGE_ASPECT_COLOR_BIT,
+			uint32_t baseMipLevel = 0,
+			uint32_t levelCount = 1,
+			uint32_t baseArrayLayer = 0,
+			uint32_t layerCount = 1
+		) override;
+
 		// API 타입
 		RHIApiType getApiType() const override { return RHIApiType::Vulkan; }
 

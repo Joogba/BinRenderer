@@ -91,6 +91,18 @@ namespace BinRenderer
 		virtual void cmdBeginRendering(uint32_t width, uint32_t height, RHIImageView* colorAttachment, RHIImageView* depthAttachment = nullptr) = 0;
 		virtual void cmdEndRendering() = 0;
 
+		// ✅ Image Layout Transition
+		virtual void cmdTransitionImageLayout(
+			RHIImage* image,
+			RHIImageLayout oldLayout,
+			RHIImageLayout newLayout,
+			RHIImageAspectFlagBits aspectMask = RHI_IMAGE_ASPECT_COLOR_BIT,
+			uint32_t baseMipLevel = 0,
+			uint32_t levelCount = 1,
+			uint32_t baseArrayLayer = 0,
+			uint32_t layerCount = 1
+		) = 0;
+
 		// API 타입
 		virtual RHIApiType getApiType() const = 0;
 	};

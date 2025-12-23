@@ -102,6 +102,10 @@ namespace BinRenderer::Vulkan
 		// RHIDescriptorSet 인터페이스 구현
 		void updateBuffer(uint32_t binding, RHIBuffer* buffer, RHIDeviceSize offset = 0, RHIDeviceSize range = 0) override;
 		void updateImage(uint32_t binding, RHIImageView* imageView, class RHISampler* sampler = nullptr) override;
+		
+		// Bindless descriptor array support
+		void updateImageArray(uint32_t binding, uint32_t arrayIndex, RHIImageView* imageView, class RHISampler* sampler = nullptr) override;
+		void updateImageArrayBatch(uint32_t binding, const std::vector<RHIImageView*>& imageViews, class RHISampler* sampler = nullptr) override;
 
 		// Vulkan 네이티브 접근
 		VkDescriptorSet getVkDescriptorSet() const { return descriptorSet_; }

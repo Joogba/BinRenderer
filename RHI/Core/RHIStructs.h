@@ -35,6 +35,7 @@ namespace BinRenderer
 		RHIImageUsageFlags usage = 0;
 		RHISampleCountFlagBits samples = RHI_SAMPLE_COUNT_1_BIT;
 		RHIImageTiling tiling = RHI_IMAGE_TILING_OPTIMAL;
+		uint32_t flags = 0;  // ✅ Cubemap flag 등
 	};
 
 	// 셰이더 생성 정보

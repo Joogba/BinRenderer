@@ -3,6 +3,7 @@
 #include "RHIType.h"
 #include <optional>
 #include <vector>
+#include <glm/glm.hpp>
 
 namespace BinRenderer
 {
@@ -1167,4 +1168,62 @@ namespace BinRenderer
             return graphicsQueueIndex.has_value(); // Graphics는 필수
         }
     };
+
+    // ========================================
+    // PBR Rendering UBO Structures
+    // ========================================
+
+    /**
+     * @brief Scene data UBO (Set 0, Binding 0)
+     * @shader pbrForward.frag - layout(set = 0, binding = 0)
+     */
+    struct SceneDataUBO
+    {
+        glm::mat4 projection;
+        glm::mat4 view;
+        glm::vec3 cameraPos;
+        float padding1;
+        glm::vec3 directionalLightDir;
+        float padding2;
+        glm::vec3 directionalLightColor;
+        float padding3;
+        glm::mat4 lightSpaceMatrix;
+    };
+
+    /**
+     * @brief Options UBO (Set 0, Binding 1)
+     * @shader pbrForward.frag - layout(set = 0, binding = 1)
+     */
+    struct OptionsUBO
+    {
+        int32_t textureOn = 1;
+        int32_t shadowOn = 1;
+        int32_t discardOn = 1;
+        int32_t animationOn = 0;
+    };
+
+    /**
+     * @brief Material UBO (Set 1, Binding 0 - Storage Buffer)
+     * @shader pbrForward.frag - layout(set = 1, binding = 0)
+     * 
+     * @note Must match MaterialData in RHIMaterial.h
+     * @alignment std140 (16-byte aligned)
+     */
+    struct MaterialUBO
+    {
+        glm::vec4 emissiveFactor;          // offset 0
+        glm::vec4 baseColorFactor;         // offset 16
+        float roughnessFactor;             // offset 32
+        float transparencyFactor;          // offset 36
+        float discardAlpha;                // offset 40
+        float metallicFactor;              // offset 44
+        int32_t baseColorTextureIndex;    // offset 48
+        int32_t emissiveTextureIndex;     // offset 52
+        int32_t normalTextureIndex;       // offset 56
+        int32_t opacityTextureIndex;      // offset 60
+        int32_t metallicRoughnessTextureIndex; // offset 64
+        int32_t occlusionTextureIndex;    // offset 68
+        // Total size: 72 bytes (aligned to 16 bytes = 80 bytes in std140)
+    };
+
 }

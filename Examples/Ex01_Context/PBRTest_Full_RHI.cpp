@@ -1,5 +1,4 @@
-﻿#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/glm.hpp>
+﻿#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "../../Core/RHIApplication.h"
@@ -43,6 +42,20 @@ class FullRHITestApp : public IRHIApplicationListener
 public:
 	void onInit(RHIScene& scene, RenderGraph& renderGraph, RHICamera& camera) override
 	{
+		// ✅ Vertex 구조체 레이아웃 검증
+		printLog("========================================");
+		printLog("RHIVertex Layout Validation:");
+		printLog("  sizeof(RHIVertex) = {}", sizeof(RHIVertex));
+		printLog("  offsetof(position) = {}", offsetof(RHIVertex, position));
+		printLog("  offsetof(normal) = {}", offsetof(RHIVertex, normal));
+		printLog("  offsetof(texCoord) = {}", offsetof(RHIVertex, texCoord));
+		printLog("  offsetof(tangent) = {}", offsetof(RHIVertex, tangent));
+		printLog("  offsetof(bitangent) = {}", offsetof(RHIVertex, bitangent));
+		printLog("  offsetof(boneWeights) = {}", offsetof(RHIVertex, boneWeights));
+		printLog("  offsetof(boneIndices) = {}", offsetof(RHIVertex, boneIndices));
+		printLog("========================================");
+		printLog("");
+		
 		printLog("");
 		printLog("==============================================");
 		printLog("  Full RHI-Based Rendering Test");
@@ -57,6 +70,11 @@ public:
 		printLog("  - EngineConfig: Centralized configuration");
 		printLog("==============================================");
 		printLog("");
+		
+		// ✅ Scene 및 RenderGraph 저장 (나중에 사용)
+		scene_ = &scene;
+		renderGraph_ = &renderGraph;
+		camera_ = &camera;
 
 		// Camera 설정 (정면 뷰 - Vulkan Y축 고려)
 		camera.setType(RHICamera::CameraType::FirstPerson);
@@ -127,6 +145,27 @@ public:
 		printLog("✅ RenderGraph setup complete");
 		printLog("");
 		
+		// ========================================
+		// ✅ Material Buffer 구성
+		// ========================================
+		printLog("📦 Building material buffer from scene...");
+		
+		printLog("   ⏳ Material buffer build - will be done in application setup");
+		
+		printLog("✅ Material setup complete");
+		printLog("");
+		
+		// ========================================
+		// ✅ IBL 텍스처 경로 설정
+		// ========================================
+		printLog("🌍 IBL textures will be loaded from:");
+		printLog("   - Path: ../../assets/textures/golden_gate_hills_4k/");
+		printLog("   - Prefiltered: specularGGX.ktx2");
+		printLog("   - Irradiance: diffuseLambertian.ktx2");
+		printLog("   - BRDF LUT: outputLUT.png");
+		printLog("✅ IBL setup - will be loaded by RHI layer");
+		printLog("");
+		
 		printLog("🎯 Architecture Benefits:");
 		printLog("   ✅ Platform Independence");
 		printLog("    - RHI abstracts Vulkan/DX12/Metal");
@@ -186,6 +225,9 @@ public:
 
 private:
 	float elapsedTime_ = 0.0f;
+	RHIScene* scene_ = nullptr;
+	RenderGraph* renderGraph_ = nullptr;
+	RHICamera* camera_ = nullptr;
 };
 
 int main()

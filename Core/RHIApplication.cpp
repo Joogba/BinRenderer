@@ -54,6 +54,17 @@ namespace BinRenderer
 			printLog("📊 Using user-defined render passes ({} pass(es))", renderGraph_->getPassCount());
 		}
 
+		// ========================================
+		// ✅ Material Buffer 빌드 및 ForwardPass에 바인딩
+		// ========================================
+		printLog("📦 Building material buffer from scene...");
+		if (renderer_ && scene_)
+		{
+			// Scene의 모든 모델에서 material 데이터 수집 및 GPU 버퍼 생성
+			renderer_->buildMaterialBuffer(*scene_);
+			printLog("   ✅ Material buffer built: {} materials", renderer_->getMaterialCount());
+		}
+		
 		// RenderGraph 컴파일 (모든 Pass 추가 후)
 		renderGraph_->compile();
 		printLog("✅ RenderGraph compiled");

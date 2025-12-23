@@ -345,9 +345,6 @@
     <ClCompile Include="RHI\Vulkan\Utilities\VulkanBarrier.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="RHI\Vulkan\Resources\VulkanShaderReflection.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="RHI\Vulkan\Pipeline\VulkanDescriptorAllocator.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -364,6 +361,15 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Platform\WindowFactory.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\ResourceFactory.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Resources\RHIShaderReflection.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\Vulkan\Resources\VulkanShaderReflection.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -914,6 +920,12 @@
     <ClInclude Include="Platform\WindowFactory.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Rendering\ResourceFactory.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\Resources\RHIShaderReflection.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Basic.hlsl">
@@ -964,7 +976,6 @@
     <None Include="docs\StorageBuffer_OOM_Debug_Guide.md" />
     <None Include="docs\Device_Lost_Error_Fix.md" />
     <None Include="docs\Material_Update_Device_Lost_Fix.md" />
-    <None Include="glsl assets\shaders\pbrForward.vert" />
     <None Include="ClassDiagram.cd" />
     <None Include="RenderPass\RenderGraph\README.md" />
     <None Include="RenderPass\RenderGraph\QUICK_START.md" />

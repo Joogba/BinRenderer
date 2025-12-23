@@ -52,37 +52,41 @@ namespace BinRenderer
 			{
 				RHIVertex& vertex = vertices[j];
 				
-				vertex.position = glm::vec3(
+				vertex.setPosition(glm::vec3(
 					aiMesh->mVertices[j].x,
 					aiMesh->mVertices[j].y,
 					aiMesh->mVertices[j].z
-				);
+				));
 
 				if (aiMesh->HasNormals())
 				{
-					vertex.normal = glm::vec3(
+					vertex.setNormal(glm::vec3(
 						aiMesh->mNormals[j].x,
 						aiMesh->mNormals[j].y,
 						aiMesh->mNormals[j].z
-					);
+					));
 				}
 
 				if (aiMesh->HasTextureCoords(0))
 				{
-					vertex.texCoord = glm::vec2(
+					vertex.setTexCoord(glm::vec2(
 						aiMesh->mTextureCoords[0][j].x,
 						aiMesh->mTextureCoords[0][j].y
-					);
+					));
 				}
 
 				if (aiMesh->HasTangentsAndBitangents())
 				{
-					vertex.tangent = glm::vec4(
+					vertex.setTangent(glm::vec3(
 						aiMesh->mTangents[j].x,
 						aiMesh->mTangents[j].y,
-						aiMesh->mTangents[j].z,
-						1.0f
-					);
+						aiMesh->mTangents[j].z
+					));
+					vertex.setBitangent(glm::vec3(
+						aiMesh->mBitangents[j].x,
+						aiMesh->mBitangents[j].y,
+						aiMesh->mBitangents[j].z
+					));
 				}
 			}
 

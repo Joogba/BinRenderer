@@ -167,10 +167,20 @@ namespace BinRenderer::Vulkan
 			queueCreateInfos.push_back(queueCreateInfo);
 		}
 
+		// ✅ Vulkan 1.2 Features: Bindless Descriptor Arrays (non-uniform indexing)
+		VkPhysicalDeviceVulkan12Features vulkan12Features{};
+		vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+		vulkan12Features.descriptorIndexing = VK_TRUE;
+		vulkan12Features.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+		vulkan12Features.runtimeDescriptorArray = VK_TRUE;
+		vulkan12Features.descriptorBindingVariableDescriptorCount = VK_TRUE;
+		vulkan12Features.descriptorBindingPartiallyBound = VK_TRUE;
+
 		// ✅ Vulkan 1.3 Features: Dynamic Rendering & Synchronization2
 		VkPhysicalDeviceSynchronization2Features sync2Features{};
 		sync2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
 		sync2Features.synchronization2 = VK_TRUE;
+		sync2Features.pNext = &vulkan12Features;  // Chain to Vulkan 1.2 features
 
 		VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures{};
 		dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
@@ -181,6 +191,7 @@ namespace BinRenderer::Vulkan
 		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 		deviceFeatures2.features.samplerAnisotropy = VK_TRUE;
 		deviceFeatures2.pNext = &dynamicRenderingFeatures;
+
 
 		// ✅ 헤드리스 모드 지원: 스왑체인이 필요할 때만 확장 추가
 		std::vector<const char*> deviceExtensions;
@@ -215,7 +226,11 @@ namespace BinRenderer::Vulkan
 		presentQueueFamily_ = indices.presentFamily;
 		computeQueueFamily_ = indices.computeFamily;
 
-		printLog("✅ Vulkan 1.3 features enabled: dynamicRendering, synchronization2");
+		printLog("✅ Vulkan features enabled:");
+		printLog("   - Dynamic Rendering (1.3)");
+		printLog("   - Synchronization2 (1.3)");
+		printLog("   - Descriptor Indexing (1.2)");
+		printLog("   - Bindless Descriptor Arrays (1.2)");
 
 		return true;
 	}

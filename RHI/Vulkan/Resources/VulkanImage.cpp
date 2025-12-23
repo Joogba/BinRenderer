@@ -43,6 +43,7 @@ namespace BinRenderer::Vulkan
 		imageInfo.usage = static_cast<VkImageUsageFlags>(createInfo.usage);
 		imageInfo.samples = static_cast<VkSampleCountFlagBits>(samples_);
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		imageInfo.flags = static_cast<VkImageCreateFlags>(createInfo.flags);
 
 		if (vkCreateImage(device_, &imageInfo, nullptr, &image_) != VK_SUCCESS)
 		{
@@ -127,6 +128,7 @@ namespace BinRenderer::Vulkan
 		// ✅ Swapchain image view는 이미 setVkImageView()로 설정되어 있음
 		if (imageView_ != VK_NULL_HANDLE)
 		{
+			// ✅ RHI enum과 Vulkan enum은 값이 일치하므로 직접 캐스팅 안전
 			viewType_ = static_cast<RHIImageViewType>(viewType);
 			return true;  // 이미 생성됨
 		}
@@ -138,6 +140,7 @@ namespace BinRenderer::Vulkan
 			return false;
 		}
 		
+		// ✅ RHI enum과 Vulkan enum은 값이 일치하므로 직접 캐스팅 안전
 		viewType_ = static_cast<RHIImageViewType>(viewType);
 
 		VkImageViewCreateInfo viewInfo{};
@@ -153,6 +156,8 @@ namespace BinRenderer::Vulkan
 
 		if (vkCreateImageView(device_, &viewInfo, nullptr, &imageView_) != VK_SUCCESS)
 		{
+			printLog("❌ ERROR: Failed to create VkImageView (format={}, viewType={})", 
+				static_cast<int>(viewInfo.format), static_cast<int>(viewType));
 			return false;
 		}
 

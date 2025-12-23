@@ -128,6 +128,7 @@ namespace BinRenderer::Vulkan
 			vertexBindings.push_back(vkBinding);
 		}
 
+	
 		for (const auto& attribute : createInfo.vertexInputState.attributes)
 		{
 			VkVertexInputAttributeDescription vkAttribute{};

@@ -1075,4 +1075,44 @@ auto* vulkanBuffer = static_cast<VulkanBuffer*>(buffer);
 		}
 	}
 
+	void VulkanRHI::cmdTransitionImageLayout(
+		RHIImage* image,
+		RHIImageLayout oldLayout,
+		RHIImageLayout newLayout,
+		RHIImageAspectFlagBits aspectMask,
+		uint32_t baseMipLevel,
+		uint32_t levelCount,
+		uint32_t baseArrayLayer,
+		uint32_t layerCount
+	)
+	{
+		if (!image || commandBuffers_.empty())
+		{
+			printLog("❌ cmdTransitionImageLayout: Invalid image or no active command buffer");
+			return;
+		}
+
+		// RHIImage → VulkanImage 캐스팅
+		auto* vulkanImage = static_cast<VulkanImage*>(image);
+		VkImage vkImage = vulkanImage->getVkImage();
+		VkFormat vkFormat = static_cast<VkFormat>(image->getFormat());
+
+		// 현재 커맨드 버퍼
+		VkCommandBuffer cmdBuffer = commandBuffers_[currentFrameIndex_]->getVkCommandBuffer();
+
+		// VulkanBarrier 헬퍼 사용
+		BarrierHelpers::transitionImageLayout(
+			cmdBuffer,
+			vkImage,
+			vkFormat,
+			static_cast<VkImageLayout>(oldLayout),
+			static_cast<VkImageLayout>(newLayout),
+			levelCount,
+			layerCount
+		);
+
+		printLog("✅ Image layout transitioned: {} -> {}",
+			static_cast<int>(oldLayout), static_cast<int>(newLayout));
+	}
+
 } // namespace BinRenderer::Vulkan

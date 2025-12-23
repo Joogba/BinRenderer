@@ -219,6 +219,107 @@ namespace BinRenderer::Vulkan
 	}
 
 	// ========================================
+	// Bindless Descriptor Array Support
+	// ========================================
+
+	void VulkanDescriptorSet::updateImageArray(uint32_t binding, uint32_t arrayIndex, RHIImageView* imageView, RHISampler* sampler)
+	{
+		auto* vulkanImageView = static_cast<VulkanImageView*>(imageView);
+
+		VkDescriptorImageInfo imageInfo{};
+		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		imageInfo.imageView = vulkanImageView->getVkImageView();
+		
+		if (sampler)
+		{
+			auto* vulkanSampler = static_cast<VulkanSampler*>(sampler);
+			imageInfo.sampler = vulkanSampler->getVkSampler();
+		}
+		else
+		{
+			imageInfo.sampler = VK_NULL_HANDLE;
+		}
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = descriptorSet_;
+		descriptorWrite.dstBinding = binding;
+		descriptorWrite.dstArrayElement = arrayIndex;  // Array index specified
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pImageInfo = &imageInfo;
+
+		vkUpdateDescriptorSets(device_, 1, &descriptorWrite, 0, nullptr);
+	}
+
+	void VulkanDescriptorSet::updateImageArrayBatch(uint32_t binding, const std::vector<RHIImageView*>& imageViews, RHISampler* sampler)
+	{
+		if (imageViews.empty())
+			return;
+
+		std::vector<VkDescriptorImageInfo> imageInfos;
+		imageInfos.reserve(imageViews.size());
+
+		VkSampler vkSampler = VK_NULL_HANDLE;
+		if (sampler)
+		{
+			auto* vulkanSampler = static_cast<VulkanSampler*>(sampler);
+			vkSampler = vulkanSampler->getVkSampler();
+		}
+
+		for (auto* imageView : imageViews)
+		{
+			VkDescriptorImageInfo imageInfo{};
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			imageInfo.sampler = vkSampler;
+			
+			// Null check: imageView가 null이거나 VkImageView가 invalid하면 건너뛰기
+			if (!imageView)
+			{
+				printLog("⚠️ Warning: Null RHIImageView in updateImageArrayBatch at index {}", imageInfos.size());
+				continue;
+			}
+			
+			auto* vulkanImageView = static_cast<VulkanImageView*>(imageView);
+			if (!vulkanImageView)
+			{
+				printLog("⚠️ Warning: Failed to cast to VulkanImageView at index {}", imageInfos.size());
+				continue;
+			}
+			
+			VkImageView vkImageView = vulkanImageView->getVkImageView();
+			if (vkImageView == VK_NULL_HANDLE)
+			{
+				printLog("⚠️ Warning: VK_NULL_HANDLE VkImageView at index {}", imageInfos.size());
+				continue;
+			}
+			
+			imageInfo.imageView = vkImageView;
+			imageInfos.push_back(imageInfo);
+		}
+
+		// 유효한 이미지가 없으면 업데이트하지 않음
+		if (imageInfos.empty())
+		{
+			printLog("⚠️ Warning: No valid imageViews in updateImageArrayBatch for binding {}", binding);
+			return;
+		}
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = descriptorSet_;
+		descriptorWrite.dstBinding = binding;
+		descriptorWrite.dstArrayElement = 0;  // Start from array index 0
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorWrite.descriptorCount = static_cast<uint32_t>(imageInfos.size());
+		descriptorWrite.pImageInfo = imageInfos.data();
+
+		vkUpdateDescriptorSets(device_, 1, &descriptorWrite, 0, nullptr);
+		
+		printLog("✅ Updated {} texture(s) for binding {}", imageInfos.size(), binding);
+	}
+
+	// ========================================
 	// ✅ 자동 풀 관리 메서드 구현
 	// ========================================
 

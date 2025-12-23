@@ -19,6 +19,12 @@ namespace BinRenderer
 		virtual uint32_t getArrayLayers() const = 0;
 		virtual RHIFormat getFormat() const = 0;
 		virtual RHISampleCountFlagBits getSamples() const = 0;
+
+		// ✅ Layout getter (for tracking current layout)
+		virtual RHIImageLayout getCurrentLayout() const { return RHI_IMAGE_LAYOUT_UNDEFINED; }
+		
+		// ✅ Helper: Get layer count for transitions
+		uint32_t getLayerCount() const { return getArrayLayers(); }
 	};
 
 	/**

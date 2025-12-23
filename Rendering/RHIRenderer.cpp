@@ -4,6 +4,26 @@
 
 namespace BinRenderer
 {
+	// ========================================
+	// ✅ Material UBO Definition (matching shader)
+	// ========================================
+	struct MaterialUBO
+	{
+		glm::vec4 emissiveFactor;          // offset 0
+		glm::vec4 baseColorFactor;         // offset 16
+		float roughnessFactor;             // offset 32
+		float transparencyFactor;          // offset 36
+		float discardAlpha;                // offset 40
+		float metallicFactor;              // offset 44
+		int32_t baseColorTextureIndex;    // offset 48
+		int32_t emissiveTextureIndex;     // offset 52
+		int32_t normalTextureIndex;       // offset 56
+		int32_t opacityTextureIndex;      // offset 60
+		int32_t metallicRoughnessTextureIndex; // offset 64
+		int32_t occlusionTextureIndex;    // offset 68
+		// Total size: 72 bytes (aligned to 16 bytes = 80 bytes in std140)
+	};
+
 	RHIRenderer::RHIRenderer(RHI* rhi, uint32_t maxFramesInFlight)
 		: rhi_(rhi)
 		, maxFramesInFlight_(maxFramesInFlight)
@@ -113,6 +133,16 @@ namespace BinRenderer
 			}
 		}
 		boneDataUniformBuffers_.clear();
+
+		// ✅ Material buffer 정리
+		if (materialBuffer_)
+		{
+			try { rhi_->destroyBuffer(materialBuffer_); }
+			catch (...) { printLog("⚠️  Warning: Failed to destroy material buffer"); }
+			materialBuffer_ = nullptr;
+		}
+		materialTextures_.clear();
+		materialCount_ = 0;
 
 		// Render targets 정리
 		printLog("   Cleaning up render targets...");
@@ -442,6 +472,97 @@ namespace BinRenderer
 					meshes.size());
 			}
 		}
+	}
+
+	// ========================================
+	// ✅ Material System
+	// ========================================
+
+	void RHIRenderer::buildMaterialBuffer(RHIScene& scene)
+	{
+		printLog("[RHIRenderer] Building material buffer from scene...");
+
+		// 기존 material buffer 정리
+		if (materialBuffer_)
+		{
+			rhi_->destroyBuffer(materialBuffer_);
+			materialBuffer_ = nullptr;
+		}
+		materialTextures_.clear();
+		materialCount_ = 0;
+
+		// Scene에서 모든 모델의 materials 수집
+		std::vector<MaterialUBO> materials;
+		auto models = scene.getModels();
+
+		for (auto* model : models)
+		{
+			if (!model) continue;
+
+			const auto& modelMaterials = model->getMaterials();
+			for (const auto& mat : modelMaterials)
+			{
+				MaterialUBO materialUBO{};
+				const auto& data = mat.getData();
+
+				// Material 데이터 복사
+				materialUBO.emissiveFactor = data.emissiveFactor;
+				materialUBO.baseColorFactor = data.baseColorFactor;
+				materialUBO.roughnessFactor = data.roughness;
+				materialUBO.transparencyFactor = data.transparency;
+				materialUBO.discardAlpha = data.discardAlpha;
+				materialUBO.metallicFactor = data.metallic;
+
+				// Texture indices
+				materialUBO.baseColorTextureIndex = data.baseColorTextureIndex;
+				materialUBO.emissiveTextureIndex = data.emissiveTextureIndex;
+				materialUBO.normalTextureIndex = data.normalTextureIndex;
+				materialUBO.opacityTextureIndex = data.opacityTextureIndex;
+				materialUBO.metallicRoughnessTextureIndex = data.metallicRoughnessTextureIndex;
+				materialUBO.occlusionTextureIndex = data.occlusionTextureIndex;
+
+				materials.push_back(materialUBO);
+			}
+		}
+
+		if (materials.empty())
+		{
+			printLog("[RHIRenderer]   ⚠️  No materials found in scene - using dummy");
+			
+			// 기본 material 하나 추가
+			MaterialUBO defaultMat{};
+			defaultMat.baseColorFactor = glm::vec4(1.0f); // 흰색
+			defaultMat.roughnessFactor = 1.0f;
+			defaultMat.metallicFactor = 0.0f;
+			materials.push_back(defaultMat);
+		}
+
+		materialCount_ = static_cast<uint32_t>(materials.size());
+
+		// GPU 버퍼 생성
+		RHIBufferCreateInfo bufferInfo{};
+		bufferInfo.size = sizeof(MaterialUBO) * materials.size();
+		bufferInfo.usage = RHI_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+		bufferInfo.memoryProperties = RHI_MEMORY_PROPERTY_HOST_VISIBLE_BIT | RHI_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+		materialBuffer_ = rhi_->createBuffer(bufferInfo);
+		if (!materialBuffer_)
+		{
+			printLog("[RHIRenderer] ❌ Failed to create material buffer!");
+			return;
+		}
+
+		// 데이터 업로드
+		void* data = rhi_->mapBuffer(materialBuffer_);
+		memcpy(data, materials.data(), bufferInfo.size);
+		rhi_->unmapBuffer(materialBuffer_);
+
+		printLog("[RHIRenderer]   ✅ Material buffer created: {} materials, {} bytes", 
+			materialCount_, bufferInfo.size);
+
+		// TODO: Texture 수집 및 bindless array 구성
+		// 현재는 placeholder
+		printLog("[RHIRenderer]   ⏳ Material textures collection - TODO");
 	}
 
 } // namespace BinRenderer

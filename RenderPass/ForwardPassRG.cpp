@@ -392,40 +392,9 @@ namespace BinRenderer
 		// Attributes
 		uint32_t offset = 0;
 		
-		// Location 0: position (vec3) - vec4로 패ding
-		RHIVertexInputAttribute posAttr{};
-		posAttr.location = 0;
-		posAttr.binding = 0;
-		posAttr.format = RHI_FORMAT_R32G32B32A32_SFLOAT;  // vec3를 vec4로
-		posAttr.offset = offset;
-		pipelineInfo.vertexInputState.attributes.push_back(posAttr);
-		offset += sizeof(glm::vec3);
+		pipelineInfo.vertexInputState.attributes = RHIVertexHelper::getVertexAttributesAnimated();
 
-		// Location 1: normal (vec3) - vec4로 패딩
-		RHIVertexInputAttribute normalAttr{};
-		normalAttr.location = 1;
-		normalAttr.binding = 0;
-		normalAttr.format = RHI_FORMAT_R32G32B32A32_SFLOAT;  // vec3를 vec4로
-		normalAttr.offset = offset;
-		pipelineInfo.vertexInputState.attributes.push_back(normalAttr);
-		offset += sizeof(glm::vec3);
-
-		// Location 2: texCoord (vec2) - vec4로 패딩
-		RHIVertexInputAttribute texCoordAttr{};
-		texCoordAttr.location = 2;
-		texCoordAttr.binding = 0;
-		texCoordAttr.format = RHI_FORMAT_R32G32B32A32_SFLOAT;  // vec2를 vec4로
-		texCoordAttr.offset = offset;
-		pipelineInfo.vertexInputState.attributes.push_back(texCoordAttr);
-		offset += sizeof(glm::vec2);
-
-		// Location 3: tangent (vec4)
-		RHIVertexInputAttribute tangentAttr{};
-		tangentAttr.location = 3;
-		tangentAttr.binding = 0;
-		tangentAttr.format = RHI_FORMAT_R32G32B32A32_SFLOAT;
-		tangentAttr.offset = offset;
-		pipelineInfo.vertexInputState.attributes.push_back(tangentAttr);
+		
 		
 		// Input Assembly State
 		pipelineInfo.inputAssemblyState.topology = RHI_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -950,6 +919,58 @@ namespace BinRenderer
 				printLog("[ForwardPassRG]   ✅ Dummy shadow map created (4x4)");
 			}
 		}
+
+		// ========================================
+		// ✅ Dummy Images Layout Transition
+		// ========================================
+		printLog("[ForwardPassRG]   Transitioning dummy images to SHADER_READ_ONLY_OPTIMAL...");
+		
+		rhi_->beginCommandRecording();
+		
+		// 1. Dummy Texture (2D color)
+		if (dummyTexture_)
+		{
+			rhi_->cmdTransitionImageLayout(
+				dummyTexture_,
+				RHI_IMAGE_LAYOUT_UNDEFINED,
+				RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				RHI_IMAGE_ASPECT_COLOR_BIT,
+				0, 1,  // mipLevel range
+				0, 1   // arrayLayer range
+			);
+		}
+		
+		// 2. Dummy Cubemap (2D color - TODO: should be cube)
+		if (dummyCubemap_)
+		{
+			rhi_->cmdTransitionImageLayout(
+				dummyCubemap_,
+				RHI_IMAGE_LAYOUT_UNDEFINED,
+				RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				RHI_IMAGE_ASPECT_COLOR_BIT,
+				0, 1,  // mipLevel range
+				0, 1   // arrayLayer range (현재 2D이므로 1)
+			);
+		}
+		
+		// 3. Dummy Shadow Map (Depth)
+		if (dummyShadowMap_)
+		{
+			rhi_->cmdTransitionImageLayout(
+				dummyShadowMap_,
+				RHI_IMAGE_LAYOUT_UNDEFINED,
+				RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				RHI_IMAGE_ASPECT_DEPTH_BIT,
+				0, 1,  // mipLevel range
+				0, 1   // arrayLayer range
+			);
+		}
+		
+		rhi_->endCommandRecording();
+		rhi_->submitCommands();
+		rhi_->waitIdle();
+		
+		printLog("[ForwardPassRG]   ✅ All dummy images transitioned to SHADER_READ_ONLY_OPTIMAL");
 
 		printLog("[ForwardPassRG] ✅ All dummy resources created");
 	}
