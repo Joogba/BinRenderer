@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "../../Resources/RHIShaderReflection.h"
 #include <vulkan/vulkan.h>
 #include <spirv-reflect/spirv_reflect.h>
 #include <string>
@@ -9,139 +10,74 @@
 namespace BinRenderer::Vulkan
 {
 	/**
-	 * @brief SPIRV 셰이더 바인딩 정보
+	 * @brief Vulkan SPIR-V 셰이더 리플렉션 구현
+	 * 
+	 * SPIRV-Reflect 라이브러리를 사용하여 SPIR-V 바이너리 분석
+	 * 
+	 * 사용 예시:
+	 * @code
+	 * std::vector<uint32_t> spirvCode = loadShader("shader.spv");
+	 * auto reflection = std::make_unique<VulkanShaderReflection>(spirvCode.data(), spirvCode.size());
+	 * if (reflection->reflect())
+	 * {
+	 *     const auto& data = reflection->getReflectionData();
+	 *     data.printDebugInfo();
+	 * }
+	 * @endcode
 	 */
-	struct ShaderBindingInfo
-	{
-		std::string name;        // Binding 리소스 이름
-		uint32_t set = 0;  // Descriptor set index
-		uint32_t binding = 0;            // Binding index
-		VkDescriptorType descriptorType;     // Descriptor 타입
-		uint32_t descriptorCount = 1;        // Array 크기
-		VkShaderStageFlags stageFlags = 0;   // 사용되는 셰이더 스테이지
-		
-		// 이미지 전용
-		VkImageLayout imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		VkAccessFlags2 accessFlags = VK_ACCESS_2_NONE;
-		VkPipelineStageFlags2 stageFlags2 = VK_PIPELINE_STAGE_2_NONE;
-		bool writeOnly = false;
-	};
-
-	/**
-	 * @brief SPIRV 셰이더 Push Constants 정보
-	 */
-	struct ShaderPushConstantInfo
-	{
-		std::string name;
-		uint32_t offset = 0;
-		uint32_t size = 0;
-		VkShaderStageFlags stageFlags = 0;
-	};
-
-	/**
-	 * @brief SPIRV 셰이더 Vertex Input 정보
-	 */
-	struct ShaderVertexInputInfo
-	{
-		uint32_t location = 0;
-		VkFormat format = VK_FORMAT_UNDEFINED;
-		uint32_t offset = 0;
-		std::string name;
-	};
-
-	/**
-	 * @brief SPIRV 셰이더 리플렉션 결과
-	 */
-	struct ShaderReflectionData
-	{
-		// Descriptor bindings (set별로 정리)
-		std::map<uint32_t, std::vector<ShaderBindingInfo>> bindings;
-		
-		// Push constants
-		std::vector<ShaderPushConstantInfo> pushConstants;
-		
-		// Vertex inputs (Vertex Shader만)
-		std::vector<ShaderVertexInputInfo> vertexInputs;
-		
-		// Compute workgroup size (Compute Shader만)
-		uint32_t workgroupSizeX = 1;
-		uint32_t workgroupSizeY = 1;
-		uint32_t workgroupSizeZ = 1;
-	};
-
-	/**
-	 * @brief SPIRV-Reflect를 사용한 셰이더 리플렉션 유틸리티
-	 */
-	class VulkanShaderReflection
+	class VulkanShaderReflection : public RHIShaderReflection
 	{
 	public:
 		/**
-		 * @brief SPIRV 바이너리에서 리플렉션 정보 추출
-		 * @param spirvCode SPIRV 바이너리 데이터
-		 * @param codeSize 바이너리 크기 (bytes)
-		 * @param shaderStage 셰이더 스테이지
-		 * @return 리플렉션 결과
+		 * @brief 생성자
+		 * @param spirvCode SPIR-V 바이너리 데이터 (uint32_t 배열)
+		 * @param codeSize 바이트 크기
 		 */
-		static ShaderReflectionData reflect(
-			const uint32_t* spirvCode,
-			size_t codeSize,
-			VkShaderStageFlagBits shaderStage);
-
+		VulkanShaderReflection(const void* spirvCode, size_t codeSize);
+		
 		/**
-		 * @brief 여러 셰이더의 바인딩을 병합 (파이프라인용)
-		 * @param reflections 리플렉션 데이터 배열
-		 * @return 병합된 바인딩 맵
+		 * @brief 생성자 (std::vector 오버로드)
+		 * @param spirvCode SPIR-V 바이너리 벡터
 		 */
-		static std::map<uint32_t, std::vector<ShaderBindingInfo>> mergeBindings(
-			const std::vector<ShaderReflectionData>& reflections);
+		explicit VulkanShaderReflection(const std::vector<uint32_t>& spirvCode);
+		
+		~VulkanShaderReflection() override;
 
-		/**
-		 * @brief Descriptor Set Layout Bindings 생성
-		 * @param bindings 바인딩 정보 맵 (set -> bindings)
-		 * @param setIndex Set index
-		 * @return VkDescriptorSetLayoutBinding 배열
-		 */
-		static std::vector<VkDescriptorSetLayoutBinding> createLayoutBindings(
-			const std::map<uint32_t, std::vector<ShaderBindingInfo>>& bindings,
-			uint32_t setIndex);
-
-		/**
-		 * @brief Push Constant Range 생성
-		 * @param reflections 리플렉션 데이터 배열
-		 * @return VkPushConstantRange 배열
-		 */
-		static std::vector<VkPushConstantRange> createPushConstantRanges(
-			const std::vector<ShaderReflectionData>& reflections);
-
-		/**
-		 * @brief Vertex Input Attribute Descriptions 생성
-		 * @param reflection Vertex shader 리플렉션 데이터
-		 * @return VkVertexInputAttributeDescription 배열
-		 */
-		static std::vector<VkVertexInputAttributeDescription> createVertexInputAttributes(
-			const ShaderReflectionData& reflection);
+		// RHIShaderReflection 인터페이스 구현
+		bool reflect() override;
+		const ShaderReflectionData& getReflectionData() const override;
+		RHIShaderStage getShaderStage() const override;
+		const std::string& getEntryPoint() const override;
+		bool validate() const override;
+		const std::vector<ShaderBindingInfo>* getDescriptorSetBindings(uint32_t setIndex) const override;
+		const std::vector<ShaderPushConstantInfo>& getPushConstants() const override;
+		const std::vector<ShaderVertexInputInfo>& getVertexInputs() const override;
+		void getComputeWorkgroupSize(uint32_t& x, uint32_t& y, uint32_t& z) const override;
 
 	private:
-		/**
-		 * @brief Descriptor binding 정보 추출
-		 */
-		static void extractBindings(
-			const SpvReflectDescriptorBinding* binding,
-			VkShaderStageFlagBits shaderStage,
-			ShaderBindingInfo& outInfo);
+		// SPIR-V 바이너리
+		const void* spirvCode_;
+		size_t codeSize_;
 
-		/**
-		 * @brief Image layout/access 자동 결정
-		 */
-		static void determineImageAccess(
-			const SpvReflectDescriptorBinding* binding,
-			VkShaderStageFlagBits shaderStage,
-			ShaderBindingInfo& outInfo);
+		// SPIRV-Reflect 모듈
+		SpvReflectShaderModule module_;
+		bool moduleCreated_ = false;
 
-		/**
-		 * @brief Pipeline stage flags 결정
-		 */
-		static VkPipelineStageFlags2 getStageFlagsFromShaderStage(VkShaderStageFlagBits stage);
+		// 리플렉션 결과
+		ShaderReflectionData reflectionData_;
+
+		// 헬퍼 함수
+		void reflectDescriptorBindings();
+		void reflectPushConstants();
+		void reflectVertexInputs();
+		void reflectComputeWorkgroupSize();
+		
+		// 타입 변환 헬퍼
+		static RHIDescriptorType convertDescriptorType(VkDescriptorType vkType);
+		static RHIShaderStage convertShaderStage(VkShaderStageFlagBits vkStage);
+		static RHIVertexFormat convertVertexFormat(VkFormat vkFormat);
+		static RHIImageLayout convertImageLayout(VkImageLayout vkLayout);
+		static RHIAccessFlags convertAccessFlags(VkAccessFlags2 vkAccess);
 	};
 
 } // namespace BinRenderer::Vulkan
