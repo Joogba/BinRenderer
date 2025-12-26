@@ -161,8 +161,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="README_RenderGraphTest.md" />
-    <None Include="README_TEST_PROGRAM.md" />
     <None Include="RenderGraph.json" />
   </ItemGroup>
   <ItemGroup>

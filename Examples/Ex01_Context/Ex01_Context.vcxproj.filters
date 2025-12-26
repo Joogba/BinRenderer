@@ -77,8 +77,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="RenderGraph.json" />
-    <None Include="README_RenderGraphTest.md" />
-    <None Include="README_TEST_PROGRAM.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="log.txt" />
