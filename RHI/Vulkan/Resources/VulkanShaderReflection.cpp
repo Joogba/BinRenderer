@@ -1,5 +1,5 @@
-﻿#include "VulkanShaderReflection.h"
-#include "Vulkan/Logger.h"
+#include "VulkanShaderReflection.h"
+#include "Core/Logger.h"
 #include <algorithm>
 
 namespace BinRenderer::Vulkan
@@ -66,7 +66,7 @@ namespace BinRenderer::Vulkan
 		// 리소스 사용량 계산
 		reflectionData_.calculateResourceUsage();
 
-		printLog("[VulkanShaderReflection] ✅ Reflection complete - {} descriptor bindings, {} push constants",
+		printLog("[VulkanShaderReflection]  Reflection complete - {} descriptor bindings, {} push constants",
 			reflectionData_.resourceUsage.totalDescriptors,
 			reflectionData_.pushConstants.size());
 

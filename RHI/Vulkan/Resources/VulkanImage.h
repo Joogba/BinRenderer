@@ -1,7 +1,7 @@
-﻿#pragma once
+#pragma once
 
 #include "../../Resources/RHIImage.h"
-#include "../../Structs/RHIImageCreateInfo.h"
+#include "../../Structs/RHIStructs.h"
 #include <vulkan/vulkan.h>
 
 namespace BinRenderer::Vulkan
@@ -68,11 +68,11 @@ namespace BinRenderer::Vulkan
 		// Vulkan 네이티브 접근
 		VkImageView getVkImageView() const { return imageView_; }
 		
-		// ✅ Swapchain용 - 외부에서 생성된 VkImageView 설정
+		//  Swapchain용 - 외부에서 생성된 VkImageView 설정
 		void setVkImageView(VkImageView imageView) { imageView_ = imageView; }
 		void setOwnsImageView(bool owns) { ownsImageView_ = owns; }
 
-		// ✅ 추가
+		//  추가
 		void setFormat(RHIFormat format) { swapchainFormat_ = format; }  
 
 	private:
@@ -80,8 +80,8 @@ namespace BinRenderer::Vulkan
 		VulkanImage* image_;
 		VkImageView imageView_ = VK_NULL_HANDLE;
 		RHIImageViewType viewType_;
-		bool ownsImageView_ = true;  // ✅ 소유권 플래그
-		RHIFormat swapchainFormat_ = RHI_FORMAT_UNDEFINED;  // ✅ Swapchain format 저장
+		bool ownsImageView_ = true;  //  소유권 플래그
+		RHIFormat swapchainFormat_ = RHI_FORMAT_UNDEFINED;  //  Swapchain format 저장
 	};
 
 } // namespace BinRenderer::Vulkan

@@ -151,9 +151,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="Core\EngineConfig.h" />
     <ClInclude Include="Core\IApplicationListener.h" />
     <ClInclude Include="Core\InputManager.h" />
@@ -164,7 +161,6 @@
     <ClInclude Include="Platform\GLFWWindow.h" />
     <ClInclude Include="Platform\IWindow.h" />
     <ClInclude Include="Platform\WindowFactory.h" />
-    <ClInclude Include="Rendering\ResourceFactory.h" />
     <ClInclude Include="Rendering\RHIMaterial.h" />
     <ClInclude Include="Rendering\RHIMesh.h" />
     <ClInclude Include="Rendering\RHIRenderer.h" />
@@ -187,6 +183,8 @@
     <ClInclude Include="RHI\Commands\RHICommandQueue.h" />
     <ClInclude Include="RHI\Core\RHI.h" />
     <ClInclude Include="RHI\Core\RHIDefinitions.h" />
+    <ClInclude Include="RHI\Core\RHIHandle.h" />
+    <ClInclude Include="RHI\Core\RHIResourcePool.h" />
     <ClInclude Include="RHI\Core\RHISwapchain.h" />
     <ClInclude Include="RHI\Pipeline\RHIDescriptor.h" />
     <ClInclude Include="RHI\Pipeline\RHIFramebuffer.h" />
@@ -195,29 +193,27 @@
     <ClInclude Include="RHI\Pipeline\RHIPipelineState.h" />
     <ClInclude Include="RHI\Pipeline\RHIRenderPass.h" />
     <ClInclude Include="RHI\Resources\RHIBuffer.h" />
-    <ClInclude Include="RHI\Resources\RHICommand.h" />
-    <ClInclude Include="RHI\Resources\RHIDescriptor.h" />
     <ClInclude Include="RHI\Resources\RHIDevice.h" />
     <ClInclude Include="RHI\Resources\RHIImage.h" />
-    <ClInclude Include="RHI\Resources\RHIPipeline.h" />
     <ClInclude Include="RHI\Resources\RHIRenderTarget.h" />
     <ClInclude Include="RHI\Resources\RHIResource.h" />
     <ClInclude Include="RHI\Resources\RHIResources.h" />
-    <ClInclude Include="RHI\Core\RHIStruct.h" />
-    <ClInclude Include="RHI\Core\RHIStructs.h" />
     <ClInclude Include="RHI\Resources\RHISampler.h" />
     <ClInclude Include="RHI\Resources\RHIShader.h" />
     <ClInclude Include="RHI\Resources\RHIShaderReflection.h" />
     <ClInclude Include="RHI\Resources\RHITexture.h" />
-    <ClInclude Include="RHI\Structs\RHIBufferCreateInfo.h" />
-    <ClInclude Include="RHI\Structs\RHIDescriptorCreateInfo.h" />
-    <ClInclude Include="RHI\Structs\RHIImageCreateInfo.h" />
-    <ClInclude Include="RHI\Structs\RHIImageViewCreateInfo.h" />
-    <ClInclude Include="RHI\Structs\RHIInstanceData.h" />
-    <ClInclude Include="RHI\Structs\RHIPipelineCreateInfo.h" />
-    <ClInclude Include="RHI\Structs\RHISamplerCreateInfo.h" />
-    <ClInclude Include="RHI\Structs\RHIShaderCreateInfo.h" />
+    <ClInclude Include="RHI\Resources\RHITextureLoader.h" />
+    <ClInclude Include="RHI\Structs\RHIBufferStructs.h" />
+    <ClInclude Include="RHI\Structs\RHICommandStructs.h" />
+    <ClInclude Include="RHI\Structs\RHICommonStructs.h" />
+    <ClInclude Include="RHI\Structs\RHIDescriptorStructs.h" />
+    <ClInclude Include="RHI\Structs\RHIDeviceStructs.h" />
+    <ClInclude Include="RHI\Structs\RHIImageStructs.h" />
+    <ClInclude Include="RHI\Structs\RHIPipelineStructs.h" />
+    <ClInclude Include="RHI\Structs\RHIRenderPassStructs.h" />
+    <ClInclude Include="RHI\Structs\RHIShaderStructs.h" />
     <ClInclude Include="RHI\Structs\RHIStructs.h" />
+    <ClInclude Include="RHI\Structs\RHISyncStructs.h" />
     <ClInclude Include="RHI\Synchronization\RHIEvent.h" />
     <ClInclude Include="RHI\Synchronization\RHIFence.h" />
     <ClInclude Include="RHI\Synchronization\RHISemaphore.h" />
@@ -256,87 +252,155 @@
     <ClInclude Include="RHI\Vulkan\VulkanUtil.h" />
     <ClInclude Include="Scene\Animation.h" />
     <ClInclude Include="Scene\RHICamera.h" />
-    <ClInclude Include="Vulkan\RenderGraphBuilder.h" />
-    <ClInclude Include="Vulkan\Application.h" />
-    <ClInclude Include="Vulkan\BarrierHelper.h" />
-    <ClInclude Include="Vulkan\Camera.h" />
-    <ClInclude Include="Vulkan\Cloth\ClothConfig.h" />
-    <ClInclude Include="Vulkan\Cloth\ClothMesh.h" />
-    <ClInclude Include="Vulkan\Cloth\ClothRenderPass.h" />
-    <ClInclude Include="Vulkan\Cloth\ClothSimulation.h" />
-    <ClInclude Include="Vulkan\DescriptorSet.h" />
-    <ClInclude Include="Vulkan\EngineConfig.h" />
-    <ClInclude Include="Vulkan\GpuTimer.h" />
-    <ClInclude Include="Vulkan\GuiRenderer.h" />
-    <ClInclude Include="Vulkan\IApplicationListener.h" />
-    <ClInclude Include="Vulkan\Image2D.h" />
-    <ClInclude Include="Vulkan\DescriptorPool.h" />
-    <ClInclude Include="Vulkan\CommandBuffer.h" />
-    <ClInclude Include="Vulkan\Context.h" />
-    <ClInclude Include="Core\Buffer.h" />
-    <ClInclude Include="Core\FlagOps.h" />
-    <ClInclude Include="Core\ITransientBufferAllocator.h" />
-    <ClInclude Include="Core\RenderManager.h" />
-    <ClInclude Include="Core\ResourceDesc.h" />
-    <ClInclude Include="Core\StaticBatcher.h" />
-    <ClInclude Include="Math\MathUtility.h" />
-    <ClInclude Include="Math\MatrixUtil.h" />
-    <ClInclude Include="Math\Plane.h" />
-    <ClInclude Include="Math\VectorUtil.h" />
-    <ClInclude Include="Core\DrawQueue.h" />
-    <ClInclude Include="GeometryGenerator.h" />
-    <ClInclude Include="Core\Handle.h" />
-    <ClInclude Include="Resources\MaterialRegistry.h" />
-    <ClInclude Include="MeshData.h" />
-    <ClInclude Include="Resources\MeshFactory.h" />
-    <ClInclude Include="Resources\MeshRegistry.h" />
-    <ClInclude Include="Core\PassResources.h" />
-    <ClInclude Include="Resources\PSORegistry.h" />
-    <ClInclude Include="Core\RendererAPI.h" />
+    <ClInclude Include="Utils\TextureLoader.h" />
+    <ClInclude Include="LegacyVulkan\RenderGraphBuilder.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Application.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\BarrierHelper.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Camera.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Cloth\ClothConfig.h" />
+    <ClInclude Include="LegacyVulkan\Cloth\ClothMesh.h" />
+    <ClInclude Include="LegacyVulkan\Cloth\ClothRenderPass.h" />
+    <ClInclude Include="LegacyVulkan\Cloth\ClothSimulation.h" />
+    <ClInclude Include="LegacyVulkan\DescriptorSet.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\EngineConfig.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\GpuTimer.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\GuiRenderer.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\IApplicationListener.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Image2D.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\DescriptorPool.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\CommandBuffer.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Context.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Core\RenderGraphBuilder.h" />
-    <ClInclude Include="Core\RenderStates.h" />
-    <ClInclude Include="Resources\RenderTargetRegistry.h" />
-    <ClInclude Include="Resources\ResourceManager.h" />
     <ClInclude Include="Resources\ShaderRegistry.h" />
     <ClInclude Include="Resources\SamplerRegistry.h" />
     <ClInclude Include="Resources\TextureRegistry.h" />
     <ClInclude Include="Scene\Light\Light.h" />
-    <ClInclude Include="UniformSystem.h" />
-    <ClInclude Include="Core\Vertex.h" />
     <ClInclude Include="View.h" />
-    <ClInclude Include="Vulkan\InputManager.h" />
-    <ClInclude Include="Vulkan\IRenderPass.h" />
-    <ClInclude Include="Vulkan\Logger.h" />
-    <ClInclude Include="Vulkan\MappedBuffer.h" />
-    <ClInclude Include="Vulkan\Material.h" />
-    <ClInclude Include="Vulkan\Mesh.h" />
-    <ClInclude Include="Vulkan\Model.h" />
-    <ClInclude Include="Vulkan\ModelLoader.h" />
-    <ClInclude Include="Vulkan\ModelNode.h" />
-    <ClInclude Include="Vulkan\Pipeline.h" />
-    <ClInclude Include="Vulkan\PipelineConfig.h" />
-    <ClInclude Include="Vulkan\PushConstants.h" />
-    <ClInclude Include="Vulkan\Renderer.h" />
-    <ClInclude Include="Vulkan\RenderGraph.h" />
-    <ClInclude Include="Vulkan\RenderPassManager.h" />
-    <ClInclude Include="Vulkan\Resource.h" />
-    <ClInclude Include="Vulkan\ResourceBinding.h" />
-    <ClInclude Include="Vulkan\ResourceHandle.h" />
-    <ClInclude Include="Vulkan\ResourceRegistry.h" />
-    <ClInclude Include="Vulkan\Sampler.h" />
-    <ClInclude Include="Vulkan\Scene.h" />
-    <ClInclude Include="Vulkan\Shader.h" />
-    <ClInclude Include="Vulkan\ShaderManager.h" />
-    <ClInclude Include="Vulkan\Skeleton.h" />
-    <ClInclude Include="Vulkan\StorageBuffer.h" />
-    <ClInclude Include="Vulkan\Swapchain.h" />
-    <ClInclude Include="Vulkan\TextureManager.h" />
-    <ClInclude Include="Vulkan\TracyProfiler.h" />
-    <ClInclude Include="Vulkan\Vertex.h" />
-    <ClInclude Include="Vulkan\ViewFrustum.h" />
-    <ClInclude Include="Vulkan\VulkanResourceManager.h" />
-    <ClInclude Include="Vulkan\VulkanTools.h" />
-    <ClInclude Include="Vulkan\Window.h" />
+    <ClInclude Include="LegacyVulkan\InputManager.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\IRenderPass.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Logger.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\MappedBuffer.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Material.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Mesh.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Model.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\ModelLoader.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\ModelNode.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Pipeline.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\PipelineConfig.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\PushConstants.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Renderer.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\RenderGraph.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\RenderPassManager.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Resource.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\ResourceBinding.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\ResourceHandle.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\ResourceRegistry.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Sampler.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Scene.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Shader.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\ShaderManager.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Skeleton.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\StorageBuffer.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Swapchain.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\TextureManager.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\TracyProfiler.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Vertex.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\ViewFrustum.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\VulkanResourceManager.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\VulkanTools.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="LegacyVulkan\Window.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\InputManager.cpp" />
@@ -347,7 +411,6 @@
     <ClCompile Include="Examples\RenderGraph_Example.cpp" />
     <ClCompile Include="Platform\GLFWWindow.cpp" />
     <ClCompile Include="Platform\WindowFactory.cpp" />
-    <ClCompile Include="Rendering\ResourceFactory.cpp" />
     <ClCompile Include="Rendering\RHIMaterial.cpp" />
     <ClCompile Include="Rendering\RHIMesh.cpp" />
     <ClCompile Include="Rendering\RHIRenderer.cpp" />
@@ -366,6 +429,7 @@
     <ClCompile Include="RHI\Core\RHI.cpp" />
     <ClCompile Include="RHI\Core\RHIType.h" />
     <ClCompile Include="RHI\Resources\RHIShaderReflection.cpp" />
+    <ClCompile Include="RHI\Resources\RHITextureLoader.cpp" />
     <ClCompile Include="RHI\Util\RHIDebug.cpp" />
     <ClCompile Include="RHI\Util\RHIFactory.cpp" />
     <ClCompile Include="RHI\Util\RHIValidation.cpp" />
@@ -400,83 +464,141 @@
     <ClCompile Include="RHI\Vulkan\VulkanUtil.cpp" />
     <ClCompile Include="Scene\Animation.cpp" />
     <ClCompile Include="Scene\RHICamera.cpp" />
-    <ClCompile Include="Vulkan\RenderGraphBuilder.cpp" />
-    <ClCompile Include="Resources\ResourceManager.cpp" />
-    <ClCompile Include="Vulkan\Application.cpp" />
-    <ClCompile Include="Vulkan\BarrierHelper.cpp" />
-    <ClCompile Include="Vulkan\Camera.cpp" />
-    <ClCompile Include="Vulkan\Cloth\ClothMesh.cpp" />
-    <ClCompile Include="Vulkan\Cloth\ClothRenderPass.cpp" />
-    <ClCompile Include="Vulkan\Cloth\ClothSimulation.cpp" />
-    <ClCompile Include="Vulkan\DescriptorSet.cpp" />
-    <ClCompile Include="Vulkan\GpuTimer.cpp" />
-    <ClCompile Include="Vulkan\GuiRenderer.cpp" />
-    <ClCompile Include="Vulkan\Image2D.cpp" />
-    <ClCompile Include="Vulkan\DescriptorPool.cpp" />
-    <ClCompile Include="Vulkan\CommandBuffer.cpp" />
-    <ClCompile Include="Vulkan\Context.cpp" />
-    <ClCompile Include="Scene\Camera.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    <ClCompile Include="Utils\TextureLoader.cpp" />
+    <ClCompile Include="LegacyVulkan\RenderGraphBuilder.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Core\RenderEnums.h" />
-    <ClCompile Include="Core\RenderManager.cpp" />
-    <ClCompile Include="Core\StaticBatcher.cpp" />
-    <ClCompile Include="Core\DrawCommand.h" />
-    <ClCompile Include="GeometryGenerator.cpp" />
-    <ClCompile Include="Core\IRenderPass.h" />
-    <ClCompile Include="Resources\MeshFactory.cpp" />
-    <ClCompile Include="Resources\RenderTargetPool.h" />
-    <ClCompile Include="TextureLoader.h" />
-    <ClCompile Include="UniformSystem.cpp" />
-    <ClCompile Include="Vulkan\InputManager.cpp">
+    <ClCompile Include="LegacyVulkan\Application.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\BarrierHelper.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Camera.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Cloth\ClothMesh.cpp" />
+    <ClCompile Include="LegacyVulkan\Cloth\ClothRenderPass.cpp" />
+    <ClCompile Include="LegacyVulkan\Cloth\ClothSimulation.cpp" />
+    <ClCompile Include="LegacyVulkan\DescriptorSet.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\GpuTimer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\GuiRenderer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Image2D.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\DescriptorPool.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\CommandBuffer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Context.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\InputManager.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Vulkan\Logger.cpp" />
-    <ClCompile Include="Vulkan\MappedBuffer.cpp" />
-    <ClCompile Include="Vulkan\Material.cpp" />
-    <ClCompile Include="Vulkan\Mesh.cpp" />
-    <ClCompile Include="Vulkan\Model.cpp" />
-    <ClCompile Include="Vulkan\ModelLoader.cpp" />
-    <ClCompile Include="Vulkan\ModelNode.cpp" />
-    <ClCompile Include="Vulkan\Pipeline.cpp" />
-    <ClCompile Include="Vulkan\PipelineCompute.cpp" />
-    <ClCompile Include="Vulkan\PipelineConfig.cpp" />
-    <ClCompile Include="Vulkan\PushConstants.cpp" />
-    <ClCompile Include="Vulkan\Renderer.cpp" />
-    <ClCompile Include="Vulkan\RenderGraph.cpp" />
-    <ClCompile Include="Vulkan\RenderPassManager.cpp" />
-    <ClCompile Include="Vulkan\Resource.cpp" />
-    <ClCompile Include="Vulkan\ResourceBinding.cpp" />
-    <ClCompile Include="Vulkan\ResourceRegistry.cpp" />
-    <ClCompile Include="Vulkan\Sampler.cpp" />
-    <ClCompile Include="Vulkan\Scene.cpp" />
-    <ClCompile Include="Vulkan\Shader.cpp" />
-    <ClCompile Include="Vulkan\ShaderManager.cpp" />
-    <ClCompile Include="Vulkan\Skeleton.cpp" />
-    <ClCompile Include="Vulkan\StorageBuffer.cpp" />
-    <ClCompile Include="Vulkan\Swapchain.cpp" />
-    <ClCompile Include="Vulkan\TextureManager.cpp" />
-    <ClCompile Include="Vulkan\TracyProfiler.cpp" />
-    <ClCompile Include="Vulkan\Vertex.cpp" />
-    <ClCompile Include="Vulkan\ViewFrustum.cpp" />
-    <ClCompile Include="Vulkan\VulkanResourceManager.cpp" />
-    <ClCompile Include="Vulkan\VulkanTools.cpp" />
-    <ClCompile Include="Vulkan\Window.cpp" />
+    <ClCompile Include="LegacyVulkan\Logger.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\MappedBuffer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Material.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Mesh.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Model.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\ModelLoader.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\ModelNode.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Pipeline.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\PipelineCompute.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\PipelineConfig.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\PushConstants.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Renderer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\RenderGraph.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\RenderPassManager.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Resource.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\ResourceBinding.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\ResourceRegistry.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Sampler.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Scene.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Shader.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\ShaderManager.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Skeleton.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\StorageBuffer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Swapchain.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\TextureManager.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\TracyProfiler.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Vertex.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\ViewFrustum.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\VulkanResourceManager.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\VulkanTools.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LegacyVulkan\Window.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Basic.hlsl">
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VSMain</EntryPointName>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">VSMain</EntryPointName>
-    </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\..\Users\tjdwn\Downloads\checker.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ANALYSIS_Rendering_Logic_vs_RHI_Implementation.md" />
-    <None Include="ANALYSIS_RHI_Vulkan_Detailed.md" />
     <None Include="assets\shaders\cloth\cloth.frag" />
     <None Include="assets\shaders\cloth\cloth.vert" />
     <None Include="assets\shaders\cloth\cloth_constraints.comp" />
@@ -484,11 +606,6 @@
     <None Include="assets\shaders\cloth\cloth_normals.comp" />
     <None Include="assets\shaders\simple.frag" />
     <None Include="assets\shaders\simple.vert" />
-    <None Include="BUGFIX_GLFW_ACCESS_VIOLATION.md" />
-    <None Include="BUGFIX_RHIRENDERER_RUNTIME_ERROR.md" />
-    <None Include="BUGFIX_SWAPCHAIN_NULL.md" />
-    <None Include="BUGFIX_VULKANRHI_ACCESS_VIOLATION.md" />
-    <None Include="ClassDiagram.cd" />
     <None Include="compile_cloth_shaders.bat" />
     <None Include="Docs\BinRenderer\BarrierHelper.md" />
     <None Include="Docs\BinRenderer\Camera.md" />
@@ -533,29 +650,8 @@
     <None Include="Docs\VulkanArchitecture.canvas" />
     <None Include="Docs\VulkanClasses.md" />
     <None Include="Docs\VulkanHeadlessMode_Fix.md" />
-    <None Include="FEATURE_PLATFORM_INDEPENDENT_WINDOW.md" />
-    <None Include="FEATURE_WINDOW_INTEGRATION.md" />
-    <None Include="FINAL_MIGRATION_PLAN.md" />
-    <None Include="FINAL_RHI_Vulkan_Status.md" />
-    <None Include="FOUND_RHI_Vulkan_Already_Implemented.md" />
-    <None Include="GPU_INSTANCING_MIGRATION_COMPLETE.md" />
-    <None Include="MIGRATION_GUIDE_Vulkan_to_RHI.md" />
-    <None Include="MIGRATION_SUMMARY.md" />
-    <None Include="PHASE1_APPLICATION_COMPLETE.md" />
-    <None Include="PHASE1_COMPLETE_SUMMARY.md" />
-    <None Include="PHASE1_RENDERER_MIGRATION_START.md" />
-    <None Include="PHASE1_SCENE_INTEGRATION_COMPLETE.md" />
-    <None Include="PHASE3_COMPLETE.md" />
-    <None Include="PHASE3_PLAN.md" />
-    <None Include="README_RHI.md" />
     <None Include="RenderPass\RenderGraph\QUICK_START.md" />
     <None Include="RenderPass\RenderGraph\README.md" />
-    <None Include="SUMMARY_VulkanSwapchain_Complete.md" />
-    <None Include="VULKAN_BARRIER_COMPLETE.md" />
-    <None Include="VULKAN_CONTEXT_HELPERS_COMPLETE.md" />
-    <None Include="VULKAN_DESCRIPTOR_AUTO_POOL_COMPLETE.md" />
-    <None Include="VULKAN_DYNAMIC_RENDERING_COMPLETE.md" />
-    <None Include="VULKAN_SHADER_REFLECTION_COMPLETE.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

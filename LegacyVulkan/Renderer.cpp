@@ -1,7 +1,7 @@
-﻿#include "Renderer.h"
+#include "Renderer.h"
 #include "Logger.h"
 #include "TracyProfiler.h"
-#include "VulkanResourceManager.h"  // ✅ VulkanResourceManager 헤더 추가
+#include "VulkanResourceManager.h"  //  VulkanResourceManager 헤더 추가
 
 #include <optional>
 #include <stb_image.h>
@@ -12,9 +12,9 @@ namespace BinRenderer::Vulkan {
 		const string& kAssetsPathPrefix, const string& kShaderPathPrefix_,
 		vector<unique_ptr<Model>>& models, VkFormat outColorFormat, VkFormat depthFormat,
 		uint32_t swapChainWidth, uint32_t swapChainHeight,
-		VulkanResourceManager* resourceManager)  // ✅ 파라미터 추가
+		VulkanResourceManager* resourceManager)  //  파라미터 추가
 		: ctx_(ctx), shaderManager_(shaderManager),
-		resourceManager_(resourceManager),  // ✅ 초기화
+		resourceManager_(resourceManager),  //  초기화
 		kMaxFramesInFlight_(kMaxFramesInFlight),
 		kAssetsPathPrefix_(kAssetsPathPrefix), kShaderPathPrefix_(kShaderPathPrefix_),
 		samplerShadow_(ctx), samplerLinearRepeat_(ctx), samplerLinearClamp_(ctx),
@@ -23,10 +23,10 @@ namespace BinRenderer::Vulkan {
 	{
 		TRACY_CPU_SCOPE("Renderer::Constructor");
 
-		// ✅ ResourceRegistry 설정
+		//  ResourceRegistry 설정
 		if (resourceManager_) {
 			resourceRegistry_ = &resourceManager_->GetGpuResources();
-			printLog("✅ Renderer using VulkanResourceManager's ResourceRegistry");
+			printLog(" Renderer using VulkanResourceManager's ResourceRegistry");
 		}
 		else {
 			printLog("⚠️ Renderer created without VulkanResourceManager");
@@ -170,7 +170,7 @@ namespace BinRenderer::Vulkan {
 	{
 		TRACY_CPU_SCOPE("Renderer::createUniformBuffers");
 
-		// ✅ Null check
+		//  Null check
 		if (!resourceRegistry_) {
 			printLog("❌ ERROR: ResourceRegistry not available!");
 			return;
@@ -182,7 +182,7 @@ namespace BinRenderer::Vulkan {
 			{
 				auto sceneBuffer = std::make_unique<MappedBuffer>(ctx_);
 				sceneBuffer->createUniformBuffer(sceneUBO_);
-				resourceHandles_.sceneData[i] = resourceRegistry_->registerBuffer(  // ✅ -> 사용
+				resourceHandles_.sceneData[i] = resourceRegistry_->registerBuffer(  //  -> 사용
 					std::format("sceneData_{}", i),
 					std::move(sceneBuffer)
 				);
@@ -192,7 +192,7 @@ namespace BinRenderer::Vulkan {
 			{
 				auto optionsBuffer = std::make_unique<MappedBuffer>(ctx_);
 				optionsBuffer->createUniformBuffer(optionsUBO_);
-				resourceHandles_.options[i] = resourceRegistry_->registerBuffer(  // ✅ -> 사용
+				resourceHandles_.options[i] = resourceRegistry_->registerBuffer(  //  -> 사용
 					std::format("options_{}", i),
 					std::move(optionsBuffer)
 				);
@@ -202,7 +202,7 @@ namespace BinRenderer::Vulkan {
 			{
 				auto skyOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
 				skyOptionsBuffer->createUniformBuffer(skyOptionsUBO_);
-				resourceHandles_.skyOptions[i] = resourceRegistry_->registerBuffer(  // ✅ -> 사용
+				resourceHandles_.skyOptions[i] = resourceRegistry_->registerBuffer(  //  -> 사용
 					std::format("skyOptions_{}", i),
 					std::move(skyOptionsBuffer)
 				);
@@ -212,7 +212,7 @@ namespace BinRenderer::Vulkan {
 			{
 				auto postOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
 				postOptionsBuffer->createUniformBuffer(postOptionsUBO_);
-				resourceHandles_.postOptions[i] = resourceRegistry_->registerBuffer(  // ✅ -> 사용
+				resourceHandles_.postOptions[i] = resourceRegistry_->registerBuffer(  //  -> 사용
 					std::format("postOptions_{}", i),
 					std::move(postOptionsBuffer)
 				);
@@ -222,7 +222,7 @@ namespace BinRenderer::Vulkan {
 			{
 				auto ssaoOptionsBuffer = std::make_unique<MappedBuffer>(ctx_);
 				ssaoOptionsBuffer->createUniformBuffer(ssaoOptionsUBO_);
-				resourceHandles_.ssaoOptions[i] = resourceRegistry_->registerBuffer(  // ✅ -> 사용
+				resourceHandles_.ssaoOptions[i] = resourceRegistry_->registerBuffer(  //  -> 사용
 					std::format("ssaoOptions_{}", i),
 					std::move(ssaoOptionsBuffer)
 				);
@@ -232,14 +232,14 @@ namespace BinRenderer::Vulkan {
 			{
 				auto boneDataBuffer = std::make_unique<MappedBuffer>(ctx_);
 				boneDataBuffer->createUniformBuffer(boneDataUBO_);
-				resourceHandles_.boneData[i] = resourceRegistry_->registerBuffer(  // ✅ -> 사용
+				resourceHandles_.boneData[i] = resourceRegistry_->registerBuffer(  //  -> 사용
 					std::format("boneData_{}", i),
 					std::move(boneDataBuffer)
 				);
 			}
 		}
 
-		printLog("✅ Created {} uniform buffer types × {} frames = {} total buffers",
+		printLog(" Created {} uniform buffer types × {} frames = {} total buffers",
 			6, kMaxFramesInFlight_, 6 * kMaxFramesInFlight_);
 	}
 
@@ -249,7 +249,7 @@ namespace BinRenderer::Vulkan {
 		TRACY_CPU_SCOPE("Renderer::update");
 
 		// ========================================
-		// ✅ GPU Instancing: Detect if any model uses instancing
+		//  GPU Instancing: Detect if any model uses instancing
 		// ========================================
 		{
 			TRACY_CPU_SCOPE("Detect GPU Instancing");
@@ -288,27 +288,27 @@ namespace BinRenderer::Vulkan {
 			TRACY_CPU_SCOPE("Update Uniform Buffers");
 
 			// 🆕 NEW SYSTEM: Use ResourceRegistry with Handles
-			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.sceneData[currentFrame])) {  // ✅ -> 사용
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.sceneData[currentFrame])) {  //  -> 사용
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.options[currentFrame])) {  // ✅ -> 사용
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.options[currentFrame])) {  //  -> 사용
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.skyOptions[currentFrame])) {  // ✅ -> 사용
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.skyOptions[currentFrame])) {  //  -> 사용
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.postOptions[currentFrame])) {  // ✅ -> 사용
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.postOptions[currentFrame])) {  //  -> 사용
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.ssaoOptions[currentFrame])) {  // ✅ -> 사용
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.ssaoOptions[currentFrame])) {  //  -> 사용
 				buffer->updateFromCpuData();
 			}
 
-			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.boneData[currentFrame])) {  // ✅ -> 사용
+			if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.boneData[currentFrame])) {  //  -> 사용
 				buffer->updateFromCpuData();
 			}
 		}
@@ -354,7 +354,7 @@ namespace BinRenderer::Vulkan {
 		}
 
 		// 🆕 NEW SYSTEM: Update via Handle
-		if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.boneData[currentFrame])) {  // ✅ 이미 -> 사용 중
+		if (auto* buffer = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.boneData[currentFrame])) {  //  이미 -> 사용 중
 			buffer->updateFromCpuData();
 		}
 	}
@@ -688,7 +688,7 @@ namespace BinRenderer::Vulkan {
 				auto prefilteredMap = std::make_unique<Image2D>(ctx_);
 				prefilteredMap->createTextureFromKtx2(path + "specularGGX.ktx2", true);
 				prefilteredMap->setSampler(samplerLinearRepeat_.handle());
-				resourceHandles_.prefilteredMap = resourceRegistry_->registerImage(  // ✅ -> 사용
+				resourceHandles_.prefilteredMap = resourceRegistry_->registerImage(  //  -> 사용
 					"prefilteredMap", std::move(prefilteredMap)
 				);
 			}
@@ -698,7 +698,7 @@ namespace BinRenderer::Vulkan {
 				auto irradianceMap = std::make_unique<Image2D>(ctx_);
 				irradianceMap->createTextureFromKtx2(path + "diffuseLambertian.ktx2", true);
 				irradianceMap->setSampler(samplerLinearRepeat_.handle());
-				resourceHandles_.irradianceMap = resourceRegistry_->registerImage(  // ✅ -> 사용
+				resourceHandles_.irradianceMap = resourceRegistry_->registerImage(  //  -> 사용
 					"irradianceMap", std::move(irradianceMap)
 				);
 			}
@@ -708,12 +708,12 @@ namespace BinRenderer::Vulkan {
 				auto brdfLut = std::make_unique<Image2D>(ctx_);
 				brdfLut->createTextureFromImage(path + "outputLUT.png", false, false);
 				brdfLut->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.brdfLut = resourceRegistry_->registerImage(  // ✅ -> 사용
+				resourceHandles_.brdfLut = resourceRegistry_->registerImage(  //  -> 사용
 					"brdfLut", std::move(brdfLut)
 				);
 			}
 
-			printLog("✅ IBL textures loaded successfully");
+			printLog(" IBL textures loaded successfully");
 		}
 
 		{
@@ -739,7 +739,7 @@ namespace BinRenderer::Vulkan {
 					selectedHDRFormat_, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT,
 					storageUsage, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
 				floatColor1->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.floatColor1 = resourceRegistry_->registerImage(  // ✅ -> 사용
+				resourceHandles_.floatColor1 = resourceRegistry_->registerImage(  //  -> 사용
 					"floatColor1", std::move(floatColor1)
 				);
 			}
@@ -751,12 +751,12 @@ namespace BinRenderer::Vulkan {
 					selectedHDRFormat_, swapchainWidth, swapchainHeight, VK_SAMPLE_COUNT_1_BIT,
 					storageUsage, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
 				floatColor2->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.floatColor2 = resourceRegistry_->registerImage(  // ✅ -> 사용
+				resourceHandles_.floatColor2 = resourceRegistry_->registerImage(  //  -> 사용
 					"floatColor2", std::move(floatColor2)
 				);
 			}
 
-			printLog("✅ HDR render targets created successfully");
+			printLog(" HDR render targets created successfully");
 		}
 
 		{
@@ -793,7 +793,7 @@ namespace BinRenderer::Vulkan {
 					VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
 					VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
 				gAlbedo->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.gAlbedo = resourceRegistry_->registerImage(  // ✅ -> 사용
+				resourceHandles_.gAlbedo = resourceRegistry_->registerImage(  //  -> 사용
 					"gAlbedo", std::move(gAlbedo)
 				);
 			}
@@ -804,7 +804,7 @@ namespace BinRenderer::Vulkan {
 					VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
 					VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
 				gNormal->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.gNormal = resourceRegistry_->registerImage(  // ✅ -> 사용
+				resourceHandles_.gNormal = resourceRegistry_->registerImage(  //  -> 사용
 					"gNormal", std::move(gNormal)
 				);
 			}
@@ -815,7 +815,7 @@ namespace BinRenderer::Vulkan {
 					VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
 					VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
 				gPosition->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.gPosition = resourceRegistry_->registerImage(  // ✅ -> 사용
+				resourceHandles_.gPosition = resourceRegistry_->registerImage(  //  -> 사용
 					"gPosition", std::move(gPosition)
 				);
 			}
@@ -826,12 +826,12 @@ namespace BinRenderer::Vulkan {
 					VK_SAMPLE_COUNT_1_BIT, gBufferUsage,
 					VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, 0, VK_IMAGE_VIEW_TYPE_2D);
 				gMaterial->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.gMaterial = resourceRegistry_->registerImage(  // ✅ -> 사용
+				resourceHandles_.gMaterial = resourceRegistry_->registerImage(  //  -> 사용
 					"gMaterial", std::move(gMaterial)
 				);
 			}
 
-			printLog("✅ G-buffer creation complete");
+			printLog(" G-buffer creation complete");
 		}
 
 		{
@@ -842,7 +842,7 @@ namespace BinRenderer::Vulkan {
 				auto depthStencil = std::make_unique<Image2D>(ctx_);
 				depthStencil->createDepthBuffer(swapchainWidth, swapchainHeight);
 				depthStencil->setSampler(samplerLinearClamp_.handle());
-				resourceHandles_.depthStencil = resourceRegistry_->registerImage(  // ✅ -> 사용
+				resourceHandles_.depthStencil = resourceRegistry_->registerImage(  //  -> 사용
 					"depthStencil", std::move(depthStencil)
 				);
 			}
@@ -852,15 +852,15 @@ namespace BinRenderer::Vulkan {
 				auto shadowMap = std::make_unique<Image2D>(ctx_);
 				shadowMap->createShadow(shadowMapSize, shadowMapSize);
 				shadowMap->setSampler(samplerShadow_.handle());
-				resourceHandles_.shadowMap = resourceRegistry_->registerImage(  // ✅ -> 사용
+				resourceHandles_.shadowMap = resourceRegistry_->registerImage(  //  -> 사용
 					"shadowMap", std::move(shadowMap)
 				);
 			}
 
-			printLog("✅ Depth and shadow buffers created successfully");
+			printLog(" Depth and shadow buffers created successfully");
 		}
 
-		printLog("✅ All textures and render targets created successfully");
+		printLog(" All textures and render targets created successfully");
 	}
 
 	// Format selection function with proper priority: float formats first, R8G8B8A8 last
@@ -1175,7 +1175,7 @@ namespace BinRenderer::Vulkan {
 	}
 
 	// ========================================
-	// ✅ NEW API: Model* 기반 오버로드 구현
+	//  NEW API: Model* 기반 오버로드 구현
 	// ========================================
 
 	void Renderer::update(Camera& camera, vector<Model*>& models, uint32_t currentFrame, double time)
@@ -1183,7 +1183,7 @@ namespace BinRenderer::Vulkan {
 		TRACY_CPU_SCOPE("Renderer::update (Model*)");
 
 		// ========================================
-		// ✅ GPU Instancing: Detect if any model uses instancing
+		//  GPU Instancing: Detect if any model uses instancing
 		// ========================================
 		{
 			TRACY_CPU_SCOPE("Detect GPU Instancing");
@@ -1386,7 +1386,7 @@ namespace BinRenderer::Vulkan {
 				}
 			}
 
-			// ✅ FIX: Get dimensions properly
+			//  FIX: Get dimensions properly
 			uint32_t width = uint32_t(viewport.width);
 			uint32_t height = uint32_t(viewport.height);
 
@@ -1452,7 +1452,7 @@ namespace BinRenderer::Vulkan {
 							vkCmdSetDepthBias(cmd, 1.1f, 0.0f, 2.0f);
 						}
 
-						// ✅ Render models (Model* version)
+						//  Render models (Model* version)
 						{
 							TRACY_CPU_SCOPE("DrawModels");
 
@@ -1464,7 +1464,7 @@ namespace BinRenderer::Vulkan {
 								if (!model || !model->visible()) continue;
 
 								// ========================================
-								// ✅ GPU Instancing: Get instance count & buffer
+								//  GPU Instancing: Get instance count & buffer
 								// ========================================
 								uint32_t instanceCount = model->getInstanceCount();
 								VkBuffer instanceBuffer = model->getInstanceBuffer();
@@ -1474,7 +1474,7 @@ namespace BinRenderer::Vulkan {
 								}
 
 								// ========================================
-								// ✅ GPU Instancing: Set shader flag
+								//  GPU Instancing: Set shader flag
 								// ========================================
 								bool isInstanced = (instanceCount > 1 && instanceBuffer != VK_NULL_HANDLE);
 
@@ -1496,7 +1496,7 @@ namespace BinRenderer::Vulkan {
 										0, sizeof(PbrPushConstants), &pushConstants);
 
 									// ========================================
-									// ✅ GPU Instancing: Bind vertex + instance buffers
+									//  GPU Instancing: Bind vertex + instance buffers
 									// ========================================
 									vkCmdBindVertexBuffers(cmd, 0, 1, &mesh.vertexBuffer_, offsets);
 
@@ -1508,7 +1508,7 @@ namespace BinRenderer::Vulkan {
 									vkCmdBindIndexBuffer(cmd, mesh.indexBuffer_, 0, VK_INDEX_TYPE_UINT32);
 
 									// ========================================
-									// ✅ GPU Instancing: Draw with instanceCount
+									//  GPU Instancing: Draw with instanceCount
 									// ========================================
 									vkCmdDrawIndexed(cmd, static_cast<uint32_t>(mesh.indices_.size()),
 										instanceCount, 0, 0, 0);
@@ -1532,8 +1532,8 @@ namespace BinRenderer::Vulkan {
 	}
 
 	// ========================================
-	// ✅ NEW: Material 동적 업데이트
-	// ✅ NEW: RenderPass system helper methods
+	//  NEW: Material 동적 업데이트
+	//  NEW: RenderPass system helper methods
 	// ========================================
 
 	void Renderer::updateMaterials(const vector<unique_ptr<Model>>& models)
@@ -1609,7 +1609,7 @@ namespace BinRenderer::Vulkan {
 				resources
 			);
 
-			printLog("✅ Recreated 'material' descriptor set");
+			printLog(" Recreated 'material' descriptor set");
 
 			// Rebind to relevant pipelines
 			for (const string& pipelineName : { string("pbrDeferred"), string("pbrForward") }) {
@@ -1641,7 +1641,7 @@ namespace BinRenderer::Vulkan {
 				}
 
 				pipelines_[pipelineName]->setDescriptorSets(pipelineDescriptorSets);
-				printLog("✅ Rebound descriptor sets to pipeline '{}'", pipelineName);
+				printLog(" Rebound descriptor sets to pipeline '{}'", pipelineName);
 			}
 		}
 	}

@@ -1,8 +1,8 @@
-﻿#include "VulkanDescriptor.h"
+#include "VulkanDescriptor.h"
 #include "../Resources/VulkanBuffer.h"
 #include "../Resources/VulkanImage.h"
 #include "../Resources/VulkanSampler.h"
-#include "Vulkan/Logger.h"
+#include "Core/Logger.h"
 
 namespace BinRenderer::Vulkan
 {
@@ -23,7 +23,7 @@ namespace BinRenderer::Vulkan
 	bool VulkanDescriptorSetLayout::create(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 	{
 		bindingCount_ = static_cast<uint32_t>(bindings.size());
-		bindings_ = bindings;  // ✅ Binding 정보 저장
+		bindings_ = bindings;  //  Binding 정보 저장
 
 		VkDescriptorSetLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -45,7 +45,7 @@ namespace BinRenderer::Vulkan
 			vkDestroyDescriptorSetLayout(device_, layout_, nullptr);
 			layout_ = VK_NULL_HANDLE;
 		}
-		bindings_.clear();  // ✅ Binding 정보 초기화
+		bindings_.clear();  //  Binding 정보 초기화
 	}
 
 	// ========================================
@@ -67,7 +67,7 @@ namespace BinRenderer::Vulkan
 		maxSets_ = maxSets;
 		remainingSets_ = maxSets;
 
-		// ✅ 용량 추적 초기화
+		//  용량 추적 초기화
 		for (const auto& poolSize : poolSizes)
 		{
 			totalDescriptors_[poolSize.type] = poolSize.descriptorCount;
@@ -85,7 +85,7 @@ namespace BinRenderer::Vulkan
 			return false;
 		}
 
-		printLog("✅ Descriptor pool created: {} sets, {} types", maxSets, poolSizes.size());
+		printLog(" Descriptor pool created: {} sets, {} types", maxSets, poolSizes.size());
 		return true;
 	}
 
@@ -97,7 +97,7 @@ namespace BinRenderer::Vulkan
 			pool_ = VK_NULL_HANDLE;
 		}
 
-		// ✅ 용량 추적 초기화
+		//  용량 추적 초기화
 		maxSets_ = 0;
 		remainingSets_ = 0;
 		totalDescriptors_.clear();
@@ -110,7 +110,7 @@ namespace BinRenderer::Vulkan
 		{
 			vkResetDescriptorPool(device_, pool_, 0);
 
-			// ✅ 용량 리셋
+			//  용량 리셋
 			remainingSets_ = maxSets_;
 			remainingDescriptors_ = totalDescriptors_;
 		}
@@ -133,7 +133,7 @@ namespace BinRenderer::Vulkan
 			return nullptr;
 		}
 
-		return new VulkanDescriptorSet(device_, descriptorSet, vulkanLayout);  // ✅ Layout 전달
+		return new VulkanDescriptorSet(device_, descriptorSet, vulkanLayout);  //  Layout 전달
 	}
 
 	// ========================================
@@ -141,7 +141,7 @@ namespace BinRenderer::Vulkan
 	// ========================================
 
 	VulkanDescriptorSet::VulkanDescriptorSet(VkDevice device, VkDescriptorSet descriptorSet, VulkanDescriptorSetLayout* layout)
-		: device_(device), descriptorSet_(descriptorSet), layout_(layout)  // ✅ Layout 저장
+		: device_(device), descriptorSet_(descriptorSet), layout_(layout)  //  Layout 저장
 	{
 	}
 
@@ -165,7 +165,7 @@ namespace BinRenderer::Vulkan
 		descriptorWrite.dstBinding = binding;
 		descriptorWrite.dstArrayElement = 0;
 		
-		// ✅ Layout에서 descriptor type 조회
+		//  Layout에서 descriptor type 조회
 		VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;  // 기본값
 		if (layout_)
 		{
@@ -195,7 +195,7 @@ namespace BinRenderer::Vulkan
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		imageInfo.imageView = vulkanImageView->getVkImageView();
 		
-		// ✅ Sampler 변환
+		//  Sampler 변환
 		if (sampler)
 		{
 			auto* vulkanSampler = static_cast<VulkanSampler*>(sampler);
@@ -316,11 +316,11 @@ namespace BinRenderer::Vulkan
 
 		vkUpdateDescriptorSets(device_, 1, &descriptorWrite, 0, nullptr);
 		
-		printLog("✅ Updated {} texture(s) for binding {}", imageInfos.size(), binding);
+		printLog(" Updated {} texture(s) for binding {}", imageInfos.size(), binding);
 	}
 
 	// ========================================
-	// ✅ 자동 풀 관리 메서드 구현
+	//  자동 풀 관리 메서드 구현
 	// ========================================
 
 	bool VulkanDescriptorPool::canAllocate(const std::vector<VkDescriptorSetLayoutBinding>& bindings, uint32_t setCount) const

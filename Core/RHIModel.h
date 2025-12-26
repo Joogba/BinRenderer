@@ -1,7 +1,7 @@
-﻿#pragma once
+#pragma once
 
 #include "../RHI/Core/RHI.h"
-#include "../RHI/Structs/RHIInstanceData.h"
+#include "../RHI/Structs/RHIStructs.h"
 #include "../Scene/Animation.h"
 #include "../Rendering/RHIMesh.h"
 #include "../Rendering/RHIMaterial.h"
@@ -46,7 +46,7 @@ namespace BinRenderer
 		void setName(const std::string& name) { name_ = name; }
 
 		// ========================================
-		// ✅ GPU Instancing 지원
+		//  GPU Instancing 지원
 		// ========================================
 
 		/**
@@ -90,7 +90,7 @@ namespace BinRenderer
 		/**
 		 * @brief Instance buffer 반환
 		 */
-		RHIBuffer* getInstanceBuffer() const { return instanceBuffer_; }
+		RHIBufferHandle getInstanceBuffer() const { return instanceBuffer_; }
 
 		/**
 		 * @brief Instance buffer 업데이트 (GPU로 전송)
@@ -113,9 +113,9 @@ namespace BinRenderer
 		std::unique_ptr<Animation> animation_;
 		glm::mat4 transform_ = glm::mat4(1.0f);
 
-		// ✅ GPU Instancing
+		//  GPU Instancing
 		std::vector<InstanceData> instances_;
-		RHIBuffer* instanceBuffer_ = nullptr;
+		RHIBufferHandle instanceBuffer_;
 	};
 
 } // namespace BinRenderer

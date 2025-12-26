@@ -40,8 +40,8 @@ namespace BinRenderer
 		RGTextureHandle getShadowMapHandle() const { return getData().shadowMap; }
 
 	private:
-		RHIPipeline* pipeline_ = nullptr;
-		RHIShader* vertexShader_ = nullptr;
+		RHIPipelineHandle pipeline_;
+		RHIShaderHandle vertexShader_;
 
 		void createPipeline();
 		void destroyPipeline();

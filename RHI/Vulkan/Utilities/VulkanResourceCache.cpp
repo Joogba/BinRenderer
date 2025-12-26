@@ -1,5 +1,5 @@
-﻿#include "VulkanResourceCache.h"
-#include "Vulkan/Logger.h"
+#include "VulkanResourceCache.h"
+#include "Core/Logger.h"
 #include <fstream>
 
 namespace BinRenderer::Vulkan
@@ -26,7 +26,7 @@ namespace BinRenderer::Vulkan
 
 		// 캐시에 추가
 		cache_[filepath] = std::move(spirv);
-		printLog("✅ Shader loaded and cached: {} ({} bytes)", filepath, cache_[filepath].size() * 4);
+		printLog(" Shader loaded and cached: {} ({} bytes)", filepath, cache_[filepath].size() * 4);
 
 		return cache_[filepath];
 	}

@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "../Core/RHIType.h"
-#include "RHIImage.h"
+#include "../Core/RHIHandle.h"
 
 namespace BinRenderer
 {
@@ -13,9 +13,9 @@ namespace BinRenderer
 	public:
 		virtual ~RHITexture() = default;
 
-		virtual class RHIImage* getImage() const = 0;
-		virtual class RHIImageView* getImageView() const = 0;
-		virtual class RHISampler* getSampler() const = 0;
+		virtual RHIImageHandle getImage() const = 0;
+		virtual RHIImageViewHandle getImageView() const = 0;
+		virtual RHISamplerHandle getSampler() const = 0;
 
 		virtual uint32_t getWidth() const = 0;
 		virtual uint32_t getHeight() const = 0;

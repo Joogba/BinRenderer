@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Context.h"
 #include "Material.h"
@@ -9,7 +9,7 @@
 #include "TextureManager.h"
 #include "Vertex.h"
 #include "VulkanTools.h"
-#include "../Scene/Animation.h"  // ✅ Vulkan/Animation.h → Scene/Animation.h
+#include "../Scene/Animation.h"  //  Vulkan/Animation.h → Scene/Animation.h
 #include "StorageBuffer.h"
 
 #include <glm/glm.hpp>
@@ -30,7 +30,7 @@ using namespace glm;
 class VulkanResourceManager;
 
 // ========================================
-// ✅ GPU Instancing: Step 1
+//  GPU Instancing: Step 1
 // ========================================
 // Per-instance data structure (16-byte aligned for GPU)
 struct InstanceData {
@@ -44,7 +44,7 @@ class Model
   friend class ModelLoader;
 
   public:
-    Model(Context& ctx, VulkanResourceManager* resourceManager = nullptr);  // ✅ VulkanResourceManager 추가
+    Model(Context& ctx, VulkanResourceManager* resourceManager = nullptr);  //  VulkanResourceManager 추가
     Model(const Model&) = delete;
     Model& operator=(const Model&) = delete;
     Model& operator=(Model&&) = delete;
@@ -117,13 +117,13 @@ if (animation_)
         static const vector<mat4> empty;
         return animation_ ? animation_->getBoneMatrices() : empty;
     }
-    BinRenderer::Animation* getAnimation() const  // ✅ 네임스페이스 명시
+    BinRenderer::Animation* getAnimation() const  //  네임스페이스 명시
     {
         return animation_.get();
     }
 
     // ========================================
-  // ✅ GPU Instancing: Instance Management
+  //  GPU Instancing: Instance Management
     // ========================================
     void addInstance(const glm::mat4& transform, uint32_t materialOffset = 0);
     void updateInstance(uint32_t index, const glm::mat4& transform);
@@ -133,17 +133,17 @@ if (animation_)
     uint32_t getInstanceCount() const { return static_cast<uint32_t>(instances_.size()); }
     const vector<InstanceData>& getInstances() const { return instances_; }
     
-    // ✅ FIX: 1개 이상이면 instancing 활성화 (>= 1)
+    //  FIX: 1개 이상이면 instancing 활성화 (>= 1)
     bool isInstanced() const { return instances_.size() >= 1; }
 
     // ========================================
-    // ✅ GPU Instancing: Step 2 - Buffer Access
+    //  GPU Instancing: Step 2 - Buffer Access
     // ========================================
     VkBuffer getInstanceBuffer() const { return instanceBuffer_; }
     bool hasInstanceBuffer() const { return instanceBuffer_ != VK_NULL_HANDLE; }
 
     // ========================================
-    // ✅ GPU Instancing: Step 4 - Pipeline Configuration
+    //  GPU Instancing: Step 4 - Pipeline Configuration
     // ========================================
     // Instance vertex input binding/attributes for pipeline creation
  static VkVertexInputBindingDescription getInstanceBindingDescription();
@@ -174,12 +174,12 @@ if (animation_)
     vector<Mesh> meshes_;
     vector<Material> materials_;
 
-    vector<shared_ptr<Image2D>> textures_;  // ✅ unique_ptr → shared_ptr 변경 (캐싱 지원)
+    vector<shared_ptr<Image2D>> textures_;  //  unique_ptr → shared_ptr 변경 (캐싱 지원)
     vector<string> textureFilenames_;
     vector<bool> textureSRgb_; // sRGB 여부
 
     unique_ptr<ModelNode> rootNode_;
-    unique_ptr<BinRenderer::Animation> animation_;  // ✅ 네임스페이스 명시
+    unique_ptr<BinRenderer::Animation> animation_;  //  네임스페이스 명시
 
     mat4 globalInverseTransform_ = mat4(1.0f);
 
@@ -193,12 +193,12 @@ if (animation_)
     float coeffs_[16] = {0.0f}; // 여러가지 옵션에 사용
 
     // ========================================
-    // ✅ GPU Instancing: Instance Storage
+    //  GPU Instancing: Instance Storage
     // ========================================
  vector<InstanceData> instances_;  // All instance transforms
 
 // ========================================
-    // ✅ GPU Instancing: Step 2 - Instance Buffer
+    //  GPU Instancing: Step 2 - Instance Buffer
     // ========================================
     VkBuffer instanceBuffer_ = VK_NULL_HANDLE;
     VkDeviceMemory instanceBufferMemory_ = VK_NULL_HANDLE;

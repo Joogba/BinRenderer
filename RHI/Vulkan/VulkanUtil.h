@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <vulkan/vulkan.h>
 #include <unordered_map>
@@ -6,7 +6,7 @@
 #include "RHI/Core/RHI.h"
 
 // ========================================
-// ✅ RHI Type Conversion Guidelines
+//  RHI Type Conversion Guidelines
 // ========================================
 // 
 // RHI enum values are aligned with Vulkan for zero-cost conversion.

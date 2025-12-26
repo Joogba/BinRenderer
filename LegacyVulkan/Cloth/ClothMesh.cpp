@@ -1,4 +1,4 @@
-﻿#include "ClothMesh.h"
+#include "ClothMesh.h"
 #include "../Logger.h"
 #include "../DescriptorSet.h"
 #include "../PipelineConfig.h"
@@ -68,7 +68,7 @@ void ClothMesh::createRenderPipeline(VkFormat colorFormat, VkFormat depthFormat,
  ctx_, shaderManager_, config,
   std::vector<VkFormat>{colorFormat},
    depthFormat,
-        VK_SAMPLE_COUNT_1_BIT  // ✅ MSAA 비활성화
+        VK_SAMPLE_COUNT_1_BIT  //  MSAA 비활성화
     );
 
     BinRenderer::printLog(" - Created cloth render pipeline");

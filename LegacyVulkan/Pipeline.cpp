@@ -1,7 +1,7 @@
-﻿#include "DescriptorSet.h"
+#include "DescriptorSet.h"
 #include "Pipeline.h"
 #include "Vertex.h"
-#include "Model.h"  // ✅ GPU Instancing: Step 4-B
+#include "Model.h"  //  GPU Instancing: Step 4-B
 #include "Image2D.h"
 #include <imgui.h>
 
@@ -90,25 +90,25 @@ void Pipeline::createGraphicsFromConfig(const PipelineConfig& config,
 
     if (config.vertexInput.type == PipelineConfig::VertexInput::Type::Standard) {
         // ========================================
-        // ✅ GPU Instancing: Step 4-B - Add Instance Vertex Input
+        //  GPU Instancing: Step 4-B - Add Instance Vertex Input
         // ========================================
         // Standard 3D vertex input (PBR Forward, Shadow Map)
 
         // Binding 0: Per-vertex attributes
         vertexInputBindings.push_back(Vertex::getBindingDescription());
 
-        // ✅ Binding 1: Per-instance attributes
+        //  Binding 1: Per-instance attributes
         vertexInputBindings.push_back(Model::getInstanceBindingDescription());
 
         // Attributes: Per-vertex (0-6) + Per-instance (10-14)
         vertexInputAttributes = Vertex::getAttributeDescriptions();
 
-        // ✅ Add instance attributes
+        //  Add instance attributes
         auto instanceAttributes = Model::getInstanceAttributeDescriptions();
         vertexInputAttributes.insert(vertexInputAttributes.end(),
           instanceAttributes.begin(), instanceAttributes.end());
 
-        printLog("✅ Pipeline '{}': Added instancing support ({} bindings, {} attributes)",
+        printLog(" Pipeline '{}': Added instancing support ({} bindings, {} attributes)",
     config.name, vertexInputBindings.size(), vertexInputAttributes.size());
 
     } else if (config.vertexInput.type == PipelineConfig::VertexInput::Type::ImGui) {

@@ -56,9 +56,9 @@ namespace BinRenderer
 		RGTextureHandle hdrHandle_;
 
 		// 파이프라인
-		RHIPipeline* pipeline_ = nullptr;
-		RHIShader* vertexShader_ = nullptr;
-		RHIShader* fragmentShader_ = nullptr;
+		RHIPipelineHandle pipeline_;
+		RHIShaderHandle vertexShader_;
+		RHIShaderHandle fragmentShader_;
 
 		void createPipeline();
 		void destroyPipeline();

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <vulkan/vulkan.h>
 #include <vector>
@@ -36,7 +36,7 @@ namespace BinRenderer::Vulkan
 		void waitIdle();
 
 		// ========================================
-		// ✅ 헬퍼 메서드 (레거시 Context에서 마이그레이션)
+		//  헬퍼 메서드 (레거시 Context에서 마이그레이션)
 		// ========================================
 
 		/**
@@ -93,9 +93,9 @@ namespace BinRenderer::Vulkan
 		uint32_t computeQueueFamily_ = 0;
 
 		bool validationEnabled_ = false;
-		bool requireSwapchain_ = true;  // ✅ 추가: 스왑체인 필요 여부
+		bool requireSwapchain_ = true;  //  추가: 스왑체인 필요 여부
 
-		// ✅ 디바이스 속성 저장
+		//  디바이스 속성 저장
 		VkPhysicalDeviceProperties deviceProperties_{};
 		VkPhysicalDeviceMemoryProperties memoryProperties_{};
 		VkPhysicalDeviceFeatures deviceFeatures_{};

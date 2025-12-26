@@ -65,19 +65,16 @@ namespace BinRenderer
 
 	void LightingPassRG::destroyPipeline()
 	{
-		if (pipeline_) {
-			rhi_->destroyPipeline(pipeline_);
-			pipeline_ = nullptr;
+		if (pipelineHandle_.isValid()) {
+			rhi_->destroyPipeline(pipelineHandle_);
 		}
 
-		if (vertexShader_) {
-			rhi_->destroyShader(vertexShader_);
-			vertexShader_ = nullptr;
+		if (vertexShaderHandle_.isValid()) {
+			rhi_->destroyShader(vertexShaderHandle_);
 		}
 
-		if (fragmentShader_) {
-			rhi_->destroyShader(fragmentShader_);
-			fragmentShader_ = nullptr;
+		if (fragmentShaderHandle_.isValid()) {
+			rhi_->destroyShader(fragmentShaderHandle_);
 		}
 	}
 

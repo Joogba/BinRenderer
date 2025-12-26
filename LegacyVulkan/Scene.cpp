@@ -1,4 +1,4 @@
-﻿#include "Scene.h"
+#include "Scene.h"
 #include "Logger.h"
 #include "VulkanResourceManager.h"
 
@@ -27,7 +27,7 @@ namespace BinRenderer::Vulkan {
 		const glm::mat4& transform)
 	{
 		// ========================================
-		// ✅ VulkanResourceManager를 통한 캐싱 + GPU Instancing
+		//  VulkanResourceManager를 통한 캐싱 + GPU Instancing
 		// ========================================
 		
 		// 1. 캐시된 모델 확인 (VulkanResourceManager가 Context를 가지고 있음)
@@ -57,7 +57,7 @@ namespace BinRenderer::Vulkan {
 			printLog("📦 First instance of model: '{}'", instanceName);
 			printLog("   Model cached at: {}", resourcePath);
 		} else {
-			printLog("✅ Added instance #{}: '{}'", cachedModel->getInstanceCount(), instanceName);
+			printLog(" Added instance #{}: '{}'", cachedModel->getInstanceCount(), instanceName);
 			printLog("   Transform: ({:.2f}, {:.2f}, {:.2f})", 
 				transform[3][0], transform[3][1], transform[3][2]);
 		}

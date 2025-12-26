@@ -146,14 +146,14 @@ namespace BinRenderer
 		// Meshes handle their own cleanup
 		meshes_.clear();
 		
-		// ✅ GPU Instancing: instance buffer 정리
+		//  GPU Instancing: instance buffer 정리
 		destroyInstanceBuffer();
 	}
 
 	void RHIModel::draw(RHI* rhi, uint32_t instanceCount)
 	{
-		// ✅ GPU Instancing: instance buffer가 있으면 바인딩
-		if (isInstanced() && instanceBuffer_)
+		//  GPU Instancing: instance buffer가 있으면 바인딩
+		if (isInstanced() && instanceBuffer_.isValid())
 		{
 			rhi->cmdBindVertexBuffer(instanceBuffer_, 0);
 		}
@@ -162,7 +162,7 @@ namespace BinRenderer
 		{
 			mesh->bind(rhi);
 			
-			// ✅ GPU Instancing: 인스턴스 개수 전달
+			//  GPU Instancing: 인스턴스 개수 전달
 			uint32_t drawInstanceCount = isInstanced() ? getInstanceCount() : instanceCount;
 			mesh->draw(rhi, drawInstanceCount);
 		}
@@ -174,7 +174,7 @@ namespace BinRenderer
 	}
 
 	// ========================================
-	// ✅ GPU Instancing 구현
+	//  GPU Instancing 구현
 	// ========================================
 
 	void RHIModel::addInstance(const InstanceData& instanceData)
@@ -182,7 +182,7 @@ namespace BinRenderer
 		instances_.push_back(instanceData);
 		
 		// Instance buffer 재생성 (크기 변경)
-		if (instanceBuffer_)
+		if (instanceBuffer_.isValid())
 		{
 			destroyInstanceBuffer();
 		}
@@ -233,7 +233,7 @@ namespace BinRenderer
 
 	void RHIModel::updateInstanceBuffer()
 	{
-		if (!instanceBuffer_ || instances_.empty())
+		if (!instanceBuffer_.isValid() || instances_.empty())
 		{
 			return;
 		}
@@ -260,21 +260,21 @@ namespace BinRenderer
 		bufferInfo.memoryProperties = RHI_MEMORY_PROPERTY_HOST_VISIBLE_BIT | RHI_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
 		instanceBuffer_ = rhi_->createBuffer(bufferInfo);
-		if (!instanceBuffer_)
+		if (!instanceBuffer_.isValid())
 		{
 			printLog("ERROR: Failed to create instance buffer");
 			return;
 		}
 
-		printLog("✅ Instance buffer created: {} instances", instances_.size());
+		printLog(" Instance buffer created: {} instances", instances_.size());
 	}
 
 	void RHIModel::destroyInstanceBuffer()
 	{
-		if (instanceBuffer_)
+		if (instanceBuffer_.isValid())
 		{
 			rhi_->destroyBuffer(instanceBuffer_);
-			instanceBuffer_ = nullptr;
+			instanceBuffer_ = {};
 		}
 	}
 

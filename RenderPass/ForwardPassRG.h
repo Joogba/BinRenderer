@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "RGPassBase.h"
 
@@ -71,32 +71,32 @@ namespace BinRenderer
 		RGTextureHandle depthHandle_;
 
 		// 파이프라인 리소스
-		RHIPipeline* pipeline_ = nullptr;
+		RHIPipelineHandle pipeline_;
 		RHIPipelineLayout* pipelineLayout_ = nullptr;
-		RHIShader* vertexShader_ = nullptr;
-		RHIShader* fragmentShader_ = nullptr;
+		RHIShaderHandle vertexShader_;
+		RHIShaderHandle fragmentShader_;
 
-		// ✅ Descriptor Sets (PBR용)
-		RHIDescriptorSetLayout* sceneDescriptorLayout_ = nullptr;     // Set 0: Scene UBO
-		RHIDescriptorSetLayout* materialDescriptorLayout_ = nullptr;  // Set 1: Materials
-		RHIDescriptorSetLayout* iblDescriptorLayout_ = nullptr;       // Set 2: IBL
-		RHIDescriptorSetLayout* shadowDescriptorLayout_ = nullptr;    // Set 3: Shadow
+		//  Descriptor Sets (PBR용)
+		RHIDescriptorSetLayoutHandle sceneDescriptorLayout_;     // Set 0: Scene UBO
+		RHIDescriptorSetLayoutHandle materialDescriptorLayout_;  // Set 1: Materials
+		RHIDescriptorSetLayoutHandle iblDescriptorLayout_;       // Set 2: IBL
+		RHIDescriptorSetLayoutHandle shadowDescriptorLayout_;    // Set 3: Shadow
 		
-		RHIDescriptorPool* descriptorPool_ = nullptr;
-		std::vector<RHIDescriptorSet*> sceneDescriptorSets_;  // Per-frame
-		RHIDescriptorSet* materialDescriptorSet_ = nullptr;   // 공유
-		RHIDescriptorSet* iblDescriptorSet_ = nullptr;        // 공유
-		RHIDescriptorSet* shadowDescriptorSet_ = nullptr;     // 공유
+		RHIDescriptorPoolHandle descriptorPool_;
+		std::vector<RHIDescriptorSetHandle> sceneDescriptorSets_;  // Per-frame
+		RHIDescriptorSetHandle materialDescriptorSet_;   // 공유
+		RHIDescriptorSetHandle iblDescriptorSet_;        // 공유
+		RHIDescriptorSetHandle shadowDescriptorSet_;     // 공유
 
-		// ✅ Dummy Resources (Material/IBL/Shadow용)
-		RHIBuffer* dummyMaterialBuffer_ = nullptr;
-		RHIImage* dummyTexture_ = nullptr;          // 흰색 1x1 texture
-		RHIImageView* dummyTextureView_ = nullptr;
-		RHISampler* dummySampler_ = nullptr;
-		RHIImage* dummyCubemap_ = nullptr;          // 검은색 1x1 cubemap
-		RHIImageView* dummyCubemapView_ = nullptr;
-		RHIImage* dummyShadowMap_ = nullptr;        // 1x1 depth texture
-		RHIImageView* dummyShadowMapView_ = nullptr;
+		//  Dummy Resources (Material/IBL/Shadow용)
+		RHIBufferHandle dummyMaterialBuffer_;
+		RHIImageHandle dummyTexture_;          // 흰색 1x1 texture
+		RHIImageViewHandle dummyTextureView_;
+		RHISamplerHandle dummySampler_;
+		RHIImageHandle dummyCubemap_;          // 검은색 1x1 cubemap
+		RHIImageViewHandle dummyCubemapView_;
+		RHIImageHandle dummyShadowMap_;        // 1x1 depth texture
+		RHIImageViewHandle dummyShadowMapView_;
 
 		void createPipeline();
 		void destroyPipeline();

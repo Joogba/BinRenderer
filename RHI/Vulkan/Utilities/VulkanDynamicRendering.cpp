@@ -1,5 +1,5 @@
-﻿#include "VulkanDynamicRendering.h"
-#include "Vulkan/Logger.h"
+#include "VulkanDynamicRendering.h"
+#include "Core/Logger.h"
 
 namespace BinRenderer::Vulkan
 {
@@ -68,13 +68,13 @@ namespace BinRenderer::Vulkan
 			renderingInfo.pDepthAttachment = info.depthAttachment ? &depthAttachmentInfo : nullptr;
 			renderingInfo.pStencilAttachment = info.stencilAttachment ? &stencilAttachmentInfo : nullptr;
 
-			// ✅ Dynamic Rendering 시작
+			//  Dynamic Rendering 시작
 			vkCmdBeginRendering(cmd, &renderingInfo);
 		}
 
 		void endRendering(VkCommandBuffer cmd)
 		{
-			// ✅ Dynamic Rendering 종료
+			//  Dynamic Rendering 종료
 			vkCmdEndRendering(cmd);
 		}
 	}

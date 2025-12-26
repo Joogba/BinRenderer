@@ -2,13 +2,16 @@
 
 // 모든 생성 정보 구조체 통합 헤더
 
-#include "RHIBufferCreateInfo.h"
-#include "RHIImageCreateInfo.h"
-#include "RHIImageViewCreateInfo.h"
-#include "RHISamplerCreateInfo.h"
-#include "RHIShaderCreateInfo.h"
-#include "RHIPipelineCreateInfo.h"
-#include "RHIDescriptorCreateInfo.h"
+#include "RHICommonStructs.h"
+#include "RHIImageStructs.h"
+#include "RHIBufferStructs.h"
+#include "RHIShaderStructs.h"
+#include "RHIPipelineStructs.h"
+#include "RHIDescriptorStructs.h"
+#include "RHIDeviceStructs.h"
+#include "RHICommandStructs.h"
+#include "RHISyncStructs.h"
+#include "RHIRenderPassStructs.h"
 
 namespace BinRenderer
 {

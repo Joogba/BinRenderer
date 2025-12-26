@@ -1,6 +1,6 @@
-﻿#include "../../Vulkan/Application.h"
+#include "../../Vulkan/Application.h"
 #include "../../Vulkan/EngineConfig.h"
-#include "../../Vulkan/Logger.h"
+#include "../../Core/Logger.h"
 #include "../../Vulkan/InputManager.h"
 
 using namespace BinRenderer::Vulkan;
@@ -63,7 +63,7 @@ public:
 			printLog("➡️ RIGHT Arrow pressed");
 			break;
 		case GLFW_KEY_ENTER:
-			printLog("✅ ENTER pressed");
+			printLog(" ENTER pressed");
 			break;
 		case GLFW_KEY_TAB:
 			printLog("⇥ TAB pressed");

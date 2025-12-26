@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Context.h"
 #include "Image2D.h"
@@ -67,7 +67,7 @@ class TextureManager : public Resource
   private:
     const uint32_t kMaxTextures_ = 512;
 
-vector<shared_ptr<Image2D>> textures_;  // ✅ unique_ptr → shared_ptr 변경
+vector<shared_ptr<Image2D>> textures_;  //  unique_ptr → shared_ptr 변경
     vector<VkDescriptorImageInfo> imageInfos_;
 };
 

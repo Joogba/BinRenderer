@@ -1,6 +1,6 @@
-﻿#include "VulkanSwapchain.h"
+#include "VulkanSwapchain.h"
 #include "VulkanContext.h"
-#include "../Resources/VulkanImage.h"  // ✅ VulkanImageView 포함
+#include "../Resources/VulkanImage.h"  //  VulkanImageView 포함
 #include "../../../Core/Logger.h"
 #include <algorithm>
 #include <limits>
@@ -52,7 +52,7 @@ namespace BinRenderer::Vulkan
 
 	VkResult VulkanSwapchain::acquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t& imageIndex)
 	{
-		// ✅ Fence 사용 (semaphore가 NULL일 경우)
+		//  Fence 사용 (semaphore가 NULL일 경우)
 		VkFence fence = VK_NULL_HANDLE;
 		if (presentCompleteSemaphore == VK_NULL_HANDLE)
 		{
@@ -316,7 +316,7 @@ namespace BinRenderer::Vulkan
 			}
 		}
 
-		// ✅ RHIImageView 래퍼 생성
+		//  RHIImageView 래퍼 생성
 		createImageViewWrappers();
 
 		return true;
@@ -324,7 +324,7 @@ namespace BinRenderer::Vulkan
 
 	void VulkanSwapchain::destroyImageViews()
 	{
-		// ✅ 래퍼 먼저 삭제
+		//  래퍼 먼저 삭제
 		destroyImageViewWrappers();
 
 		for (auto imageView : imageViews_)
@@ -338,41 +338,34 @@ namespace BinRenderer::Vulkan
 	{
 		imageViewWrappers_.clear();
 		imageViewWrappers_.reserve(imageViews_.size());
+		imageViewHandles_.resize(imageViews_.size()); //  핸들 벡터 리사이즈
 
 		for (size_t i = 0; i < imageViews_.size(); i++)
 		{
-			// ✅ VulkanImageView 래퍼 제대로 생성
+			//  VulkanImageView 래퍼 제대로 생성
 			auto wrapper = std::make_unique<VulkanImageView>(context_->getDevice(), nullptr);
 			
-			// ✅ 기존 VkImageView 설정
+			//  기존 VkImageView 설정
 			wrapper->setVkImageView(imageViews_[i]);
 			
-			// ✅ 소유권 없음 (VulkanSwapchain이 destroyImageViews()에서 파괴)
+			//  소유권 없음 (VulkanSwapchain이 destroyImageViews()에서 파괴)
 			wrapper->setOwnsImageView(false);
 			
-			// ✅ Swapchain format 설정
+			//  Swapchain format 설정
 			wrapper->setFormat(static_cast<RHIFormat>(colorFormat_));
 			
 			imageViewWrappers_.push_back(std::move(wrapper));
 		}
 
-		printLog("✅ Created {} RHIImageView wrappers", imageViewWrappers_.size());
+		printLog(" Created {} RHIImageView wrappers", imageViewWrappers_.size());
 	}
 
 	void VulkanSwapchain::destroyImageViewWrappers()
 	{
-		// ✅ unique_ptr이 자동으로 VulkanImageView 삭제
+		//  unique_ptr이 자동으로 VulkanImageView 삭제
 		// VulkanImageView::destroy()는 ownsImageView_가 false이므로 VkImageView를 파괴하지 않음
 		imageViewWrappers_.clear();
-	}
-
-	RHIImageView* VulkanSwapchain::getImageView(uint32_t index) const
-	{
-		if (index < imageViewWrappers_.size())
-		{
-			return imageViewWrappers_[index].get();
-		}
-		return nullptr;
+		imageViewHandles_.clear(); //  핸들 벡터 클리어
 	}
 
 	// ========================================

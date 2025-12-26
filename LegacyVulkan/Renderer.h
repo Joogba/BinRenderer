@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Camera.h"
 #include "DescriptorSet.h"
@@ -139,7 +139,7 @@ namespace BinRenderer::Vulkan {
 			const string& kAssetsPathPrefix, const string& kShaderPathPrefix_,
 			vector<unique_ptr<Model>>& models, VkFormat outColorFormat, VkFormat depthFormat,
 			uint32_t swapChainWidth, uint32_t swapChainHeight,
-			VulkanResourceManager* resourceManager = nullptr); // ✅ VulkanResourceManager 추가
+			VulkanResourceManager* resourceManager = nullptr); //  VulkanResourceManager 추가
 
 		~Renderer() = default;
 
@@ -159,7 +159,7 @@ namespace BinRenderer::Vulkan {
 		void updateWorldBounds(vector<unique_ptr<Model>>& models);
 
 		// ========================================
-		// ✅ NEW API (Model* 기반 - Scene 호환)
+		//  NEW API (Model* 기반 - Scene 호환)
 		// ========================================
 		void update(Camera& camera, vector<Model*>& models, uint32_t currentFrame, double time);
 		void updateBoneData(const vector<Model*>& models, uint32_t currentFrame);
@@ -177,13 +177,13 @@ namespace BinRenderer::Vulkan {
 		void updateViewFrustum(const glm::mat4& viewProjection);
 
 		// ========================================
-		// ✅ NEW: Material 동적 업데이트
+		//  NEW: Material 동적 업데이트
 		// ========================================
 		void updateMaterials(const vector<Model*>& models);
 		void updateMaterials(const vector<unique_ptr<Model>>& models);
 
 	private:
-		void updateMaterialDescriptorSets(); // ✅ Helper method
+		void updateMaterialDescriptorSets(); //  Helper method
 
 	public:
 		// Accessors
@@ -205,10 +205,10 @@ namespace BinRenderer::Vulkan {
 
 		Context& ctx_;
 		ShaderManager& shaderManager_;
-		VulkanResourceManager* resourceManager_ = nullptr;  // ✅ VulkanResourceManager 포인터 추가
+		VulkanResourceManager* resourceManager_ = nullptr;  //  VulkanResourceManager 포인터 추가
 
 		// 🆕 Resource Registry for handle-based resource management
-		ResourceRegistry* resourceRegistry_ = nullptr;  // ✅ 포인터로 변경 (VulkanResourceManager에서 가져옴)
+		ResourceRegistry* resourceRegistry_ = nullptr;  //  포인터로 변경 (VulkanResourceManager에서 가져옴)
 
 		// 🆕 Named handles for quick access
 		struct ResourceHandles {
@@ -286,7 +286,7 @@ namespace BinRenderer::Vulkan {
 		void addResource(string resourceName, uint32_t frameNumber,
 			vector<reference_wrapper<Resource>>& resources)
 		{
-			// ✅ Null check 추가
+			//  Null check 추가
 			if (!resourceRegistry_) {
 				printLog("❌ ERROR: ResourceRegistry not available!");
 				return;
@@ -296,37 +296,37 @@ namespace BinRenderer::Vulkan {
 			{
 				// Check if it's a per-frame buffer
 				if (resourceName == "sceneData" && frameNumber != uint32_t(-1)) {
-					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.sceneData[frameNumber])) {  // ✅ -> 사용
+					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.sceneData[frameNumber])) {  //  -> 사용
 						resources.push_back(*res);
 						return;
 					}
 				}
 				else if (resourceName == "options" && frameNumber != uint32_t(-1)) {
-					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.options[frameNumber])) {  // ✅ -> 사용
+					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.options[frameNumber])) {  //  -> 사용
 						resources.push_back(*res);
 						return;
 					}
 				}
 				else if (resourceName == "skyOptions" && frameNumber != uint32_t(-1)) {
-					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.skyOptions[frameNumber])) {  // ✅ -> 사용
+					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.skyOptions[frameNumber])) {  //  -> 사용
 						resources.push_back(*res);
 						return;
 					}
 				}
 				else if (resourceName == "postOptions" && frameNumber != uint32_t(-1)) {
-					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.postOptions[frameNumber])) {  // ✅ -> 사용
+					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.postOptions[frameNumber])) {  //  -> 사용
 						resources.push_back(*res);
 						return;
 					}
 				}
 				else if (resourceName == "ssaoOptions" && frameNumber != uint32_t(-1)) {
-					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.ssaoOptions[frameNumber])) {  // ✅ -> 사용
+					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.ssaoOptions[frameNumber])) {  //  -> 사용
 						resources.push_back(*res);
 						return;
 					}
 				}
 				else if (resourceName == "boneData" && frameNumber != uint32_t(-1)) {
-					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.boneData[frameNumber])) {  // ✅ -> 사용
+					if (auto* res = resourceRegistry_->getResourceAs<MappedBuffer>(resourceHandles_.boneData[frameNumber])) {  //  -> 사용
 						resources.push_back(*res);
 						return;
 					}
@@ -335,7 +335,7 @@ namespace BinRenderer::Vulkan {
 				// Check if it's an image resource
 				ImageHandle imgHandle = getImageHandleByName(resourceName);
 				if (imgHandle.isValid()) {
-					if (auto* res = resourceRegistry_->getResourceAs<Image2D>(imgHandle)) {  // ✅ -> 사용
+					if (auto* res = resourceRegistry_->getResourceAs<Image2D>(imgHandle)) {  //  -> 사용
 						resources.push_back(*res);
 						return;
 					}

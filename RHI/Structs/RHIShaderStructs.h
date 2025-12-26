@@ -8,7 +8,7 @@ namespace BinRenderer
 {
 	/**
 	 * @brief 셰이더 생성 정보
-   */
+	 */
 	struct RHIShaderCreateInfo
 	{
 		RHIShaderStageFlags stage = 0;

@@ -1,4 +1,4 @@
-﻿#include "VulkanResourceManager.h"
+#include "VulkanResourceManager.h"
 #include "Model.h"
 #include "Context.h"
 #include "ResourceRegistry.h"
@@ -6,7 +6,7 @@
 #include "Logger.h"
 #include "../Core/RenderStates.h"
 #include "../Resources/ResourceManager.h"
-#include "../Resources/TextureRegistry.h"  // ✅ TextureRegistry 헤더 추가
+#include "../Resources/TextureRegistry.h"  //  TextureRegistry 헤더 추가
 
 namespace BinRenderer::Vulkan {
 
@@ -37,13 +37,13 @@ namespace BinRenderer::Vulkan {
 		// 캐시 확인
 		auto it = modelCache_.find(resourcePath);
 		if (it != modelCache_.end()) {
-			printLog("✅ Model cache HIT: {}", resourcePath);
+			printLog(" Model cache HIT: {}", resourcePath);
 			return it->second;
 		}
 
 		// 캐시 미스 - 새로 로드
 		printLog("📦 Loading model: {}", resourcePath);
-		auto model = std::make_shared<Model>(ctx_, this);  // ✅ this 전달하여 VulkanResourceManager 제공
+		auto model = std::make_shared<Model>(ctx_, this);  //  this 전달하여 VulkanResourceManager 제공
 		model->loadFromModelFile(resourcePath, false);
 
 		// 캐시에 저장
@@ -82,7 +82,7 @@ namespace BinRenderer::Vulkan {
 		// 캐시 확인
 		auto it = textureCache_.find(texturePath);
 		if (it != textureCache_.end()) {
-			printLog("✅ Texture cache HIT: {}", texturePath);
+			printLog(" Texture cache HIT: {}", texturePath);
 			return it->second;
 		}
 
@@ -118,7 +118,7 @@ namespace BinRenderer::Vulkan {
 		BinRenderer::TextureDesc desc{};
 		desc.width = texture->width();
 		desc.height = texture->height();
-		desc.format = BinRenderer::Format::R8G8B8A8_UNORM;  // ✅ 올바른 Format 사용
+		desc.format = BinRenderer::Format::R8G8B8A8_UNORM;  //  올바른 Format 사용
 		desc.bindFlags = static_cast<uint32_t>(BinRenderer::BindFlags::Bind_ShaderResource);
 
 		// Registry에 등록

@@ -68,16 +68,16 @@ namespace BinRenderer
 	// 리소스 접근
 	// ========================================
 
-	RHIImage* RenderGraph::getFinalOutput() const
+	RHIImageHandle RenderGraph::getFinalOutput() const
 	{
 		auto handle = builder_.getFinalOutput();
 		return getTexture(handle);
 	}
 
-	RHIImage* RenderGraph::getTexture(RGTextureHandle handle) const
+	RHIImageHandle RenderGraph::getTexture(RGTextureHandle handle) const
 	{
 		if (!handle.isValid()) {
-			return nullptr;
+			return {};
 		}
 
 		auto it = allocatedTextures_.find(handle.index);
@@ -90,13 +90,13 @@ namespace BinRenderer
 			return builder_.textures_[handle.index].importedImage;
 		}
 
-		return nullptr;
+		return {};
 	}
 
-	RHIBuffer* RenderGraph::getBuffer(RGBufferHandle handle) const
+	RHIBufferHandle RenderGraph::getBuffer(RGBufferHandle handle) const
 	{
 		if (!handle.isValid()) {
-			return nullptr;
+			return {};
 		}
 
 		auto it = allocatedBuffers_.find(handle.index);
@@ -109,7 +109,7 @@ namespace BinRenderer
 			return builder_.buffers_[handle.index].importedBuffer;
 		}
 
-		return nullptr;
+		return {};
 	}
 
 	// ========================================
@@ -233,7 +233,7 @@ namespace BinRenderer
 			createInfo.samples = node.desc.samples;
 			createInfo.usage = node.desc.usage;
 
-			RHIImage* image = rhi_->createImage(createInfo);
+			RHIImageHandle image = rhi_->createImage(createInfo);
 			allocatedTextures_[static_cast<uint32_t>(i)] = image;
 		}
 
@@ -251,7 +251,7 @@ namespace BinRenderer
 			createInfo.size = node.desc.size;
 			createInfo.usage = node.desc.usage;
 
-			RHIBuffer* buffer = rhi_->createBuffer(createInfo);
+			RHIBufferHandle buffer = rhi_->createBuffer(createInfo);
 			allocatedBuffers_[static_cast<uint32_t>(i)] = buffer;
 		}
 	}
@@ -260,7 +260,7 @@ namespace BinRenderer
 	{
 		// 할당된 텍스처 해제
 		for (auto& pair : allocatedTextures_) {
-			if (pair.second) {
+			if (pair.second.isValid()) {
 				rhi_->destroyImage(pair.second);
 			}
 		}
@@ -268,7 +268,7 @@ namespace BinRenderer
 
 		// 할당된 버퍼 해제
 		for (auto& pair : allocatedBuffers_) {
-			if (pair.second) {
+			if (pair.second.isValid()) {
 				rhi_->destroyBuffer(pair.second);
 			}
 		}

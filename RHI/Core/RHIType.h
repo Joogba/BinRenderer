@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -65,7 +65,7 @@ namespace BinRenderer
 		RHI_COMMAND_BUFFER_LEVEL_SECONDARY = 1,
 	};
 
-	// ✅ Vulkan과 값 일치 (VkImageType)
+	//  Vulkan과 값 일치 (VkImageType)
 	enum RHIImageType : int
 	{
 		RHI_IMAGE_TYPE_1D = 0,  // VK_IMAGE_TYPE_1D = 0
@@ -79,7 +79,7 @@ namespace BinRenderer
 		RHI_SHARING_MODE_CONCURRENT = 1,
 	};
 
-	// ✅ Vulkan과 값 일치 (VkFormat)
+	//  Vulkan과 값 일치 (VkFormat)
 	enum RHIFormat : int
 	{
 		RHI_FORMAT_UNDEFINED = 0,
@@ -280,7 +280,7 @@ namespace BinRenderer
 		RHI_SAMPLE_COUNT_64_BIT = 0x00000040,
 	};
 
-	// ✅ Vulkan과 값 일치 (VkImageLayout)
+	//  Vulkan과 값 일치 (VkImageLayout)
 	enum RHIImageLayout : int
 	{
 		RHI_IMAGE_LAYOUT_UNDEFINED = 0,                         // VK_IMAGE_LAYOUT_UNDEFINED = 0

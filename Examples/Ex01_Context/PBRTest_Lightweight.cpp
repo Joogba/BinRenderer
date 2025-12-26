@@ -1,11 +1,11 @@
-﻿#define GLM_ENABLE_EXPERIMENTAL
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Vulkan/Application.h"
 #include "Vulkan/EngineConfig.h"
 #include "Vulkan/IApplicationListener.h"
-#include "Vulkan/Logger.h"
+#include "Core/Logger.h"
 #include "Vulkan/Scene.h"
 #include "Vulkan/Renderer.h"
 #include "Vulkan/Camera.h"
@@ -29,7 +29,7 @@ public:
 		printLog("Testing automatic GPU instancing via Scene::addModelInstance()...");
 		
 		// ========================================
-		// ✅ GPU Instancing: VulkanResourceManager가 자동으로 처리
+		//  GPU Instancing: VulkanResourceManager가 자동으로 처리
 		// ========================================
 		
 		// 첫 번째 헬멧: 왼쪽
@@ -40,7 +40,7 @@ public:
 			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			glm::mat4 transform = translate * scale * rotation;
 			
-			scene.addModelInstance(helmetPath, "Helmet_Left", transform);  // ✅ Context 제거
+			scene.addModelInstance(helmetPath, "Helmet_Left", transform);  //  Context 제거
 		}
 		
 		// 두 번째 헬멧: 중앙
@@ -51,7 +51,7 @@ public:
 			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			glm::mat4 transform = translate * scale * rotation;
 			
-			scene.addModelInstance(helmetPath, "Helmet_Center", transform);  // ✅ Context 제거
+			scene.addModelInstance(helmetPath, "Helmet_Center", transform);  //  Context 제거
 		}
 		
 		// 세 번째 헬멧: 오른쪽
@@ -62,10 +62,10 @@ public:
 			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			glm::mat4 transform = translate * scale * rotation;
 			
-			scene.addModelInstance(helmetPath, "Helmet_Right", transform);  // ✅ Context 제거
+			scene.addModelInstance(helmetPath, "Helmet_Right", transform);  //  Context 제거
 		}
 		
-		printLog("✅ VulkanResourceManager automatically handled GPU instancing!");
+		printLog(" VulkanResourceManager automatically handled GPU instancing!");
 		printLog("   Expected: 1 model loaded, 3 instances, 1 draw call");
 
 		// 카메라 설정
@@ -95,10 +95,10 @@ public:
 		ImGui::Text("Elapsed: %.2f seconds", elapsedTime_);
 		ImGui::Separator();
 		
-		ImGui::TextColored(ImVec4(0, 1, 0, 1), "✅ Automatic GPU Instancing");
-		ImGui::TextColored(ImVec4(0, 1, 1, 1), "✅ Scene::addModelInstance() x3");
-		ImGui::TextColored(ImVec4(1, 1, 0, 1), "✅ 1 Model, 3 Instances");
-		ImGui::TextColored(ImVec4(1, 0.5, 0, 1), "✅ 1 Draw Call");
+		ImGui::TextColored(ImVec4(0, 1, 0, 1), " Automatic GPU Instancing");
+		ImGui::TextColored(ImVec4(0, 1, 1, 1), " Scene::addModelInstance() x3");
+		ImGui::TextColored(ImVec4(1, 1, 0, 1), " 1 Model, 3 Instances");
+		ImGui::TextColored(ImVec4(1, 0.5, 0, 1), " 1 Draw Call");
 		
 		ImGui::Separator();
 		ImGui::Text("Features:");

@@ -92,7 +92,7 @@ namespace BinRenderer
 		}
 
 		// 셰이더 검증
-		for (const auto* shader : createInfo.shaderStages)
+		for (const auto shader : createInfo.shaderStages)
 		{
 			if (!shader)
 			{

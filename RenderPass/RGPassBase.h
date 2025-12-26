@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "RenderGraph/RGTypes.h"
 #include "../RHI/Core/RHI.h"
@@ -7,7 +7,7 @@
 
 namespace BinRenderer
 {
-	// ✅ 전방 선언
+	//  전방 선언
 	class RenderGraphBuilder;
 
 	/**
@@ -112,7 +112,7 @@ namespace BinRenderer
 
 } // namespace BinRenderer
 
-// ✅ 템플릿 클래스는 별도 파일로 분리하거나 여기에 RenderGraphBuilder include
+//  템플릿 클래스는 별도 파일로 분리하거나 여기에 RenderGraphBuilder include
 #include "RenderGraph/RGBuilder.h"
 
 namespace BinRenderer

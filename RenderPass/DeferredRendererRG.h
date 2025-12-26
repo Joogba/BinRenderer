@@ -41,7 +41,7 @@ namespace BinRenderer
 		void resize(uint32_t width, uint32_t height);
 		void render(uint32_t frameIndex);
 
-		RHIImage* getFinalOutput() const;
+		RHIImageHandle getFinalOutput() const;
 		RenderGraph* getRenderGraph() { return renderGraph_.get(); }
 
 		void printDebugInfo() const;

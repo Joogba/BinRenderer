@@ -38,7 +38,7 @@ namespace BinRenderer
 		vertexBufferInfo.memoryProperties = RHI_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | RHI_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
 
 		vertexBuffer_ = rhi_->createBuffer(vertexBufferInfo);
-		if (vertexBuffer_)
+		if (vertexBuffer_.isValid())
 		{
 			void* data = rhi_->mapBuffer(vertexBuffer_);
 			memcpy(data, vertices_.data(), vertexBufferInfo.size);
@@ -57,7 +57,7 @@ namespace BinRenderer
 		indexBufferInfo.memoryProperties = RHI_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | RHI_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
 
 		indexBuffer_ = rhi_->createBuffer(indexBufferInfo);
-		if (indexBuffer_)
+		if (indexBuffer_.isValid())
 		{
 			void* data = rhi_->mapBuffer(indexBuffer_);
 			memcpy(data, indices_.data(), indexBufferInfo.size);
@@ -75,22 +75,22 @@ namespace BinRenderer
 
 	void RHIMesh::destroyBuffers()
 	{
-		if (vertexBuffer_)
+		if (vertexBuffer_.isValid())
 		{
 			rhi_->destroyBuffer(vertexBuffer_);
-			vertexBuffer_ = nullptr;
+			vertexBuffer_ = {};
 		}
 
-		if (indexBuffer_)
+		if (indexBuffer_.isValid())
 		{
 			rhi_->destroyBuffer(indexBuffer_);
-			indexBuffer_ = nullptr;
+			indexBuffer_ = {};
 		}
 	}
 
 	void RHIMesh::bind(RHI* rhi)
 	{
-		if (vertexBuffer_ && indexBuffer_)
+		if (vertexBuffer_.isValid() && indexBuffer_.isValid())
 		{
 			rhi->cmdBindVertexBuffer(vertexBuffer_);
 			rhi->cmdBindIndexBuffer(indexBuffer_);
@@ -99,7 +99,7 @@ namespace BinRenderer
 
 	void RHIMesh::draw(RHI* rhi, uint32_t instanceCount)
 	{
-		if (indexBuffer_ && !indices_.empty())
+		if (indexBuffer_.isValid() && !indices_.empty())
 		{
 			rhi->cmdDrawIndexed(static_cast<uint32_t>(indices_.size()), instanceCount, 0, 0, 0);
 		}

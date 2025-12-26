@@ -1,11 +1,11 @@
-﻿#include "RHIRenderer.h"
+#include "RHIRenderer.h"
 #include "../Core/Logger.h"
 #include "../RenderPass/RHIForwardPassRG.h"
 
 namespace BinRenderer
 {
 	// ========================================
-	// ✅ Material UBO Definition (matching shader)
+	//  Material UBO Definition (matching shader)
 	// ========================================
 	struct MaterialUBO
 	{
@@ -67,7 +67,7 @@ namespace BinRenderer
 			// setupRenderPasses();
 			// renderGraph_->compile();
 
-			printLog("✅ RHIRenderer initialized successfully");
+			printLog(" RHIRenderer initialized successfully");
 			return true;
 		}
 		catch (const std::exception& e)
@@ -104,9 +104,9 @@ namespace BinRenderer
 
 		// Uniform buffers 정리
 		printLog("   Cleaning up uniform buffers...");
-		for (auto* buffer : sceneUniformBuffers_)
+		for (auto& buffer : sceneUniformBuffers_)
 		{
-			if (buffer)
+			if (buffer.isValid())
 			{
 				try { rhi_->destroyBuffer(buffer); }
 				catch (...) { printLog("⚠️  Warning: Failed to destroy scene uniform buffer"); }
@@ -114,9 +114,9 @@ namespace BinRenderer
 		}
 		sceneUniformBuffers_.clear();
 
-		for (auto* buffer : optionsUniformBuffers_)
+		for (auto& buffer : optionsUniformBuffers_)
 		{
-			if (buffer)
+			if (buffer.isValid())
 			{
 				try { rhi_->destroyBuffer(buffer); }
 				catch (...) { printLog("⚠️  Warning: Failed to destroy options uniform buffer"); }
@@ -124,9 +124,9 @@ namespace BinRenderer
 		}
 		optionsUniformBuffers_.clear();
 
-		for (auto* buffer : boneDataUniformBuffers_)
+		for (auto& buffer : boneDataUniformBuffers_)
 		{
-			if (buffer)
+			if (buffer.isValid())
 			{
 				try { rhi_->destroyBuffer(buffer); }
 				catch (...) { printLog("⚠️  Warning: Failed to destroy bone data uniform buffer"); }
@@ -134,37 +134,37 @@ namespace BinRenderer
 		}
 		boneDataUniformBuffers_.clear();
 
-		// ✅ Material buffer 정리
-		if (materialBuffer_)
+		//  Material buffer 정리
+		if (materialBuffer_.isValid())
 		{
 			try { rhi_->destroyBuffer(materialBuffer_); }
 			catch (...) { printLog("⚠️  Warning: Failed to destroy material buffer"); }
-			materialBuffer_ = nullptr;
+			materialBuffer_ = {};
 		}
 		materialTextures_.clear();
 		materialCount_ = 0;
 
 		// Render targets 정리
 		printLog("   Cleaning up render targets...");
-		if (depthStencilTexture_)
+		if (depthStencilTexture_.isValid())
 		{
 			try { rhi_->destroyImage(depthStencilTexture_); }
 			catch (...) { printLog("⚠️  Warning: Failed to destroy depth/stencil texture"); }
-			depthStencilTexture_ = nullptr;
+			depthStencilTexture_ = {};
 		}
 
-		if (shadowMapTexture_)
+		if (shadowMapTexture_.isValid())
 		{
 			try { rhi_->destroyImage(shadowMapTexture_); }
 			catch (...) { printLog("⚠️  Warning: Failed to destroy shadow map texture"); }
-			shadowMapTexture_ = nullptr;
+			shadowMapTexture_ = {};
 		}
 
 		// Pipelines 정리
 		printLog("   Cleaning up pipelines...");
 		for (auto& [name, pipeline] : pipelines_)
 		{
-			if (pipeline)
+			if (pipeline.isValid())
 			{
 				try { rhi_->destroyPipeline(pipeline); }
 				catch (...) { printLog("⚠️  Warning: Failed to destroy pipeline: {}", name); }
@@ -172,7 +172,7 @@ namespace BinRenderer
 		}
 		pipelines_.clear();
 
-		printLog("✅ RHIRenderer shutdown complete");
+		printLog(" RHIRenderer shutdown complete");
 	}
 
 	void RHIRenderer::resize(uint32_t width, uint32_t height)
@@ -183,8 +183,8 @@ namespace BinRenderer
 		printLog("RHIRenderer::resize - {}x{}", width, height);
 
 		// Render targets 재생성
-		if (depthStencilTexture_) rhi_->destroyImage(depthStencilTexture_);
-		if (shadowMapTexture_) rhi_->destroyImage(shadowMapTexture_);
+		if (depthStencilTexture_.isValid()) rhi_->destroyImage(depthStencilTexture_);
+		if (shadowMapTexture_.isValid()) rhi_->destroyImage(shadowMapTexture_);
 
 		createRenderTargets(width, height);
 
@@ -214,7 +214,7 @@ namespace BinRenderer
 		// sceneUniform_.directionalLightColor = scene.getDirectionalLight().color;
 
 		// Uniform buffer 업데이트
-		if (sceneUniformBuffers_[frameIndex])
+		if (sceneUniformBuffers_[frameIndex].isValid())
 		{
 			void* data = rhi_->mapBuffer(sceneUniformBuffers_[frameIndex]);
 			memcpy(data, &sceneUniform_, sizeof(SceneUniform));
@@ -222,7 +222,7 @@ namespace BinRenderer
 		}
 
 		// Options uniform 업데이트
-		if (optionsUniformBuffers_[frameIndex])
+		if (optionsUniformBuffers_[frameIndex].isValid())
 		{
 			void* data = rhi_->mapBuffer(optionsUniformBuffers_[frameIndex]);
 			memcpy(data, &optionsUniform_, sizeof(OptionsUniform));
@@ -235,7 +235,7 @@ namespace BinRenderer
 		// TODO: 애니메이션 bone matrices 업데이트
 		// 현재는 identity matrices
 
-		if (boneDataUniformBuffers_[frameIndex])
+		if (boneDataUniformBuffers_[frameIndex].isValid())
 		{
 			void* data = rhi_->mapBuffer(boneDataUniformBuffers_[frameIndex]);
 			memcpy(data, &boneDataUniform_, sizeof(BoneDataUniform));
@@ -245,7 +245,7 @@ namespace BinRenderer
 
 	void RHIRenderer::render(RHICommandBuffer* cmd, RHIScene& scene, uint32_t frameIndex, RHIImageView* swapchainImageView)
 	{
-		// ✅ RHIScene에서 모델 가져오기
+		//  RHIScene에서 모델 가져오기
 		auto visibleModels = scene.getModels();
 		
 		// Frustum culling
@@ -307,7 +307,7 @@ namespace BinRenderer
 			sceneBufferInfo.memoryProperties = RHI_MEMORY_PROPERTY_HOST_VISIBLE_BIT | RHI_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 			
 			sceneUniformBuffers_[i] = rhi_->createBuffer(sceneBufferInfo);
-			if (!sceneUniformBuffers_[i])
+			if (!sceneUniformBuffers_[i].isValid())
 			{
 				printLog("❌ ERROR: Failed to create scene uniform buffer {}", i);
 				throw std::runtime_error("Failed to create scene uniform buffer");
@@ -320,7 +320,7 @@ namespace BinRenderer
 			optionsBufferInfo.memoryProperties = RHI_MEMORY_PROPERTY_HOST_VISIBLE_BIT | RHI_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 			
 			optionsUniformBuffers_[i] = rhi_->createBuffer(optionsBufferInfo);
-			if (!optionsUniformBuffers_[i])
+			if (!optionsUniformBuffers_[i].isValid())
 			{
 				printLog("❌ ERROR: Failed to create options uniform buffer {}", i);
 				throw std::runtime_error("Failed to create options uniform buffer");
@@ -333,16 +333,16 @@ namespace BinRenderer
 			boneBufferInfo.memoryProperties = RHI_MEMORY_PROPERTY_HOST_VISIBLE_BIT | RHI_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 			
 			boneDataUniformBuffers_[i] = rhi_->createBuffer(boneBufferInfo);
-			if (!boneDataUniformBuffers_[i])
+			if (!boneDataUniformBuffers_[i].isValid())
 			{
 				printLog("❌ ERROR: Failed to create bone data uniform buffer {}", i);
 				throw std::runtime_error("Failed to create bone data uniform buffer");
 			}
 
-			printLog("   ✅ Frame {} uniform buffers created", i);
+			printLog("    Frame {} uniform buffers created", i);
 		}
 
-		printLog("✅ All uniform buffers created successfully");
+		printLog(" All uniform buffers created successfully");
 	}
 
 	void RHIRenderer::createRenderTargets(uint32_t width, uint32_t height)
@@ -358,12 +358,12 @@ namespace BinRenderer
 		depthInfo.samples = RHI_SAMPLE_COUNT_1_BIT;
 
 		depthStencilTexture_ = rhi_->createImage(depthInfo);
-		if (!depthStencilTexture_)
+		if (!depthStencilTexture_.isValid())
 		{
 			printLog("❌ ERROR: Failed to create depth/stencil texture");
 			throw std::runtime_error("Failed to create depth/stencil texture");
 		}
-		printLog("   ✅ Depth/stencil texture created");
+		printLog("    Depth/stencil texture created");
 
 		// Shadow map image (2048x2048)
 		RHIImageCreateInfo shadowInfo{};
@@ -374,14 +374,14 @@ namespace BinRenderer
 	shadowInfo.samples = RHI_SAMPLE_COUNT_1_BIT;
 
 		shadowMapTexture_ = rhi_->createImage(shadowInfo);
-		if (!shadowMapTexture_)
+		if (!shadowMapTexture_.isValid())
 		{
 			printLog("❌ ERROR: Failed to create shadow map texture");
 			throw std::runtime_error("Failed to create shadow map texture");
 		}
-		printLog("   ✅ Shadow map texture created");
+		printLog("    Shadow map texture created");
 
-		printLog("✅ Render targets created successfully: {}x{}", width, height);
+		printLog(" Render targets created successfully: {}x{}", width, height);
 	}
 
 	void RHIRenderer::createPipelines(RHIFormat colorFormat, RHIFormat depthFormat)
@@ -389,7 +389,7 @@ namespace BinRenderer
 		// TODO: Pipeline 생성 (셰이더, 상태 등)
 		// 현재는 플레이스홀더
 
-		printLog("✅ Pipelines created");
+		printLog(" Pipelines created");
 	}
 
 	void RHIRenderer::createDescriptorSets()
@@ -397,7 +397,7 @@ namespace BinRenderer
 		// TODO: Descriptor sets 생성
 		// 현재는 플레이스홀더
 
-		printLog("✅ Descriptor sets created");
+		printLog(" Descriptor sets created");
 	}
 
 	// ========================================
@@ -422,9 +422,9 @@ namespace BinRenderer
 		// TODO: Material descriptor sets 업데이트
 	}
 
-	void RHIRenderer::renderForwardModels(RHI* rhi, RHIScene& scene, RHIPipeline* pipeline, uint32_t frameIndex)
+	void RHIRenderer::renderForwardModels(RHI* rhi, RHIScene& scene, RHIPipelineHandle pipeline, uint32_t frameIndex)
 	{
-		if (!pipeline)
+		if (!pipeline.isValid())
 		{
 			printLog("❌ ERROR: Pipeline is null in renderForwardModels");
 			return;
@@ -446,12 +446,12 @@ namespace BinRenderer
 			// ❌ Simple 셰이더는 Push constants 불필요 - 주석 처리
 			// TODO: PBR 셰이더로 전환 시 다시 활성화
 			/*
-			// ✅ Push constants (Model matrix)
+			//  Push constants (Model matrix)
 			PbrPushConstants pushConstants{};
 			pushConstants.model = model->getTransform();
 			pushConstants.materialIndex = 0;  // TODO: Material index 전달
 			
-			// ✅ Push constants 전송 (Pipeline 사용)
+			//  Push constants 전송 (Pipeline 사용)
 			rhi->cmdPushConstants(
 				pipeline, 
 				RHI_SHADER_STAGE_VERTEX_BIT | RHI_SHADER_STAGE_FRAGMENT_BIT,
@@ -461,7 +461,7 @@ namespace BinRenderer
 			);
 			*/
 
-			// ✅ Draw
+			//  Draw
 			model->draw(rhi, 1);
 			
 			if (frameIndex % 60 == 0)
@@ -475,7 +475,7 @@ namespace BinRenderer
 	}
 
 	// ========================================
-	// ✅ Material System
+	//  Material System
 	// ========================================
 
 	void RHIRenderer::buildMaterialBuffer(RHIScene& scene)
@@ -483,10 +483,10 @@ namespace BinRenderer
 		printLog("[RHIRenderer] Building material buffer from scene...");
 
 		// 기존 material buffer 정리
-		if (materialBuffer_)
+		if (materialBuffer_.isValid())
 		{
 			rhi_->destroyBuffer(materialBuffer_);
-			materialBuffer_ = nullptr;
+			materialBuffer_ = {};
 		}
 		materialTextures_.clear();
 		materialCount_ = 0;
@@ -546,7 +546,7 @@ namespace BinRenderer
 		bufferInfo.memoryProperties = RHI_MEMORY_PROPERTY_HOST_VISIBLE_BIT | RHI_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
 		materialBuffer_ = rhi_->createBuffer(bufferInfo);
-		if (!materialBuffer_)
+		if (!materialBuffer_.isValid())
 		{
 			printLog("[RHIRenderer] ❌ Failed to create material buffer!");
 			return;
@@ -557,7 +557,7 @@ namespace BinRenderer
 		memcpy(data, materials.data(), bufferInfo.size);
 		rhi_->unmapBuffer(materialBuffer_);
 
-		printLog("[RHIRenderer]   ✅ Material buffer created: {} materials, {} bytes", 
+		printLog("[RHIRenderer]    Material buffer created: {} materials, {} bytes", 
 			materialCount_, bufferInfo.size);
 
 		// TODO: Texture 수집 및 bindless array 구성

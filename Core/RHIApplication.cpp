@@ -1,4 +1,4 @@
-﻿#include "RHIApplication.h"
+#include "RHIApplication.h"
 #include "RHIScene.h"
 #include "Logger.h"
 #include "../Platform/WindowFactory.h"
@@ -37,12 +37,12 @@ namespace BinRenderer
 		// 사용자가 렌더 패스를 추가하지 않았다면 기본 ForwardPassRG 추가
 		if (renderGraph_->getPassCount() == 0)
 		{
-			printLog("📊 No render passes added by user, adding default ForwardPassRG");
+			printLog("No render passes added by user, adding default ForwardPassRG");
 			auto forwardPass = std::make_unique<ForwardPassRG>(rhi_.get(), scene_.get(), renderer_.get());
 			if (forwardPass->initialize())
 			{
 				renderGraph_->addPass(std::move(forwardPass));
-				printLog("   ✅ Default ForwardPassRG added (with Scene and Renderer)");
+				printLog("    Default ForwardPassRG added (with Scene and Renderer)");
 			}
 			else
 			{
@@ -51,23 +51,23 @@ namespace BinRenderer
 		}
 		else
 		{
-			printLog("📊 Using user-defined render passes ({} pass(es))", renderGraph_->getPassCount());
+			printLog("Using user-defined render passes ({} pass(es))", renderGraph_->getPassCount());
 		}
 
 		// ========================================
-		// ✅ Material Buffer 빌드 및 ForwardPass에 바인딩
+		//  Material Buffer 빌드 및 ForwardPass에 바인딩
 		// ========================================
-		printLog("📦 Building material buffer from scene...");
+		printLog("Building material buffer from scene...");
 		if (renderer_ && scene_)
 		{
 			// Scene의 모든 모델에서 material 데이터 수집 및 GPU 버퍼 생성
 			renderer_->buildMaterialBuffer(*scene_);
-			printLog("   ✅ Material buffer built: {} materials", renderer_->getMaterialCount());
+			printLog("    Material buffer built: {} materials", renderer_->getMaterialCount());
 		}
 		
 		// RenderGraph 컴파일 (모든 Pass 추가 후)
 		renderGraph_->compile();
-		printLog("✅ RenderGraph compiled");
+		printLog(" RenderGraph compiled");
 
 		// 메인 루프 실행
 		mainLoop();
@@ -97,7 +97,7 @@ namespace BinRenderer
 			printLog("ERROR: Failed to create window");
 			return;
 		}
-		printLog("✅ Window created");
+		printLog(" Window created");
 
 		// 2. RHI 생성
 		rhi_ = RHIFactory::createUnique(apiType_);
@@ -112,7 +112,7 @@ namespace BinRenderer
 		initInfo.windowWidth = config_.windowWidth;
 		initInfo.windowHeight = config_.windowHeight;
 		initInfo.window = window_->getNativeHandle();  // 레거시 (VulkanRHI 내부에서 사용 안 함)
-		initInfo.windowInterface = window_.get();  // ✅ IWindow 인터페이스 전달!
+		initInfo.windowInterface = window_.get();  //  IWindow 인터페이스 전달!
 		initInfo.maxFramesInFlight = config_.maxFramesInFlight;
 		
 		// Vulkan 확장 (Window에서 가져오기)
@@ -126,7 +126,7 @@ namespace BinRenderer
 			printLog("ERROR: Failed to initialize RHI");
 			return;
 		}
-		printLog("✅ RHI initialized");
+		printLog(" RHI initialized");
 
 		// 4. Renderer 생성
 		renderer_ = std::make_unique<RHIRenderer>(rhi_.get(), config_.maxFramesInFlight);
@@ -153,23 +153,23 @@ namespace BinRenderer
 			printLog("ERROR: Failed to initialize Renderer");
 			return;
 		}
-		printLog("✅ Renderer initialized");
+		printLog(" Renderer initialized");
 
 		// 5. Camera 초기화
 		float aspect = static_cast<float>(config_.windowWidth) / static_cast<float>(config_.windowHeight);
 		camera_.setPerspective(60.0f, aspect, 0.1f, 1000.0f);
 		camera_.setPosition(glm::vec3(0.0f, 5.0f, -10.0f));
-		printLog("✅ Camera initialized");
+		printLog(" Camera initialized");
 
 		// 6. Scene 생성
 		scene_ = std::make_unique<RHIScene>(rhi_.get());
 		scene_->setCamera(camera_);
-		printLog("✅ Scene created");
+		printLog(" Scene created");
 
 		// 7. RenderGraph 생성
 		renderGraph_ = std::make_unique<RenderGraph>(rhi_.get());
 		setupDefaultRenderGraph();
-		printLog("✅ RenderGraph created");
+		printLog(" RenderGraph created");
 
 		// 8. Input 시스템 초기화
 		// TODO: Window 핸들 전달
@@ -177,7 +177,7 @@ namespace BinRenderer
 
 		initialized_ = true;
 		running_ = true;
-		printLog("✅ RHIApplication initialized successfully");
+		printLog(" RHIApplication initialized successfully");
 	}
 
 	void RHIApplication::shutdown()
@@ -247,13 +247,13 @@ namespace BinRenderer
 		}
 
 		initialized_ = false;
-		printLog("✅ RHIApplication shutdown complete");
+		printLog(" RHIApplication shutdown complete");
 	}
 
 	void RHIApplication::setupDefaultRenderGraph()
 	{
 		// 기본 ForwardPassRG는 사용자가 패스를 추가하지 않았을 때만 추가
-		printLog("📊 Default RenderGraph setup");
+		printLog("Default RenderGraph setup");
 		
 		// 이 시점에서는 listener의 onInit이 호출되기 전이므로
 		// setupDefaultRenderGraph를 제거하고 listener 호출 후에 체크하도록 수정 필요

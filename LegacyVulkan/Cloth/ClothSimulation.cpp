@@ -1,4 +1,4 @@
-﻿#include "ClothSimulation.h"
+#include "ClothSimulation.h"
 #include "../Logger.h"
 #include "../MappedBuffer.h"
 #include "../StorageBuffer.h"
@@ -220,7 +220,7 @@ namespace BinRenderer::Vulkan {
 			ctx_, 
 			indices.data(), 
 			bufferSize,
-			VK_BUFFER_USAGE_INDEX_BUFFER_BIT  // ✅ 인덱스 버퍼로 사용 가능
+			VK_BUFFER_USAGE_INDEX_BUFFER_BIT  //  인덱스 버퍼로 사용 가능
 		);
 		
 		BinRenderer::printLog("Created index buffer successfully (size: {} bytes)", bufferSize);

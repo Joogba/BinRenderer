@@ -1,6 +1,6 @@
-﻿#include "VulkanContext.h"
+#include "VulkanContext.h"
 #include "../Utilities/VulkanDebug.h"
-#include "Vulkan/Logger.h"
+#include "Core/Logger.h"
 #include <set>
 
 namespace BinRenderer::Vulkan
@@ -17,7 +17,7 @@ namespace BinRenderer::Vulkan
 	bool VulkanContext::initialize(const std::vector<const char*>& instanceExtensions, bool enableValidation, bool requireSwapchain)
 	{
 		validationEnabled_ = enableValidation;
-		requireSwapchain_ = requireSwapchain;  // ✅ 저장
+		requireSwapchain_ = requireSwapchain;  //  저장
 
 		if (!createInstance(instanceExtensions))
 		{
@@ -134,7 +134,7 @@ namespace BinRenderer::Vulkan
 		// 간단하게 첫 번째 디바이스 선택 (실제로는 점수 매기기 필요)
 		physicalDevice_ = devices[0];
 
-		// ✅ 디바이스 속성 저장
+		//  디바이스 속성 저장
 		vkGetPhysicalDeviceProperties(physicalDevice_, &deviceProperties_);
 		vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
 		vkGetPhysicalDeviceFeatures(physicalDevice_, &deviceFeatures_);
@@ -167,7 +167,7 @@ namespace BinRenderer::Vulkan
 			queueCreateInfos.push_back(queueCreateInfo);
 		}
 
-		// ✅ Vulkan 1.2 Features: Bindless Descriptor Arrays (non-uniform indexing)
+		//  Vulkan 1.2 Features: Bindless Descriptor Arrays (non-uniform indexing)
 		VkPhysicalDeviceVulkan12Features vulkan12Features{};
 		vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
 		vulkan12Features.descriptorIndexing = VK_TRUE;
@@ -176,7 +176,7 @@ namespace BinRenderer::Vulkan
 		vulkan12Features.descriptorBindingVariableDescriptorCount = VK_TRUE;
 		vulkan12Features.descriptorBindingPartiallyBound = VK_TRUE;
 
-		// ✅ Vulkan 1.3 Features: Dynamic Rendering & Synchronization2
+		//  Vulkan 1.3 Features: Dynamic Rendering & Synchronization2
 		VkPhysicalDeviceSynchronization2Features sync2Features{};
 		sync2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
 		sync2Features.synchronization2 = VK_TRUE;
@@ -193,7 +193,7 @@ namespace BinRenderer::Vulkan
 		deviceFeatures2.pNext = &dynamicRenderingFeatures;
 
 
-		// ✅ 헤드리스 모드 지원: 스왑체인이 필요할 때만 확장 추가
+		//  헤드리스 모드 지원: 스왑체인이 필요할 때만 확장 추가
 		std::vector<const char*> deviceExtensions;
 		if (requireSwapchain_) {
 			deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
@@ -206,8 +206,8 @@ namespace BinRenderer::Vulkan
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 		createInfo.pQueueCreateInfos = queueCreateInfos.data();
-		createInfo.pEnabledFeatures = nullptr; // ✅ deviceFeatures2 사용 시 nullptr
-		createInfo.pNext = &deviceFeatures2;   // ✅ Feature chain 연결
+		createInfo.pEnabledFeatures = nullptr; //  deviceFeatures2 사용 시 nullptr
+		createInfo.pNext = &deviceFeatures2;   //  Feature chain 연결
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 		createInfo.ppEnabledExtensionNames = deviceExtensions.empty() ? nullptr : deviceExtensions.data();
 
@@ -226,7 +226,7 @@ namespace BinRenderer::Vulkan
 		presentQueueFamily_ = indices.presentFamily;
 		computeQueueFamily_ = indices.computeFamily;
 
-		printLog("✅ Vulkan features enabled:");
+		printLog(" Vulkan features enabled:");
 		printLog("   - Dynamic Rendering (1.3)");
 		printLog("   - Synchronization2 (1.3)");
 		printLog("   - Descriptor Indexing (1.2)");
@@ -276,7 +276,7 @@ namespace BinRenderer::Vulkan
 	}
 
 	// ========================================
-	// ✅ 헬퍼 메서드 구현
+	//  헬퍼 메서드 구현
 	// ========================================
 
 	uint32_t VulkanContext::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const

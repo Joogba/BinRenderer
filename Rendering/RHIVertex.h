@@ -4,7 +4,7 @@
 #include <glm/gtc/packing.hpp>  // For half-precision support
 #include <cstdint>
 #include <vector>
-#include "../RHI/Structs/RHIPipelineCreateInfo.h"
+#include "../RHI/Structs/RHIStructs.h"
 
 namespace BinRenderer
 {

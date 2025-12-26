@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "../../Resources/RHIBuffer.h"
-#include "../../Structs/RHIBufferCreateInfo.h"
+#include "../../Structs/RHIStructs.h"
 #include <vulkan/vulkan.h>
 
 namespace BinRenderer::Vulkan

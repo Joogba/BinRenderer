@@ -32,7 +32,7 @@ namespace BinRenderer
 		// 디버그 정보 출력
 		printDebugInfo();
 
-		printLog("✅ DeferredRendererRG initialized successfully");
+		printLog(" DeferredRendererRG initialized successfully");
 		return true;
 	}
 
@@ -64,7 +64,7 @@ namespace BinRenderer
 		renderGraph_->execute(frameIndex);
 	}
 
-	RHIImage* DeferredRendererRG::getFinalOutput() const
+	RHIImageHandle DeferredRendererRG::getFinalOutput() const
 	{
 		return renderGraph_->getFinalOutput();
 	}
@@ -113,7 +113,7 @@ namespace BinRenderer
 		auto lighting = std::make_unique<LightingPassRG>(rhi_);
 		lighting->resize(width_, height_);
 		
-		// ✅ 의존성 설정: Shadow + GBuffer → Lighting
+		//  의존성 설정: Shadow + GBuffer → Lighting
 		lighting->setShadowMapHandle(shadowMapHandle);
 		lighting->setAlbedoHandle(albedoHandle);
 		lighting->setNormalHandle(normalHandle);
@@ -133,7 +133,7 @@ namespace BinRenderer
 		auto forward = std::make_unique<ForwardPassRG>(rhi_);
 		forward->resize(width_, height_);
 		
-		// ✅ 의존성 설정: Lighting + Depth → Forward
+		//  의존성 설정: Lighting + Depth → Forward
 		forward->setLightingHandle(lightingHandle);
 		forward->setDepthHandle(depthHandle);
 		
@@ -149,7 +149,7 @@ namespace BinRenderer
 		auto postProcess = std::make_unique<PostProcessPassRG>(rhi_);
 		postProcess->resize(width_, height_);
 		
-		// ✅ 의존성 설정: Forward → PostProcess
+		//  의존성 설정: Forward → PostProcess
 		postProcess->setHDRHandle(forwardHandle);
 		
 		postProcess->initialize();
@@ -164,14 +164,14 @@ namespace BinRenderer
 		auto gui = std::make_unique<GUIPassRG>(rhi_);
 		gui->resize(width_, height_);
 		
-		// ✅ 의존성 설정: PostProcess → GUI
+		//  의존성 설정: PostProcess → GUI
 		gui->setSceneHandle(ldrHandle);
 		
 		gui->initialize();
 		
 		renderGraph_->addPass(std::move(gui));
 
-		printLog("  ✅ All 6 passes added to RenderGraph");
+		printLog("   All 6 passes added to RenderGraph");
 	}
 
 } // namespace BinRenderer

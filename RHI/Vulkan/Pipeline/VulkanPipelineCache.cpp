@@ -1,5 +1,5 @@
-﻿#include "VulkanPipelineCache.h"
-#include "Vulkan/Logger.h"
+#include "VulkanPipelineCache.h"
+#include "Core/Logger.h"
 #include <fstream>
 
 namespace BinRenderer::Vulkan
@@ -27,7 +27,7 @@ namespace BinRenderer::Vulkan
 			return false;
 		}
 
-		printLog("✅ Pipeline cache created (initial size: {} bytes)", initialDataSize);
+		printLog(" Pipeline cache created (initial size: {} bytes)", initialDataSize);
 		return true;
 	}
 
@@ -49,7 +49,7 @@ namespace BinRenderer::Vulkan
 			return false;
 		}
 
-		printLog("✅ Pipeline cache loaded from file: {} ({} bytes)", filename, data.size());
+		printLog(" Pipeline cache loaded from file: {} ({} bytes)", filename, data.size());
 		return true;
 	}
 
@@ -77,7 +77,7 @@ namespace BinRenderer::Vulkan
 			return false;
 		}
 
-		printLog("✅ Pipeline cache saved to file: {} ({} bytes)", filename, data.size());
+		printLog(" Pipeline cache saved to file: {} ({} bytes)", filename, data.size());
 		return true;
 	}
 

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <vulkan/vulkan.h>
 #include "../../Core/RHISwapchain.h"
@@ -32,15 +32,17 @@ namespace BinRenderer::Vulkan
 		VkResult acquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t& imageIndex);
 		VkResult present(VkQueue queue, uint32_t imageIndex, VkSemaphore waitSemaphore = VK_NULL_HANDLE);
 
-		// ✅ RHISwapchain 인터페이스 구현
+		//  RHISwapchain 인터페이스 구현
 		bool acquireNextImage(uint32_t& imageIndex, RHISemaphore* semaphore = nullptr, RHIFence* fence = nullptr) override;
 		bool present(uint32_t imageIndex, RHISemaphore* waitSemaphore = nullptr) override;
 		uint32_t getImageCount() const override { return static_cast<uint32_t>(images_.size()); }
 		RHIFormat getFormat() const override;
 		uint32_t getWidth() const override { return extent_.width; }
 		uint32_t getHeight() const override { return extent_.height; }
-		RHIImage* getImage(uint32_t index) const override { return nullptr; } // TODO: VulkanImage 래퍼
-		RHIImageView* getImageView(uint32_t index) const override;  // ✅ 구현됨
+		RHIImageHandle getImage(uint32_t index) const override { return {}; } // TODO: VulkanImage 래퍼
+		RHIImageViewHandle getImageView(uint32_t index) const override { return imageViewHandles_[index]; }
+		void setImageViewHandle(uint32_t index, RHIImageViewHandle handle) { imageViewHandles_[index] = handle; }
+
 		RHIPresentMode getPresentMode() const override;
 		void setPresentMode(RHIPresentMode mode) override;
 
@@ -55,6 +57,9 @@ namespace BinRenderer::Vulkan
 
 		const std::vector<VkImageView>& getVkImageViews() const { return imageViews_; }
 		VkImageView getVkImageView(uint32_t index) const { return imageViews_[index]; }
+		
+		// 내부적으로 사용하는 Raw Pointer 접근 (Pool 등록용)
+		RHIImageView* getImageViewRaw(uint32_t index) const { return imageViewWrappers_[index].get(); }
 
 	private:
 		VulkanContext* context_;
@@ -71,8 +76,9 @@ namespace BinRenderer::Vulkan
 		std::vector<VkImage> images_;
 		std::vector<VkImageView> imageViews_;
 		
-		// ✅ RHIImageView 래퍼들
+		//  RHIImageView 래퍼들
 		std::vector<std::unique_ptr<RHIImageView>> imageViewWrappers_;
+		std::vector<RHIImageViewHandle> imageViewHandles_;
 
 		// 헬퍼 함수
 		struct SwapchainSupportDetails
@@ -91,7 +97,7 @@ namespace BinRenderer::Vulkan
 		bool createImageViews();
 		void destroyImageViews();
 		
-		// ✅ RHIImageView 래퍼 생성/삭제
+		//  RHIImageView 래퍼 생성/삭제
 		void createImageViewWrappers();
 		void destroyImageViewWrappers();
 	};

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "../Resources/ResourceManager.h"
 #include <memory>
@@ -10,7 +10,7 @@ namespace BinRenderer::Vulkan {
 	class Model;
 	class Context;
 	class ResourceRegistry;
-	class Image2D;  // ✅ Image2D forward declaration 추가
+	class Image2D;  //  Image2D forward declaration 추가
 }
 
 namespace BinRenderer::Vulkan {

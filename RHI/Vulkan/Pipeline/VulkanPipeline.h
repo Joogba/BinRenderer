@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "../../Pipeline/RHIPipeline.h"
-#include "../../Structs/RHIPipelineCreateInfo.h"
+#include "../../Structs/RHIStructs.h"
 #include "../Resources/VulkanShader.h"
 #include <vulkan/vulkan.h>
 #include <vector>
@@ -19,7 +19,7 @@ namespace BinRenderer::Vulkan
 		VulkanPipeline(VkDevice device);
 		~VulkanPipeline() override;
 
-		bool create(const RHIPipelineCreateInfo& createInfo);
+		bool create(const RHIPipelineCreateInfo& createInfo, const std::vector<class RHIDescriptorSetLayout*>& resolvedLayouts, vector<VulkanShader*>& shaders);
 		void destroy();
 
 		// RHIPipeline 인터페이스 구현
@@ -38,8 +38,8 @@ namespace BinRenderer::Vulkan
 		VulkanRenderPass* renderPass_ = nullptr;
 		RHIPipelineBindPoint bindPoint_ = RHI_PIPELINE_BIND_POINT_GRAPHICS;
 
-		bool createPipelineLayout(const RHIPipelineCreateInfo& createInfo);
-		bool createGraphicsPipeline(const RHIPipelineCreateInfo& createInfo);
+		bool createPipelineLayout(const RHIPipelineCreateInfo& createInfo, const std::vector<class RHIDescriptorSetLayout*>& resolvedLayouts);
+		bool createGraphicsPipeline(const RHIPipelineCreateInfo& createInfo, vector<VulkanShader*>& shaders);
 	};
 
 } // namespace BinRenderer::Vulkan

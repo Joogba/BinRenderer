@@ -1,5 +1,5 @@
-﻿#include "VulkanDebug.h"
-#include "Vulkan/Logger.h"
+#include "VulkanDebug.h"
+#include "Core/Logger.h"
 #include <iostream>
 #include <vector>
 
@@ -146,7 +146,7 @@ namespace BinRenderer::Vulkan
 		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 		void* pUserData)
 	{
-		// ✅ printLog()를 사용하여 파일에도 기록되도록 수정
+		//  printLog()를 사용하여 파일에도 기록되도록 수정
 		const char* severityStr = "";
 		const char* typeStr = "";
 
@@ -168,7 +168,7 @@ namespace BinRenderer::Vulkan
 		else
 			typeStr = "[General]";
 
-		// ✅ printLog() 사용 (파일 + 콘솔 출력)
+		//  printLog() 사용 (파일 + 콘솔 출력)
 		printLog("{} {} {}", severityStr, typeStr, pCallbackData->pMessage);
 
 		// Custom callback 호출

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "../../Pipeline/RHIDescriptor.h"
 #include <vulkan/vulkan.h>
@@ -25,14 +25,14 @@ namespace BinRenderer::Vulkan
 		// Vulkan 네이티브 접근
 		VkDescriptorSetLayout getVkDescriptorSetLayout() const { return layout_; }
 		
-		// ✅ Binding 정보 조회
+		//  Binding 정보 조회
 		const std::vector<VkDescriptorSetLayoutBinding>& getBindings() const { return bindings_; }
 
 	private:
 		VkDevice device_;
 		VkDescriptorSetLayout layout_ = VK_NULL_HANDLE;
 		uint32_t bindingCount_ = 0;
-		std::vector<VkDescriptorSetLayoutBinding> bindings_;  // ✅ Binding 정보 저장
+		std::vector<VkDescriptorSetLayoutBinding> bindings_;  //  Binding 정보 저장
 	};
 
 	/**
@@ -55,7 +55,7 @@ namespace BinRenderer::Vulkan
 		VkDescriptorPool getVkDescriptorPool() const { return pool_; }
 
 		// ========================================
-		// ✅ 자동 풀 관리 기능
+		//  자동 풀 관리 기능
 		// ========================================
 
 		/**
@@ -83,7 +83,7 @@ namespace BinRenderer::Vulkan
 		VkDevice device_;
 		VkDescriptorPool pool_ = VK_NULL_HANDLE;
 
-		// ✅ 용량 추적
+		//  용량 추적
 		uint32_t maxSets_ = 0;
 		uint32_t remainingSets_ = 0;
 		std::unordered_map<VkDescriptorType, uint32_t> totalDescriptors_;
@@ -96,7 +96,7 @@ namespace BinRenderer::Vulkan
 	class VulkanDescriptorSet : public RHIDescriptorSet
 	{
 	public:
-		VulkanDescriptorSet(VkDevice device, VkDescriptorSet descriptorSet, VulkanDescriptorSetLayout* layout);  // ✅ Layout 추가
+		VulkanDescriptorSet(VkDevice device, VkDescriptorSet descriptorSet, VulkanDescriptorSetLayout* layout);  //  Layout 추가
 		~VulkanDescriptorSet() override;
 
 		// RHIDescriptorSet 인터페이스 구현
@@ -113,7 +113,7 @@ namespace BinRenderer::Vulkan
 	private:
 		VkDevice device_;
 		VkDescriptorSet descriptorSet_;
-		VulkanDescriptorSetLayout* layout_;  // ✅ Layout 참조 저장
+		VulkanDescriptorSetLayout* layout_;  //  Layout 참조 저장
 	};
 
 } // namespace BinRenderer::Vulkan

@@ -1,5 +1,5 @@
-﻿#include "VulkanDescriptorAllocator.h"
-#include "Vulkan/Logger.h"
+#include "VulkanDescriptorAllocator.h"
+#include "Core/Logger.h"
 #include <algorithm>
 
 namespace BinRenderer::Vulkan
@@ -41,7 +41,7 @@ namespace BinRenderer::Vulkan
 				
 				if (result == VK_SUCCESS)
 				{
-					// ✅ 용량 업데이트
+					//  용량 업데이트
 					pool->updateCapacity(bindings, 1);
 					return descriptorSet;
 				}
@@ -72,7 +72,7 @@ namespace BinRenderer::Vulkan
 			return VK_NULL_HANDLE;
 		}
 
-		// ✅ 용량 업데이트
+		//  용량 업데이트
 		newPool->updateCapacity(bindings, 1);
 
 		printLog("📦 Allocated descriptor set from new pool (total pools: {})", pools_.size());

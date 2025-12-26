@@ -1,7 +1,7 @@
 ﻿#include "VulkanQueue.h"
 #include "VulkanCommandBuffer.h"
 #include "../../Synchronization/RHIFence.h"
-#include "Vulkan/Logger.h"
+#include "Core/Logger.h"
 
 namespace BinRenderer::Vulkan
 {

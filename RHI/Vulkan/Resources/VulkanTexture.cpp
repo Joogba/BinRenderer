@@ -1,11 +1,11 @@
-﻿#include "VulkanTexture.h"
+#include "VulkanTexture.h"
 #include "VulkanBuffer.h"
 #include "../VulkanRHI.h"
 #include "../Commands/VulkanCommandPool.h"
 #include "../Commands/VulkanCommandBuffer.h"
-#include "Vulkan/Logger.h"
+#include "Core/Logger.h"
 
-// stb_image 사용 (이미지 로딩)
+// stb_image 사용 (이미지 로딩) - 레거시 메서드용
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #endif
@@ -15,14 +15,204 @@
 namespace BinRenderer::Vulkan
 {
 	VulkanTexture::VulkanTexture(VkDevice device, VkPhysicalDevice physicalDevice, VulkanRHI* rhi)
-		: device_(device), physicalDevice_(physicalDevice), rhi_(rhi)
+		: device_(device), physicalDevice_(physicalDevice), rhi_(rhi), useHandles_(false)
+	{
+	}
+
+	VulkanTexture::VulkanTexture(RHIImageHandle image, RHIImageViewHandle view, RHISamplerHandle sampler, uint32_t width, uint32_t height, uint32_t mipLevels)
+		: useHandles_(true), imageHandle_(image), viewHandle_(view), samplerHandle_(sampler), width_(width), height_(height), mipLevels_(mipLevels)
 	{
 	}
 
 	VulkanTexture::~VulkanTexture()
 	{
-		destroy();
+		if (!useHandles_)
+		{
+			destroy();
+		}
 	}
+
+	// ========================================
+	//  새로운 로딩 메서드 (RHITextureLoader 사용)
+	// ========================================
+
+	bool VulkanTexture::loadFromKTX2(const std::string& filename)
+	{
+		auto loadedData = RHITextureLoader::loadKTX2(filename);
+		if (loadedData.data.empty())
+		{
+			printLog("[VulkanTexture] ❌ Failed to load KTX2 file: {}", filename);
+			return false;
+		}
+
+		return createFromLoadedData(loadedData);
+	}
+
+	bool VulkanTexture::loadFromImage(const std::string& filename, bool sRGB)
+	{
+		auto loadedData = RHITextureLoader::loadImage(filename, sRGB);
+		if (loadedData.data.empty())
+		{
+			printLog("[VulkanTexture] ❌ Failed to load image file: {}", filename);
+			return false;
+		}
+
+		return createFromLoadedData(loadedData);
+	}
+
+	bool VulkanTexture::createFromLoadedData(const RHITextureLoader::LoadedTextureData& loadedData)
+	{
+		width_ = loadedData.width;
+		height_ = loadedData.height;
+		mipLevels_ = loadedData.mipLevels;
+
+		// 1. RHIImage 생성
+		image_ = new VulkanImage(device_, physicalDevice_);
+
+		RHIImageCreateInfo imageInfo{};
+		imageInfo.width = loadedData.width;
+		imageInfo.height = loadedData.height;
+		imageInfo.depth = loadedData.depth;
+		imageInfo.mipLevels = loadedData.mipLevels;
+		imageInfo.arrayLayers = loadedData.arrayLayers;
+		imageInfo.format = loadedData.format;
+		imageInfo.tiling = RHI_IMAGE_TILING_OPTIMAL;
+		imageInfo.usage = RHI_IMAGE_USAGE_SAMPLED_BIT | RHI_IMAGE_USAGE_TRANSFER_DST_BIT;
+		imageInfo.samples = RHI_SAMPLE_COUNT_1_BIT;
+		imageInfo.flags = loadedData.isCubemap ? RHI_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
+
+		if (!image_->create(imageInfo))
+		{
+			printLog("[VulkanTexture] ❌ Failed to create image");
+			delete image_;
+			image_ = nullptr;
+			return false;
+		}
+
+		// 2. RHIImageView 생성
+		imageView_ = new VulkanImageView(device_, image_);
+		VkImageViewType viewType = loadedData.isCubemap ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
+
+		if (!imageView_->create(viewType, VK_IMAGE_ASPECT_COLOR_BIT))
+		{
+			printLog("[VulkanTexture] ❌ Failed to create image view");
+			delete imageView_;
+			imageView_ = nullptr;
+			delete image_;
+			image_ = nullptr;
+			return false;
+		}
+
+		// 3. 텍스처 데이터 업로드 (큐브맵 지원)
+		uploadTextureData(loadedData);
+
+		// 4. Sampler 생성
+		sampler_ = new VulkanSampler(device_);
+		if (!sampler_->createLinear())
+		{
+			printLog("[VulkanTexture] ⚠️  Failed to create sampler (texture still usable)");
+			delete sampler_;
+			sampler_ = nullptr;
+		}
+
+		printLog("[VulkanTexture]  Texture created successfully ({}x{}, {} mips, {} layers)",
+			width_, height_, mipLevels_, loadedData.arrayLayers);
+
+		return true;
+	}
+
+	void VulkanTexture::uploadTextureData(const RHITextureLoader::LoadedTextureData& loadedData)
+	{
+		if (!rhi_ || !image_)
+		{
+			printLog("[VulkanTexture] ❌ Cannot upload texture data - RHI or image is null");
+			return;
+		}
+
+		// 1. 스테이징 버퍼 생성
+		RHIBufferCreateInfo stagingInfo{};
+		stagingInfo.size = loadedData.data.size();
+		stagingInfo.usage = RHI_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		stagingInfo.memoryProperties = RHI_MEMORY_PROPERTY_HOST_VISIBLE_BIT | RHI_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+		stagingInfo.initialData = loadedData.data.data();
+
+		auto* stagingBuffer = new VulkanBuffer(device_, physicalDevice_);
+		if (!stagingBuffer->create(stagingInfo))
+		{
+			printLog("[VulkanTexture] ❌ Failed to create staging buffer");
+			delete stagingBuffer;
+			return;
+		}
+
+		// 2. 커맨드 버퍼 시작
+		VkCommandBuffer cmdBuffer = rhi_->beginSingleTimeCommands();
+
+		// 3. 이미지 레이아웃 전환: UNDEFINED -> TRANSFER_DST
+		rhi_->cmdTransitionImageLayout(
+			image_,
+			RHI_IMAGE_LAYOUT_UNDEFINED,
+			RHI_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			RHI_IMAGE_ASPECT_COLOR_BIT,
+			0, loadedData.mipLevels,
+			0, loadedData.arrayLayers
+		);
+
+		// 4. 버퍼 -> 이미지 복사 (모든 레이어와 mipmap)
+		std::vector<VkBufferImageCopy> copyRegions;
+
+		for (uint32_t layer = 0; layer < loadedData.arrayLayers; ++layer)
+		{
+			for (uint32_t mipLevel = 0; mipLevel < loadedData.mipLevels; ++mipLevel)
+			{
+				const auto& mipInfo = loadedData.mipInfos[layer][mipLevel];
+
+				VkBufferImageCopy region{};
+				region.bufferOffset = mipInfo.offset;
+				region.bufferRowLength = 0;
+				region.bufferImageHeight = 0;
+				region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				region.imageSubresource.mipLevel = mipLevel;
+				region.imageSubresource.baseArrayLayer = layer;
+				region.imageSubresource.layerCount = 1;
+				region.imageOffset = { 0, 0, 0 };
+				region.imageExtent = { mipInfo.width, mipInfo.height, 1 };
+
+				copyRegions.push_back(region);
+			}
+		}
+
+		vkCmdCopyBufferToImage(
+			cmdBuffer,
+			stagingBuffer->getVkBuffer(),
+			image_->getVkImage(),
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			static_cast<uint32_t>(copyRegions.size()),
+			copyRegions.data()
+		);
+
+		// 5. 이미지 레이아웃 전환: TRANSFER_DST -> SHADER_READ_ONLY
+		rhi_->cmdTransitionImageLayout(
+			image_,
+			RHI_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			RHI_IMAGE_ASPECT_COLOR_BIT,
+			0, loadedData.mipLevels,
+			0, loadedData.arrayLayers
+		);
+
+		// 6. 커맨드 버퍼 제출 및 대기
+		rhi_->endSingleTimeCommands(cmdBuffer);
+
+		// 7. 스테이징 버퍼 정리
+		delete stagingBuffer;
+
+		printLog("[VulkanTexture]  Texture data uploaded ({} layers, {} mips, {} copy regions)",
+			loadedData.arrayLayers, loadedData.mipLevels, copyRegions.size());
+	}
+
+	// ========================================
+	// 기존 레거시 메서드 (호환성 유지)
+	// ========================================
 
 	bool VulkanTexture::create2D(uint32_t width, uint32_t height, VkFormat format, uint32_t mipLevels, bool createSampler)
 	{
@@ -30,7 +220,6 @@ namespace BinRenderer::Vulkan
 		height_ = height;
 		mipLevels_ = mipLevels;
 
-		// 이미지 생성
 		image_ = new VulkanImage(device_, physicalDevice_);
 		RHIImageCreateInfo imageInfo{};
 		imageInfo.width = width;
@@ -50,7 +239,6 @@ namespace BinRenderer::Vulkan
 			return false;
 		}
 
-		// 이미지 뷰 생성
 		imageView_ = new VulkanImageView(device_, image_);
 		if (!imageView_->create(VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT))
 		{
@@ -61,7 +249,6 @@ namespace BinRenderer::Vulkan
 			return false;
 		}
 
-		// 샘플러 생성
 		if (createSampler)
 		{
 			sampler_ = new VulkanSampler(device_);
@@ -69,7 +256,6 @@ namespace BinRenderer::Vulkan
 			{
 				delete sampler_;
 				sampler_ = nullptr;
-				// 샘플러 실패해도 텍스처는 사용 가능
 			}
 		}
 
@@ -90,7 +276,6 @@ namespace BinRenderer::Vulkan
 		VkDeviceSize imageSize = texWidth * texHeight * 4;
 		mipLevels_ = generateMipmaps ? static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1 : 1;
 
-		// 텍스처 생성
 		if (!createFromData(pixels, texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, mipLevels_))
 		{
 			stbi_image_free(pixels);
@@ -110,7 +295,6 @@ namespace BinRenderer::Vulkan
 
 		VkDeviceSize imageSize = width * height * 4;
 
-		// 1. 스테이징 버퍼 생성
 		RHIBufferCreateInfo stagingInfo{};
 		stagingInfo.size = imageSize;
 		stagingInfo.usage = RHI_BUFFER_USAGE_TRANSFER_SRC_BIT;
@@ -124,30 +308,25 @@ namespace BinRenderer::Vulkan
 			return false;
 		}
 
-		// 2. 이미지 레이아웃 전환: UNDEFINED -> TRANSFER_DST
 		transitionImageLayout(image_->getVkImage(), format,
 			VK_IMAGE_LAYOUT_UNDEFINED,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			mipLevels_);
 
-		// 3. 버퍼 -> 이미지 복사
 		copyBufferToImage(stagingBuffer->getVkBuffer(), image_->getVkImage(), width, height);
 
-		// 4. Mipmap 생성 (레이아웃도 자동 전환)
 		if (mipLevels_ > 1)
 		{
 			generateMipmaps(image_->getVkImage(), format, width, height, mipLevels_);
 		}
 		else
 		{
-			// Mipmap 없으면 수동 전환: TRANSFER_DST -> SHADER_READ_ONLY
 			transitionImageLayout(image_->getVkImage(), format,
 				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 				mipLevels_);
 		}
 
-		// 스테이징 버퍼 정리
 		delete stagingBuffer;
 
 		return true;
@@ -176,7 +355,6 @@ namespace BinRenderer::Vulkan
 
 	void VulkanTexture::generateMipmaps(VkImage image, VkFormat format, uint32_t width, uint32_t height, uint32_t mipLevels)
 	{
-		// 포맷이 선형 필터링을 지원하는지 확인
 		VkFormatProperties formatProperties;
 		vkGetPhysicalDeviceFormatProperties(physicalDevice_, format, &formatProperties);
 
@@ -186,7 +364,6 @@ namespace BinRenderer::Vulkan
 			return;
 		}
 
-		// VulkanRHI의 단일 시간 커맨드 사용
 		VkCommandBuffer commandBuffer = rhi_ ? rhi_->beginSingleTimeCommands() : VK_NULL_HANDLE;
 		if (!commandBuffer)
 		{

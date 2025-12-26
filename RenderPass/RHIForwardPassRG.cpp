@@ -81,22 +81,19 @@ namespace BinRenderer
 
 	void RHIForwardPassRG::destroyPipeline()
 	{
-		if (vertexShader_)
+		if (vertexShaderHandle_.isValid())
 		{
-			rhi_->destroyShader(vertexShader_);
-			vertexShader_ = nullptr;
+			rhi_->destroyShader(vertexShaderHandle_);
 		}
 
-		if (fragmentShader_)
+		if (fragmentShaderHandle_.isValid())
 		{
-			rhi_->destroyShader(fragmentShader_);
-			fragmentShader_ = nullptr;
+			rhi_->destroyShader(fragmentShaderHandle_);
 		}
 
-		if (pipeline_)
+		if (pipelineHandle_.isValid())
 		{
-			rhi_->destroyPipeline(pipeline_);
-			pipeline_ = nullptr;
+			rhi_->destroyPipeline(pipelineHandle_);
 		}
 	}
 

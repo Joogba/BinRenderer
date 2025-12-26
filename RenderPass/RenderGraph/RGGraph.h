@@ -1,8 +1,8 @@
-﻿#pragma once
+#pragma once
 
 #include "RGTypes.h"
 #include "RGBuilder.h"
-#include "../RGPassBase.h"  // ✅ 새로운 통합 기본 클래스
+#include "../RGPassBase.h"  //  새로운 통합 기본 클래스
 #include "../../RHI/Core/RHI.h"
 #include <memory>
 #include <vector>
@@ -142,17 +142,17 @@ namespace BinRenderer
 		/**
 		 * @brief 최종 출력 이미지 가져오기
 		 */
-		RHIImage* getFinalOutput() const;
+		RHIImageHandle getFinalOutput() const;
 
 		/**
 		 * @brief 텍스처 리소스 가져오기
 		 */
-		RHIImage* getTexture(RGTextureHandle handle) const;
+		RHIImageHandle getTexture(RGTextureHandle handle) const;
 
 		/**
 		 * @brief 버퍼 리소스 가져오기
 		 */
-		RHIBuffer* getBuffer(RGBufferHandle handle) const;
+		RHIBufferHandle getBuffer(RGBufferHandle handle) const;
 
 		// ========================================
 		// 디버그 정보
@@ -178,12 +178,12 @@ namespace BinRenderer
 		RenderGraphBuilder builder_;
 
 		// 패스 관리
-		std::vector<std::unique_ptr<RGPassBase>> passes_;  // ✅ RenderGraphPassBase → RGPassBase
+		std::vector<std::unique_ptr<RGPassBase>> passes_;  //  RenderGraphPassBase → RGPassBase
 		std::vector<RGPassBase*> sortedPasses_; // 실행 순서
 
 		// 실제 할당된 리소스
-		std::unordered_map<uint32_t, RHIImage*> allocatedTextures_;
-		std::unordered_map<uint32_t, RHIBuffer*> allocatedBuffers_;
+		std::unordered_map<uint32_t, RHIImageHandle> allocatedTextures_;
+		std::unordered_map<uint32_t, RHIBufferHandle> allocatedBuffers_;
 
 		bool compiled_ = false;
 

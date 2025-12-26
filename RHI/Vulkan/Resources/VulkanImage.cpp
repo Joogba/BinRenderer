@@ -1,5 +1,5 @@
-﻿#include "VulkanImage.h"
-#include "Vulkan/Logger.h"
+#include "VulkanImage.h"
+#include "Core/Logger.h"
 
 namespace BinRenderer::Vulkan
 {
@@ -125,22 +125,22 @@ namespace BinRenderer::Vulkan
 
 	bool VulkanImageView::create(VkImageViewType viewType, VkImageAspectFlags aspectFlags)
 	{
-		// ✅ Swapchain image view는 이미 setVkImageView()로 설정되어 있음
+		//  Swapchain image view는 이미 setVkImageView()로 설정되어 있음
 		if (imageView_ != VK_NULL_HANDLE)
 		{
-			// ✅ RHI enum과 Vulkan enum은 값이 일치하므로 직접 캐스팅 안전
+			//  RHI enum과 Vulkan enum은 값이 일치하므로 직접 캐스팅 안전
 			viewType_ = static_cast<RHIImageViewType>(viewType);
 			return true;  // 이미 생성됨
 		}
 		
-		// ✅ image_가 nullptr이면 생성 불가
+		//  image_가 nullptr이면 생성 불가
 		if (!image_)
 		{
 			printLog("❌ ERROR: Cannot create VulkanImageView without VulkanImage");
 			return false;
 		}
 		
-		// ✅ RHI enum과 Vulkan enum은 값이 일치하므로 직접 캐스팅 안전
+		//  RHI enum과 Vulkan enum은 값이 일치하므로 직접 캐스팅 안전
 		viewType_ = static_cast<RHIImageViewType>(viewType);
 
 		VkImageViewCreateInfo viewInfo{};
@@ -166,7 +166,7 @@ namespace BinRenderer::Vulkan
 
 	void VulkanImageView::destroy()
 	{
-		// ✅ 소유권이 있을 때만 파괴
+		//  소유권이 있을 때만 파괴
 		if (imageView_ != VK_NULL_HANDLE && ownsImageView_)
 		{
 			vkDestroyImageView(device_, imageView_, nullptr);
@@ -176,13 +176,13 @@ namespace BinRenderer::Vulkan
 
 	RHIFormat VulkanImageView::getFormat() const
 	{
-		// ✅ Swapchain image view인 경우
+		//  Swapchain image view인 경우
 		if (swapchainFormat_ != RHI_FORMAT_UNDEFINED)
 		{
 			return swapchainFormat_;
 		}
 		
-		// ✅ 일반 image view인 경우
+		//  일반 image view인 경우
 		return image_ ? image_->getFormat() : RHI_FORMAT_UNDEFINED;
 	}
 

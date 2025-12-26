@@ -1,6 +1,6 @@
-﻿#include "ModelLoader.h"
+#include "ModelLoader.h"
 #include "Model.h"
-#include "VulkanResourceManager.h"  // ✅ VulkanResourceManager 헤더 추가
+#include "VulkanResourceManager.h"  //  VulkanResourceManager 헤더 추가
 #include <chrono>
 #include <filesystem>
 #include <stb_image.h>
@@ -135,7 +135,7 @@ void ModelLoader::loadFromModelFile(const string& modelFilename, bool readBistro
             // ========================================
             // Embedded Texture - 기존 방식 유지 (shared_ptr로 변경)
             // ========================================
-            model_.textures_.emplace_back(make_shared<Image2D>(model_.ctx_));  // ✅ unique → shared
+            model_.textures_.emplace_back(make_shared<Image2D>(model_.ctx_));  //  unique → shared
 
             // Parse the texture index from the path (e.g., "*0" -> 0)
             int textureIndex = stoi(filename.substr(1));
@@ -217,17 +217,17 @@ void ModelLoader::loadFromModelFile(const string& modelFilename, bool readBistro
             auto cachedTexture = model_.resourceManager_->LoadOrGetTexture(fullPath, sRGB);
        if (cachedTexture) {
         model_.textures_.push_back(cachedTexture);
-              printLog("   ✅ Texture loaded via VulkanResourceManager");
+              printLog("    Texture loaded via VulkanResourceManager");
        } else {
     // Fallback: 직접 로드
       printLog("   ⚠️ VulkanResourceManager failed, using fallback");
-   model_.textures_.emplace_back(make_shared<Image2D>(model_.ctx_));  // ✅ unique → shared
+   model_.textures_.emplace_back(make_shared<Image2D>(model_.ctx_));  //  unique → shared
           model_.textures_.back()->createTextureFromImage(fullPath, false, sRGB);
      }
          } else {
       // VulkanResourceManager 없음 - 기존 방식
          printLog("   ℹ️ No VulkanResourceManager, loading directly");
-        model_.textures_.emplace_back(make_shared<Image2D>(model_.ctx_));  // ✅ unique → shared
+        model_.textures_.emplace_back(make_shared<Image2D>(model_.ctx_));  //  unique → shared
             model_.textures_.back()->createTextureFromImage(fullPath, false, sRGB);
             }
         }

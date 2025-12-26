@@ -1,4 +1,4 @@
-﻿#include "Model.h"
+#include "Model.h"
 #include "ModelNode.h"
 #include "Vertex.h"
 #include "Logger.h"
@@ -17,7 +17,7 @@ using namespace std;
 using namespace glm;
 
 Model::Model(Context& ctx, VulkanResourceManager* resourceManager)
-    : ctx_(ctx), resourceManager_(resourceManager)  // ✅ resourceManager 초기화
+    : ctx_(ctx), resourceManager_(resourceManager)  //  resourceManager 초기화
 {
     rootNode_ = make_unique<ModelNode>();
     rootNode_->name = "Root";
@@ -26,7 +26,7 @@ Model::Model(Context& ctx, VulkanResourceManager* resourceManager)
     animation_ = make_unique<BinRenderer::Animation>();
     
     if (resourceManager_) {
-        printLog("✅ Model created with VulkanResourceManager support");
+        printLog(" Model created with VulkanResourceManager support");
     }
 }
 
@@ -47,8 +47,8 @@ void Model::prepareForBindlessRendering(Sampler& sampler, vector<MaterialUBO>& a
 
     // Append textures to textureManager.textures_ (shared_ptr이므로 복사)
     textureManager.textures_.reserve(textureManager.textures_.size() + textures_.size());
-    for (const auto& texture : textures_) {  // ✅ const auto& 로 변경 (복사)
-   textureManager.textures_.push_back(texture);  // ✅ shared_ptr 복사
+    for (const auto& texture : textures_) {  //  const auto& 로 변경 (복사)
+   textureManager.textures_.push_back(texture);  //  shared_ptr 복사
     }
     // textures_.clear(); 제거 - shared_ptr이므로 유지 가능
 
@@ -123,7 +123,7 @@ void Model::calculateBoundingBox()
 void Model::cleanup()
 {
     // ========================================
-    // ✅ GPU Instancing: Step 2 - Cleanup Instance Buffer
+    //  GPU Instancing: Step 2 - Cleanup Instance Buffer
     // ========================================
     destroyInstanceBuffer();
 
@@ -147,7 +147,7 @@ void Model::updateAnimation(float deltaTime)
 }
 
 // ========================================
-// ✅ GPU Instancing: Step 1 - Instance Management Implementation
+//  GPU Instancing: Step 1 - Instance Management Implementation
 // ========================================
 
 void Model::addInstance(const glm::mat4& transform, uint32_t materialOffset)
@@ -161,14 +161,14 @@ void Model::addInstance(const glm::mat4& transform, uint32_t materialOffset)
     
     instances_.push_back(instance);
 
-    printLog("✅ Added instance #{} to model '{}' at ({:.2f}, {:.2f}, {:.2f})",
+    printLog(" Added instance #{} to model '{}' at ({:.2f}, {:.2f}, {:.2f})",
         instances_.size() - 1, name_, transform[3][0], transform[3][1], transform[3][2]);
 
     // ========================================
-    // ✅ GPU Instancing: Step 2 - Auto-create/update buffer
+    //  GPU Instancing: Step 2 - Auto-create/update buffer
     // ========================================
     // Recreate buffer with new size (매번 인스턴스 추가 시)
-    createInstanceBuffer();  // ✅ 자동으로 버퍼 생성/재생성
+    createInstanceBuffer();  //  자동으로 버퍼 생성/재생성
 }
 
 void Model::updateInstance(uint32_t index, const glm::mat4& transform)
@@ -183,7 +183,7 @@ void Model::updateInstance(uint32_t index, const glm::mat4& transform)
     printLog("🔄 Updated instance #{} of model '{}'", index, name_);
 
     // ========================================
-    // ✅ GPU Instancing: Step 2 - Update buffer
+    //  GPU Instancing: Step 2 - Update buffer
     // ========================================
     if (hasInstanceBuffer()) {
   updateInstanceBuffer();  // Upload to GPU
@@ -211,7 +211,7 @@ void Model::clearInstances()
 }
 
 // ========================================
-// ✅ GPU Instancing: Step 2 - Instance Buffer Implementation
+//  GPU Instancing: Step 2 - Instance Buffer Implementation
 // ========================================
 
 void Model::createInstanceBuffer()
@@ -260,7 +260,7 @@ check(vkCreateBuffer(ctx_.device(), &bufferInfo, nullptr, &instanceBuffer_));
     // Initial upload
     updateInstanceBuffer();
 
-    printLog("✅ Instance buffer created for model '{}'", name_);
+    printLog(" Instance buffer created for model '{}'", name_);
 }
 
 void Model::updateInstanceBuffer()
@@ -305,7 +305,7 @@ void Model::destroyInstanceBuffer()
 }
 
 // ========================================
-// ✅ GPU Instancing: Step 4 - Pipeline Configuration Implementation
+//  GPU Instancing: Step 4 - Pipeline Configuration Implementation
 // ========================================
 
 VkVertexInputBindingDescription Model::getInstanceBindingDescription()
@@ -319,7 +319,7 @@ VkVertexInputBindingDescription Model::getInstanceBindingDescription()
     VkVertexInputBindingDescription bindingDescription{};
     bindingDescription.binding = 1;  // Instance buffer uses binding 1
     bindingDescription.stride = sizeof(InstanceData);
-    bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;  // ✅ Per-instance!
+    bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;  //  Per-instance!
     
     return bindingDescription;
 }

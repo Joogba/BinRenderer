@@ -1,7 +1,7 @@
-﻿#pragma once
+#pragma once
 
 #include "RGTypes.h"
-// ✅ 전방 선언으로 변경 (순환 참조 방지)
+//  전방 선언으로 변경 (순환 참조 방지)
 // #include "../RGPassBase.h"  
 #include "../../RHI/Core/RHI.h"
 #include <vector>
@@ -9,7 +9,7 @@
 
 namespace BinRenderer
 {
-	// ✅ 전방 선언
+	//  전방 선언
 	class RGPassBase;
 
 	/**
@@ -34,7 +34,7 @@ namespace BinRenderer
 		/**
 		 * @brief 외부 텍스처 임포트 (예: 스왑체인 이미지)
 		 */
-		RGTextureHandle importTexture(const std::string& name, RHIImage* image, const RGTextureDesc& desc);
+		RGTextureHandle importTexture(const std::string& name, RHIImageHandle image, const RGTextureDesc& desc);
 
 		/**
 		 * @brief 텍스처 읽기 선언
@@ -63,7 +63,7 @@ namespace BinRenderer
 		/**
 		 * @brief 외부 버퍼 임포트
 		 */
-		RGBufferHandle importBuffer(const std::string& name, RHIBuffer* buffer, const RGBufferDesc& desc);
+		RGBufferHandle importBuffer(const std::string& name, RHIBufferHandle buffer, const RGBufferDesc& desc);
 
 		/**
 		 * @brief 버퍼 읽기 선언
@@ -98,7 +98,7 @@ namespace BinRenderer
 		struct TextureNode
 		{
 			RGTextureDesc desc;
-			RHIImage* importedImage = nullptr;
+			RHIImageHandle importedImage;
 			uint32_t firstUse = UINT32_MAX;
 			uint32_t lastUse = 0;
 			bool isRead = false;
@@ -109,7 +109,7 @@ namespace BinRenderer
 		struct BufferNode
 		{
 			RGBufferDesc desc;
-			RHIBuffer* importedBuffer = nullptr;
+			RHIBufferHandle importedBuffer;
 			uint32_t firstUse = UINT32_MAX;
 			uint32_t lastUse = 0;
 			bool isRead = false;

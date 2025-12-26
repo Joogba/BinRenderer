@@ -1,8 +1,8 @@
-﻿#include "Application.h"
+#include "Application.h"
 #include "Logger.h"
 #include "GpuTimer.h"
 #include "TracyProfiler.h" // Add Tracy macros wrapper
-#include "Cloth/ClothRenderPass.h" // ✅ For future cloth integration
+#include "Cloth/ClothRenderPass.h" //  For future cloth integration
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <format>
@@ -50,7 +50,7 @@ namespace BinRenderer::Vulkan {
 		}
 		break;
 		case GLFW_KEY_ESCAPE:
-			// ✅ FIX: Use window from Application instead of glfwGetCurrentContext()
+			//  FIX: Use window from Application instead of glfwGetCurrentContext()
 			glfwSetWindowShouldClose(app_->window_.getGLFWWindow(), GLFW_TRUE);
 			printLog("ESC pressed - closing application");
 			break;
@@ -236,14 +236,14 @@ namespace BinRenderer::Vulkan {
 		printLog("  Max frames in flight: {}", engineConfig_.maxFramesInFlight);
 		printLog("  Validation layers: {}", engineConfig_.enableValidationLayers ? "Enabled" : "Disabled");
 
-		// ✅ 리소스 매니저 초기화 (플랫폼 독립적 → Vulkan 전용)
+		//  리소스 매니저 초기화 (플랫폼 독립적 → Vulkan 전용)
 		resourceManager_ = std::make_unique<BinRenderer::ResourceManager>();
 		vulkanResourceManager_ = std::make_unique<VulkanResourceManager>(*resourceManager_, ctx_);
 		printLog("ResourceManager initialized (Platform-independent + Vulkan)");
 
 		initializeVulkanResources();
 
-		// ✅ Scene에 VulkanResourceManager 주입
+		//  Scene에 VulkanResourceManager 주입
 		scene_.setVulkanResourceManager(vulkanResourceManager_.get());
 		printLog("VulkanResourceManager injected into Scene");
 
@@ -268,9 +268,9 @@ namespace BinRenderer::Vulkan {
 			engineConfig_.assetsPath, engineConfig_.shaderPath, emptyModels,
 			swapchain_.colorFormat(), ctx_.depthFormat(),
 			windowSize_.width, windowSize_.height,
-			vulkanResourceManager_.get());  // ✅ VulkanResourceManager 전달!
+			vulkanResourceManager_.get());  //  VulkanResourceManager 전달!
 		
-		printLog("✅ Renderer initialized with VulkanResourceManager");
+		printLog(" Renderer initialized with VulkanResourceManager");
 
 		// Initialize Tracy profiler conditionally
 #ifdef TRACY_ENABLE
@@ -463,7 +463,7 @@ namespace BinRenderer::Vulkan {
 
 			{
 				TRACY_CPU_SCOPE("Animation Update");
-				// ✅ FIX: Scene 모델만 업데이트
+				//  FIX: Scene 모델만 업데이트
 				for (auto& node : scene_.getNodes()) {
 					if (node.model && node.model->hasAnimations()) {
 						node.model->updateAnimation(deltaTime);
@@ -475,7 +475,7 @@ namespace BinRenderer::Vulkan {
 			{
 				TRACY_CPU_SCOPE("Shadow Mapping Setup");
 
-				// ✅ FIX: Scene 모델만 사용 + Transform 동기화
+				//  FIX: Scene 모델만 사용 + Transform 동기화
 				syncSceneTransforms();
 				auto allModels = getSceneModels();
 				
@@ -546,7 +546,7 @@ namespace BinRenderer::Vulkan {
 			{
 				TRACY_CPU_SCOPE("Renderer Update");
 				
-				// ✅ FIX: Scene 모델만 사용
+				//  FIX: Scene 모델만 사용
 				auto allModels = getSceneModels();
 				
 				if (!allModels.empty()) {
@@ -634,7 +634,7 @@ namespace BinRenderer::Vulkan {
 					TRACY_GPU_SCOPE(*tracyProfiler_, cmd.handle(), "Rendering");
 				}
 				
-				// ✅ FIX: Scene 모델만 사용
+				//  FIX: Scene 모델만 사용
 				auto allModels = getSceneModels();
 				
 				if (!allModels.empty()) {
@@ -850,7 +850,7 @@ namespace BinRenderer::Vulkan {
 
 		ImGui::Separator();
 
-		// ✅ FIX: Scene 노드 기반으로 GUI 렌더링
+		//  FIX: Scene 노드 기반으로 GUI 렌더링
 		auto& sceneNodes = scene_.getNodes();
 		for (uint32_t i = 0; i < sceneNodes.size(); i++) {
 			auto& node = sceneNodes[i];
@@ -1416,10 +1416,10 @@ namespace BinRenderer::Vulkan {
 				camera_.type = isFirstPerson ? BinRenderer::Vulkan::Camera::CameraType::firstperson
 					: BinRenderer::Vulkan::Camera::CameraType::lookat;
 				
-				// ✅ FIX: View matrix 재계산
+				//  FIX: View matrix 재계산
 				camera_.updateViewMatrix();
 				
-				// ✅ FIX: Scene 카메라 동기화
+				//  FIX: Scene 카메라 동기화
 				scene_.setCamera(camera_);
 			}
 		}
@@ -1589,7 +1589,7 @@ namespace BinRenderer::Vulkan {
 			size_t totalTriangles = 0;
 			size_t visibleModels = 0;
 
-			// ✅ FIX: Scene 노드 기반으로 통계 수집
+			//  FIX: Scene 노드 기반으로 통계 수집
 			for (const auto& node : scene_.getNodes()) {
 				if (node.model && node.visible) {
 					visibleModels++;
@@ -1694,7 +1694,7 @@ namespace BinRenderer::Vulkan {
 	}
 
 	// ========================================
-	// ✅ NEW: Scene Integration Helper Methods
+	//  NEW: Scene Integration Helper Methods
 	// ========================================
 	
 	vector<Model*> Application::getSceneModels()
@@ -1704,7 +1704,7 @@ namespace BinRenderer::Vulkan {
 		vector<Model*> models;
 		models.reserve(scene_.getNodeCount());
 		
-		// ✅ FIX: 중복 제거 - 같은 Model은 한 번만 추가
+		//  FIX: 중복 제거 - 같은 Model은 한 번만 추가
 		std::unordered_set<Model*> uniqueModels;
 		
 		printLog("🔍 getSceneModels() - Scanning {} nodes...", scene_.getNodeCount());

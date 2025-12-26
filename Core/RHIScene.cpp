@@ -1,4 +1,4 @@
-﻿#include "RHIScene.h"
+#include "RHIScene.h"
 #include "Logger.h"
 
 namespace BinRenderer
@@ -33,7 +33,7 @@ namespace BinRenderer
 
 		nodes_.push_back(node);
 
-		printLog("✅ RHIScene::addModel - {}", name);
+		printLog(" RHIScene::addModel - {}", name);
 	}
 
 	void RHIScene::addModel(const std::string& resourcePath, const std::string& name, const glm::mat4& transform)
@@ -53,7 +53,7 @@ namespace BinRenderer
 
 		nodes_.push_back(node);
 
-		printLog("✅ RHIScene::addModel - {} ({})", name, resourcePath);
+		printLog(" RHIScene::addModel - {} ({})", name, resourcePath);
 	}
 
 	bool RHIScene::addModelInstance(const std::string& resourcePath, const std::string& instanceName, const glm::mat4& transform)
@@ -73,7 +73,7 @@ namespace BinRenderer
 
 		nodes_.push_back(node);
 
-		printLog("✅ RHIScene::addModelInstance - {} (cached: {})", instanceName, resourcePath);
+		printLog(" RHIScene::addModelInstance - {} (cached: {})", instanceName, resourcePath);
 		return true;
 	}
 
@@ -83,14 +83,14 @@ namespace BinRenderer
 		auto it = modelCache_.find(resourcePath);
 		if (it != modelCache_.end())
 		{
-			printLog("📦 Using cached model: {}", resourcePath);
+			printLog("Using cached model: {}", resourcePath);
 			return it->second;
 		}
 
 		// 새로 로드
 		auto model = std::make_shared<RHIModel>(rhi_);
 		
-		// ✅ 파일 로드
+		//  파일 로드
 		if (!model->loadFromFile(resourcePath))
 		{
 			printLog("❌ ERROR: Failed to load model file: {}", resourcePath);
@@ -98,7 +98,7 @@ namespace BinRenderer
 		}
 
 		modelCache_[resourcePath] = model;
-		printLog("✅ Loaded and cached model: {} ({} meshes)", 
+		printLog(" Loaded and cached model: {} ({} meshes)", 
 			resourcePath, model->getMeshes().size());
 		return model;
 	}

@@ -1,4 +1,4 @@
-﻿#include "GLFWWindow.h"
+#include "GLFWWindow.h"
 #include "../Core/Logger.h"
 #include <GLFW/glfw3.h>
 
@@ -62,7 +62,7 @@ namespace BinRenderer
 			return false;
 		}
 
-		printLog("✅ GLFW Window created: {}x{} \"{}\"", width, height, title);
+		printLog(" GLFW Window created: {}x{} \"{}\"", width, height, title);
 		return true;
 	}
 
@@ -72,14 +72,14 @@ namespace BinRenderer
 		{
 			glfwDestroyWindow(window_);
 			window_ = nullptr;
-			printLog("✅ GLFW Window destroyed");
+			printLog(" GLFW Window destroyed");
 		}
 
 		if (initialized_)
 		{
 			glfwTerminate();
 			initialized_ = false;
-			printLog("✅ GLFW terminated");
+			printLog(" GLFW terminated");
 		}
 	}
 
@@ -210,7 +210,7 @@ namespace BinRenderer
 			return -1;
 		}
 
-		// ✅ GLFW의 Surface 생성 함수 사용 (GLFWwindow* 필요)
+		//  GLFW의 Surface 생성 함수 사용 (GLFWwindow* 필요)
 		VkResult result = static_cast<VkResult>(
 			glfwCreateWindowSurface(
 				reinterpret_cast<VkInstance>(instance),
@@ -222,7 +222,7 @@ namespace BinRenderer
 		
 		if (result == 0) // VK_SUCCESS
 		{
-			printLog("✅ Vulkan Surface created via GLFW");
+			printLog(" Vulkan Surface created via GLFW");
 		}
 		else
 		{

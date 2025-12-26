@@ -1,5 +1,5 @@
-﻿#include "VulkanBuffer.h"
-#include "Vulkan/Logger.h"
+#include "VulkanBuffer.h"
+#include "Core/Logger.h"
 #include <cstring>
 
 namespace BinRenderer::Vulkan
@@ -19,7 +19,7 @@ namespace BinRenderer::Vulkan
 		size_ = createInfo.size;
 		usage_ = createInfo.usage;
 
-		// ✅ RHI usage flags를 Vulkan usage flags로 변환
+		//  RHI usage flags를 Vulkan usage flags로 변환
 		VkBufferUsageFlags vkUsage = 0;
 		if (createInfo.usage & RHI_BUFFER_USAGE_VERTEX_BUFFER_BIT)
 			vkUsage |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
@@ -38,7 +38,7 @@ namespace BinRenderer::Vulkan
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferInfo.size = createInfo.size;
-		bufferInfo.usage = vkUsage; // ✅ 변환된 usage 사용
+		bufferInfo.usage = vkUsage; //  변환된 usage 사용
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 		if (vkCreateBuffer(device_, &bufferInfo, nullptr, &buffer_) != VK_SUCCESS)

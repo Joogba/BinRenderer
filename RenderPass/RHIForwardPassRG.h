@@ -45,9 +45,9 @@ namespace BinRenderer
 		glm::mat4 viewProjection_ = glm::mat4(1.0f);
 
 		// 파이프라인
-		RHIPipeline* pipeline_ = nullptr;
-		RHIShader* vertexShader_ = nullptr;
-		RHIShader* fragmentShader_ = nullptr;
+		RHIPipelineHandle pipelineHandle_;
+		RHIShaderHandle vertexShaderHandle_;
+		RHIShaderHandle fragmentShaderHandle_;
 
 		void createPipeline();
 		void destroyPipeline();

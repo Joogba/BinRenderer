@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "../RHI/Core/RHI.h"
 #include "../RHI/Commands/RHICommandBuffer.h"
@@ -122,24 +122,24 @@ namespace BinRenderer
 		OptionsUniform& getOptionsUniform() { return optionsUniform_; }
 		BoneDataUniform& getBoneDataUniform() { return boneDataUniform_; }
 
-		// ✅ Uniform Buffer 접근자 (Descriptor Set 바인딩용)
-		RHIBuffer* getSceneUniformBuffer(uint32_t frameIndex) const 
+		//  Uniform Buffer 접근자 (Descriptor Set 바인딩용)
+		RHIBufferHandle getSceneUniformBuffer(uint32_t frameIndex) const 
 		{ 
-			return frameIndex < sceneUniformBuffers_.size() ? sceneUniformBuffers_[frameIndex] : nullptr; 
+			return frameIndex < sceneUniformBuffers_.size() ? sceneUniformBuffers_[frameIndex] : RHIBufferHandle{}; 
 		}
-		RHIBuffer* getOptionsUniformBuffer(uint32_t frameIndex) const 
+		RHIBufferHandle getOptionsUniformBuffer(uint32_t frameIndex) const 
 		{ 
-			return frameIndex < optionsUniformBuffers_.size() ? optionsUniformBuffers_[frameIndex] : nullptr; 
+			return frameIndex < optionsUniformBuffers_.size() ? optionsUniformBuffers_[frameIndex] : RHIBufferHandle{}; 
 		}
-		RHIBuffer* getBoneDataUniformBuffer(uint32_t frameIndex) const 
+		RHIBufferHandle getBoneDataUniformBuffer(uint32_t frameIndex) const 
 		{ 
-			return frameIndex < boneDataUniformBuffers_.size() ? boneDataUniformBuffers_[frameIndex] : nullptr; 
+			return frameIndex < boneDataUniformBuffers_.size() ? boneDataUniformBuffers_[frameIndex] : RHIBufferHandle{}; 
 		}
 
 		// ========================================
 		// Forward Rendering 헬퍼 (ForwardPass에서 사용)
 		// ========================================
-		void renderForwardModels(RHI* rhi, RHIScene& scene, RHIPipeline* pipeline, uint32_t frameIndex);
+		void renderForwardModels(RHI* rhi, RHIScene& scene, RHIPipelineHandle pipeline, uint32_t frameIndex);
 
 		// ========================================
 		// Getters
@@ -148,7 +148,7 @@ namespace BinRenderer
 		uint32_t getHeight() const { return height_; }
 
 		// ========================================
-		// ✅ Material System
+		//  Material System
 		// ========================================
 		
 		/**
@@ -160,7 +160,7 @@ namespace BinRenderer
 		/**
 		 * @brief Material buffer 접근자
 		 */
-		RHIBuffer* getMaterialBuffer() const { return materialBuffer_; }
+		RHIBufferHandle getMaterialBuffer() const { return materialBuffer_; }
 		
 		/**
 		 * @brief Material 개수
@@ -170,7 +170,7 @@ namespace BinRenderer
 		/**
 		 * @brief Material textures 접근자 (bindless)
 		 */
-		const std::vector<RHIImageView*>& getMaterialTextures() const { return materialTextures_; }
+		const std::vector<RHIImageViewHandle>& getMaterialTextures() const { return materialTextures_; }
 
 	private:
 		// ========================================
@@ -205,19 +205,19 @@ namespace BinRenderer
 		BoneDataUniform boneDataUniform_;
 
 		// Uniform Buffers (per-frame)
-		std::vector<RHIBuffer*> sceneUniformBuffers_;      // [maxFramesInFlight]
-		std::vector<RHIBuffer*> optionsUniformBuffers_;    // [maxFramesInFlight]
-		std::vector<RHIBuffer*> boneDataUniformBuffers_;   // [maxFramesInFlight]
+		std::vector<RHIBufferHandle> sceneUniformBuffers_;      // [maxFramesInFlight]
+		std::vector<RHIBufferHandle> optionsUniformBuffers_;    // [maxFramesInFlight]
+		std::vector<RHIBufferHandle> boneDataUniformBuffers_;   // [maxFramesInFlight]
 
 		// Render Targets
-		RHIImage* depthStencilTexture_ = nullptr;
-		RHIImage* shadowMapTexture_ = nullptr;
+		RHIImageHandle depthStencilTexture_;
+		RHIImageHandle shadowMapTexture_;
 
 		// Pipelines
-		std::unordered_map<std::string, RHIPipeline*> pipelines_;
+		std::unordered_map<std::string, RHIPipelineHandle> pipelines_;
 
 		// Descriptor Sets
-		std::unordered_map<std::string, std::vector<RHIDescriptorSet*>> descriptorSets_;
+		std::unordered_map<std::string, std::vector<RHIDescriptorSetHandle>> descriptorSets_;
 
 		// Frustum Culling
 		bool frustumCullingEnabled_ = true;
@@ -225,11 +225,11 @@ namespace BinRenderer
 		// ViewFrustum 클래스는 나중에 추가
 
 		// ========================================
-		// ✅ Material System
+		//  Material System
 		// ========================================
-		RHIBuffer* materialBuffer_ = nullptr;
+		RHIBufferHandle materialBuffer_;
 		uint32_t materialCount_ = 0;
-		std::vector<RHIImageView*> materialTextures_; // Bindless texture array
+		std::vector<RHIImageViewHandle> materialTextures_; // Bindless texture array
 	};
 
 } // namespace BinRenderer

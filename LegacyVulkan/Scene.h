@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Camera.h"
 #include "Model.h"
@@ -24,7 +24,7 @@ namespace BinRenderer::Vulkan {
 	 */
 	struct SceneNode
 	{
-		shared_ptr<Model> model = nullptr;  // ✅ unique_ptr → shared_ptr
+		shared_ptr<Model> model = nullptr;  //  unique_ptr → shared_ptr
 		glm::mat4 transform = glm::mat4(1.0f);
 		string name = "Unnamed";
 		bool visible = true;
@@ -163,7 +163,7 @@ namespace BinRenderer::Vulkan {
 
 	private:
 		vector<SceneNode> nodes_;  // 모든 씬 노드
-		VulkanResourceManager* vulkanResourceManager_ = nullptr;  // ✅ VulkanResourceManager로 변경
+		VulkanResourceManager* vulkanResourceManager_ = nullptr;  //  VulkanResourceManager로 변경
 		Camera camera_;
 	};
 

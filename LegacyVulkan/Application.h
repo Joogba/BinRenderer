@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Camera.h"
 #include "Context.h"
@@ -20,8 +20,8 @@
 #include "Swapchain.h"
 #include "TracyProfiler.h"
 #include "Window.h"
-#include "VulkanResourceManager.h"  // ✅ VulkanResourceManager 추가
-#include "RenderPassManager.h" // ✅ NEW: RenderPass system
+#include "VulkanResourceManager.h"  //  VulkanResourceManager 추가
+#include "RenderPassManager.h" //  NEW: RenderPass system
 
 #include "../Resources/ResourceManager.h"
 
@@ -147,8 +147,8 @@ namespace BinRenderer::Vulkan {
 		Context ctx_;
 		Swapchain swapchain_;
 		ShaderManager shaderManager_;
-		unique_ptr<BinRenderer::ResourceManager> resourceManager_;  // ✅ 플랫폼 독립적
-		unique_ptr<VulkanResourceManager> vulkanResourceManager_;    // ✅ Vulkan 전용
+		unique_ptr<BinRenderer::ResourceManager> resourceManager_;  //  플랫폼 독립적
+		unique_ptr<VulkanResourceManager> vulkanResourceManager_;    //  Vulkan 전용
 		Scene scene_;
 		unique_ptr<Renderer> renderer_;
 		GuiRenderer guiRenderer_;

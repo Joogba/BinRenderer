@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "../Core/RHIType.h"
 
@@ -20,10 +20,10 @@ namespace BinRenderer
 		virtual RHIFormat getFormat() const = 0;
 		virtual RHISampleCountFlagBits getSamples() const = 0;
 
-		// ✅ Layout getter (for tracking current layout)
+		//  Layout getter (for tracking current layout)
 		virtual RHIImageLayout getCurrentLayout() const { return RHI_IMAGE_LAYOUT_UNDEFINED; }
 		
-		// ✅ Helper: Get layer count for transitions
+		//  Helper: Get layer count for transitions
 		uint32_t getLayerCount() const { return getArrayLayers(); }
 	};
 

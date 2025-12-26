@@ -1,4 +1,4 @@
-﻿#include "GUIPassRG.h"
+#include "GUIPassRG.h"
 #include "../Core/Logger.h"
 
 namespace BinRenderer
@@ -44,7 +44,7 @@ namespace BinRenderer
 
 		data.guiOut = builder.writeTexture(builder.createTexture(guiDesc));
 
-		// ✅ 최종 출력 설정
+		//  최종 출력 설정
 		builder.setFinalOutput(data.guiOut);
 	}
 
@@ -64,19 +64,19 @@ namespace BinRenderer
 
 	void GUIPassRG::destroyPipeline()
 	{
-		if (pipeline_) {
+		if (pipeline_.isValid()) {
 			rhi_->destroyPipeline(pipeline_);
-			pipeline_ = nullptr;
+			pipeline_ = {};
 		}
 
-		if (vertexShader_) {
+		if (vertexShader_.isValid()) {
 			rhi_->destroyShader(vertexShader_);
-			vertexShader_ = nullptr;
+			vertexShader_ = {};
 		}
 
-		if (fragmentShader_) {
+		if (fragmentShader_.isValid()) {
 			rhi_->destroyShader(fragmentShader_);
-			fragmentShader_ = nullptr;
+			fragmentShader_ = {};
 		}
 	}
 

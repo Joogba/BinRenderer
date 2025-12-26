@@ -1,4 +1,4 @@
-﻿#include "RGBuilder.h"
+#include "RGBuilder.h"
 #include "../RGPassBase.h"
 #include <algorithm>
 
@@ -20,7 +20,7 @@ namespace BinRenderer
 		return handle;
 	}
 
-	RGTextureHandle RenderGraphBuilder::importTexture(const std::string& name, RHIImage* image, const RGTextureDesc& desc)
+	RGTextureHandle RenderGraphBuilder::importTexture(const std::string& name, RHIImageHandle image, const RGTextureDesc& desc)
 	{
 		RGTextureHandle handle;
 		handle.index = static_cast<uint32_t>(textures_.size());
@@ -100,7 +100,7 @@ namespace BinRenderer
 		return handle;
 	}
 
-	RGBufferHandle RenderGraphBuilder::importBuffer(const std::string& name, RHIBuffer* buffer, const RGBufferDesc& desc)
+	RGBufferHandle RenderGraphBuilder::importBuffer(const std::string& name, RHIBufferHandle buffer, const RGBufferDesc& desc)
 	{
 		RGBufferHandle handle;
 		handle.index = static_cast<uint32_t>(buffers_.size());
@@ -188,7 +188,7 @@ namespace BinRenderer
 		dep.accessType = accessType;
 		dep.isTexture = true;
 		
-		// ✅ public 메서드 사용
+		//  public 메서드 사용
 		currentPass_->addDependency(dep);
 	}
 
@@ -203,7 +203,7 @@ namespace BinRenderer
 		dep.accessType = accessType;
 		dep.isTexture = false;
 		
-		// ✅ public 메서드 사용
+		//  public 메서드 사용
 		currentPass_->addDependency(dep);
 	}
 

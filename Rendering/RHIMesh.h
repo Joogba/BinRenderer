@@ -46,8 +46,8 @@ namespace BinRenderer
 		std::vector<RHIVertex> vertices_;
 		std::vector<uint32_t> indices_;
 
-		RHIBuffer* vertexBuffer_ = nullptr;
-		RHIBuffer* indexBuffer_ = nullptr;
+		RHIBufferHandle vertexBuffer_;
+		RHIBufferHandle indexBuffer_;
 
 		uint32_t materialIndex_ = 0;
 		std::string name_;

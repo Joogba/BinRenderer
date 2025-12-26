@@ -2,8 +2,8 @@
 #include "../Resources/VulkanShader.h"
 #include "VulkanRenderPass.h"
 #include "VulkanDescriptor.h"
-#include "../../Structs/RHIPipelineCreateInfo.h"
-#include "Vulkan/Logger.h"
+#include "../../Structs/RHIStructs.h"
+#include "Core/Logger.h"
 
 namespace BinRenderer::Vulkan
 {
@@ -17,7 +17,7 @@ namespace BinRenderer::Vulkan
 		destroy();
 	}
 
-	bool VulkanPipeline::create(const RHIPipelineCreateInfo& createInfo)
+	bool VulkanPipeline::create(const RHIPipelineCreateInfo& createInfo, const std::vector<RHIDescriptorSetLayout*>& resolvedLayouts, vector<VulkanShader*>& shaders)
 	{
 		// 렌더 패스 저장
 		if (createInfo.renderPass)
@@ -26,13 +26,13 @@ namespace BinRenderer::Vulkan
 		}
 
 		// 파이프라인 레이아웃 생성
-		if (!createPipelineLayout(createInfo))
+		if (!createPipelineLayout(createInfo, resolvedLayouts))
 		{
 			return false;
 		}
 
 		// 그래픽스 파이프라인 생성
-		if (!createGraphicsPipeline(createInfo))
+		if (!createGraphicsPipeline(createInfo,shaders))
 		{
 			return false;
 		}
@@ -56,13 +56,13 @@ namespace BinRenderer::Vulkan
 		}
 	}
 
-	bool VulkanPipeline::createPipelineLayout(const RHIPipelineCreateInfo& createInfo)
+	bool VulkanPipeline::createPipelineLayout(const RHIPipelineCreateInfo& createInfo, const std::vector<RHIDescriptorSetLayout*>& resolvedLayouts)
 	{
-		// ✅ Descriptor Set Layouts 변환
+		//  Descriptor Set Layouts 변환
 		std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
-		vkDescriptorSetLayouts.reserve(createInfo.descriptorSetLayouts.size());
+		vkDescriptorSetLayouts.reserve(resolvedLayouts.size());
 		
-		for (auto* layout : createInfo.descriptorSetLayouts)
+		for (auto* layout : resolvedLayouts)
 		{
 			if (layout)
 			{
@@ -71,7 +71,7 @@ namespace BinRenderer::Vulkan
 			}
 		}
 
-		// ✅ Push Constant Ranges 변환
+		//  Push Constant Ranges 변환
 		std::vector<VkPushConstantRange> vkPushConstantRanges;
 		vkPushConstantRanges.reserve(createInfo.pushConstantRanges.size());
 		
@@ -98,21 +98,19 @@ namespace BinRenderer::Vulkan
 			return false;
 		}
 
-		printLog("✅ Pipeline layout created with {} descriptor set layouts, {} push constant ranges",
+		printLog(" Pipeline layout created with {} descriptor set layouts, {} push constant ranges",
 			vkDescriptorSetLayouts.size(), vkPushConstantRanges.size());
 
 		return true;
 	}
 
-	bool VulkanPipeline::createGraphicsPipeline(const RHIPipelineCreateInfo& createInfo)
+	bool VulkanPipeline::createGraphicsPipeline(const RHIPipelineCreateInfo& createInfo, vector<VulkanShader*>& shaders)
 	{
 		// 셰이더 스테이지
+		// rhi의 ShaderPool에서 get한다음 캐스팅해야함
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-		for (auto* shader : createInfo.shaderStages)
-		{
-			auto* vulkanShader = static_cast<VulkanShader*>(shader);
-			shaderStages.push_back(vulkanShader->getStageCreateInfo());
-		}
+		for (auto* shader : shaders)
+			shaderStages.push_back(shader->getStageCreateInfo());
 
 		// 버텍스 입력 상태
 		std::vector<VkVertexInputBindingDescription> vertexBindings;
@@ -139,7 +137,7 @@ namespace BinRenderer::Vulkan
 			vertexAttributes.push_back(vkAttribute);
 		}
 
-		// ✅ GPU Instancing: enableInstancing이 true면 instance binding/attributes 자동 추가
+		//  GPU Instancing: enableInstancing이 true면 instance binding/attributes 자동 추가
 		if (createInfo.enableInstancing)
 		{
 			// Instance binding 추가 (binding = 1)
@@ -162,7 +160,7 @@ namespace BinRenderer::Vulkan
 				vertexAttributes.push_back(vkAttr);
 			}
 
-			printLog("✅ GPU Instancing enabled: {} bindings, {} attributes",
+			printLog(" GPU Instancing enabled: {} bindings, {} attributes",
 				vertexBindings.size(), vertexAttributes.size());
 		}
 
@@ -247,7 +245,7 @@ namespace BinRenderer::Vulkan
 		dynamicState.pDynamicStates = dynamicStates.data();
 
 		// ========================================
-		// ✅ Dynamic Rendering (Vulkan 1.3+)
+		//  Dynamic Rendering (Vulkan 1.3+)
 		// ========================================
 		VkPipelineRenderingCreateInfo renderingInfo{};
 		std::vector<VkFormat> colorFormats;
@@ -266,7 +264,7 @@ namespace BinRenderer::Vulkan
 			renderingInfo.depthAttachmentFormat = static_cast<VkFormat>(createInfo.depthAttachmentFormat);
 			renderingInfo.stencilAttachmentFormat = static_cast<VkFormat>(createInfo.stencilAttachmentFormat);
 
-			printLog("✅ Dynamic Rendering enabled: {} color attachments, depth format: {}",
+			printLog(" Dynamic Rendering enabled: {} color attachments, depth format: {}",
 				colorFormats.size(), static_cast<int>(createInfo.depthAttachmentFormat));
 		}
 
@@ -285,7 +283,7 @@ namespace BinRenderer::Vulkan
 		pipelineInfo.pDynamicState = dynamicStates.empty() ? nullptr : &dynamicState;
 		pipelineInfo.layout = pipelineLayout_;
 		
-		// ✅ Dynamic Rendering 사용 시 pNext에 renderingInfo 연결, 아니면 legacy renderPass 사용
+		//  Dynamic Rendering 사용 시 pNext에 renderingInfo 연결, 아니면 legacy renderPass 사용
 		if (createInfo.useDynamicRendering)
 		{
 			pipelineInfo.pNext = &renderingInfo;

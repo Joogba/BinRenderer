@@ -1,8 +1,8 @@
 ﻿#pragma once
 
 #include "RHIType.h"
+#include "RHIHandle.h"
 #include "../Resources/RHIImage.h"
-#include <vector>
 
 namespace BinRenderer
 {
@@ -44,8 +44,8 @@ namespace BinRenderer
 		virtual uint32_t getHeight() const = 0;
 
 		// 스왑체인 이미지 접근
-		virtual RHIImage* getImage(uint32_t index) const = 0;
-		virtual RHIImageView* getImageView(uint32_t index) const = 0;
+		virtual RHIImageHandle getImage(uint32_t index) const = 0;
+		virtual RHIImageViewHandle getImageView(uint32_t index) const = 0;
 
 		// Present 모드
 		virtual RHIPresentMode getPresentMode() const = 0;

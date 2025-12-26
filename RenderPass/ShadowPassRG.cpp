@@ -56,14 +56,14 @@ namespace BinRenderer
 
 	void ShadowPassRG::destroyPipeline()
 	{
-		if (pipeline_) {
+		if (pipeline_.isValid()) {
 			rhi_->destroyPipeline(pipeline_);
-			pipeline_ = nullptr;
+			pipeline_ = {};
 		}
 
-		if (vertexShader_) {
+		if (vertexShader_.isValid()) {
 			rhi_->destroyShader(vertexShader_);
-			vertexShader_ = nullptr;
+			vertexShader_ = {};
 		}
 	}
 

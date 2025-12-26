@@ -3,7 +3,7 @@
 #include "../Resources/VulkanBuffer.h"
 #include "../Pipeline/VulkanPipeline.h"
 #include "../Pipeline/VulkanDescriptor.h"
-#include "Vulkan/Logger.h"
+#include "Core/Logger.h"
 
 namespace BinRenderer::Vulkan
 {
