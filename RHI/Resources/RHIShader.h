@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "../Core/RHIType.h"
+#include "../Core/RHIResource.h"
 #include <vector>
 #include <string>
 
@@ -9,7 +10,7 @@ namespace BinRenderer
 	/**
 	 * @brief 셰이더 모듈 추상 클래스
   */
-	class RHIShader
+	class RHIShader : public RHIResource
 	{
 	public:
 		virtual ~RHIShader() = default;

@@ -210,20 +210,14 @@ namespace BinRenderer
 		//  GPU Instancing 지원
 		bool enableInstancing = false;
 
-		//  Descriptor Set Layouts
-		std::vector<RHIDescriptorSetLayoutHandle> descriptorSetLayouts;
-
-		//  Push Constants
-		std::vector<RHIPushConstantRange> pushConstantRanges;
+		RHIPipelineLayoutHandle layout;
 	};
 
 	struct RHIPipelineLayoutCreateInfo
     {
-        RHIPipelineLayoutCreateFlags flags;
-        uint32_t setLayoutCount;
-        const RHIDescriptorSetLayout* pSetLayouts;
-        uint32_t pushConstantRangeCount;
-        const RHIPushConstantRange* pPushConstantRanges;
+        RHIPipelineLayoutCreateFlags flags = 0;
+        std::vector<RHIDescriptorSetLayoutHandle> setLayouts;
+        std::vector<RHIPushConstantRange> pushConstantRanges;
     };
 
 	struct RHIPipelineTessellationStateCreateInfo

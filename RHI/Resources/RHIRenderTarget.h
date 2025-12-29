@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "../Core/RHIType.h"
+#include "../Core/RHIResource.h"
 #include "RHIImage.h"
 
 namespace BinRenderer
@@ -8,7 +9,7 @@ namespace BinRenderer
 	/**
 	 * @brief 렌더 타겟 (Framebuffer + RenderPass 조합)
 	 */
-	class RHIRenderTarget
+	class RHIRenderTarget : public RHIResource
 	{
 	public:
 		virtual ~RHIRenderTarget() = default;

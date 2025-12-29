@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../Core/RHIType.h"
+#include "../Core/RHIResource.h"
 
 namespace BinRenderer
 {
 	/**
 	 * @brief 이미지 리소스 추상 클래스
 	 */
-	class RHIImage
+	class RHIImage : public RHIResource
 	{
 	public:
 		virtual ~RHIImage() = default;
@@ -30,7 +31,7 @@ namespace BinRenderer
 	/**
 	 * @brief 이미지 뷰 추상 클래스
 	 */
-	class RHIImageView
+	class RHIImageView : public RHIResource
 	{
 	public:
 		virtual ~RHIImageView() = default;

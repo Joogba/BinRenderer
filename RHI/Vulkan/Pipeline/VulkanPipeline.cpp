@@ -7,17 +7,8 @@
 
 namespace BinRenderer::Vulkan
 {
-	VulkanPipeline::VulkanPipeline(VkDevice device)
-		: device_(device)
-	{
-	}
-
-	VulkanPipeline::~VulkanPipeline()
-	{
-		destroy();
-	}
-
-	bool VulkanPipeline::create(const RHIPipelineCreateInfo& createInfo, const std::vector<RHIDescriptorSetLayout*>& resolvedLayouts, vector<VulkanShader*>& shaders)
+	VulkanPipeline::VulkanPipeline(VkDevice device, const RHIPipelineCreateInfo& createInfo, const std::vector<VulkanShader*>& shaders, RHIPipelineLayout* layout)
+		: device_(device), layout_(layout)
 	{
 		// 렌더 패스 저장
 		if (createInfo.renderPass)
@@ -25,20 +16,20 @@ namespace BinRenderer::Vulkan
 			renderPass_ = static_cast<VulkanRenderPass*>(createInfo.renderPass);
 		}
 
-		// 파이프라인 레이아웃 생성
-		if (!createPipelineLayout(createInfo, resolvedLayouts))
-		{
-			return false;
-		}
-
 		// 그래픽스 파이프라인 생성
-		if (!createGraphicsPipeline(createInfo,shaders))
+		if (!createGraphicsPipeline(createInfo, shaders))
 		{
-			return false;
+			printLog("❌ ERROR: Failed to create graphics pipeline");
 		}
+		else
+		{
+			bindPoint_ = RHI_PIPELINE_BIND_POINT_GRAPHICS;
+		}
+	}
 
-		bindPoint_ = RHI_PIPELINE_BIND_POINT_GRAPHICS;
-		return true;
+	VulkanPipeline::~VulkanPipeline()
+	{
+		destroy();
 	}
 
 	void VulkanPipeline::destroy()
@@ -48,63 +39,19 @@ namespace BinRenderer::Vulkan
 			vkDestroyPipeline(device_, pipeline_, nullptr);
 			pipeline_ = VK_NULL_HANDLE;
 		}
-
-		if (pipelineLayout_ != VK_NULL_HANDLE)
-		{
-			vkDestroyPipelineLayout(device_, pipelineLayout_, nullptr);
-			pipelineLayout_ = VK_NULL_HANDLE;
-		}
+		// layout_ is not owned by VulkanPipeline, so we don't destroy it here.
 	}
 
-	bool VulkanPipeline::createPipelineLayout(const RHIPipelineCreateInfo& createInfo, const std::vector<RHIDescriptorSetLayout*>& resolvedLayouts)
+	VkPipelineLayout VulkanPipeline::getVkPipelineLayout() const
 	{
-		//  Descriptor Set Layouts 변환
-		std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
-		vkDescriptorSetLayouts.reserve(resolvedLayouts.size());
-		
-		for (auto* layout : resolvedLayouts)
+		if (layout_)
 		{
-			if (layout)
-			{
-				auto* vulkanLayout = static_cast<VulkanDescriptorSetLayout*>(layout);
-				vkDescriptorSetLayouts.push_back(vulkanLayout->getVkDescriptorSetLayout());
-			}
+			return static_cast<VulkanPipelineLayout*>(layout_)->getVkPipelineLayout();
 		}
-
-		//  Push Constant Ranges 변환
-		std::vector<VkPushConstantRange> vkPushConstantRanges;
-		vkPushConstantRanges.reserve(createInfo.pushConstantRanges.size());
-		
-		for (const auto& range : createInfo.pushConstantRanges)
-		{
-			VkPushConstantRange vkRange{};
-			vkRange.stageFlags = static_cast<VkShaderStageFlags>(range.stageFlags);
-			vkRange.offset = range.offset;
-			vkRange.size = range.size;
-			vkPushConstantRanges.push_back(vkRange);
-		}
-
-		// Pipeline Layout 생성
-		VkPipelineLayoutCreateInfo layoutInfo{};
-		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		layoutInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
-		layoutInfo.pSetLayouts = vkDescriptorSetLayouts.empty() ? nullptr : vkDescriptorSetLayouts.data();
-		layoutInfo.pushConstantRangeCount = static_cast<uint32_t>(vkPushConstantRanges.size());
-		layoutInfo.pPushConstantRanges = vkPushConstantRanges.empty() ? nullptr : vkPushConstantRanges.data();
-
-		if (vkCreatePipelineLayout(device_, &layoutInfo, nullptr, &pipelineLayout_) != VK_SUCCESS)
-		{
-			printLog("❌ ERROR: Failed to create pipeline layout");
-			return false;
-		}
-
-		printLog(" Pipeline layout created with {} descriptor set layouts, {} push constant ranges",
-			vkDescriptorSetLayouts.size(), vkPushConstantRanges.size());
-
-		return true;
+		return VK_NULL_HANDLE;
 	}
 
-	bool VulkanPipeline::createGraphicsPipeline(const RHIPipelineCreateInfo& createInfo, vector<VulkanShader*>& shaders)
+	bool VulkanPipeline::createGraphicsPipeline(const RHIPipelineCreateInfo& createInfo, const std::vector<VulkanShader*>& shaders)
 	{
 		// 셰이더 스테이지
 		// rhi의 ShaderPool에서 get한다음 캐스팅해야함
@@ -281,7 +228,7 @@ namespace BinRenderer::Vulkan
 		pipelineInfo.pDepthStencilState = &depthStencil;
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.pDynamicState = dynamicStates.empty() ? nullptr : &dynamicState;
-		pipelineInfo.layout = pipelineLayout_;
+		pipelineInfo.layout = getVkPipelineLayout();
 		
 		//  Dynamic Rendering 사용 시 pNext에 renderingInfo 연결, 아니면 legacy renderPass 사용
 		if (createInfo.useDynamicRendering)

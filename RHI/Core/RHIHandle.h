@@ -10,6 +10,7 @@ namespace BinRenderer
 	struct RHITextureTag {};
 	struct RHICommandBufferTag {};
 	struct RHIPipelineTag {};
+	struct RHIPipelineLayoutTag {};
 	struct RHIDescriptorSetTag {};
 	struct RHIDescriptorSetLayoutTag {};
 	struct RHIDescriptorPoolTag {};
@@ -51,6 +52,7 @@ namespace BinRenderer
 	using RHITextureHandle = RHIHandle<RHITextureTag>;
 	using RHICommandBufferHandle = RHIHandle<RHICommandBufferTag>;
 	using RHIPipelineHandle = RHIHandle<RHIPipelineTag>;
+	using RHIPipelineLayoutHandle = RHIHandle<RHIPipelineLayoutTag>;
 	using RHIDescriptorSetHandle = RHIHandle<RHIDescriptorSetTag>;
 	using RHIDescriptorSetLayoutHandle = RHIHandle<RHIDescriptorSetLayoutTag>;
 	using RHIDescriptorPoolHandle = RHIHandle<RHIDescriptorPoolTag>;

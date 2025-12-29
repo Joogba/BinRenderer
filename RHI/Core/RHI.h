@@ -43,6 +43,7 @@ namespace BinRenderer
 		virtual RHIImageHandle createImage(const RHIImageCreateInfo& createInfo) = 0;
 		virtual RHIShaderHandle createShader(const RHIShaderCreateInfo& createInfo) = 0;
 		virtual RHIPipelineHandle createPipeline(const RHIPipelineCreateInfo& createInfo) = 0;
+		virtual RHIPipelineLayoutHandle createPipelineLayout(const RHIPipelineLayoutCreateInfo& createInfo) = 0;
 		virtual RHIImageViewHandle createImageView(RHIImageHandle image, const RHIImageViewCreateInfo& createInfo) = 0;
 		virtual RHISamplerHandle createSampler(const RHISamplerCreateInfo& createInfo) = 0;
 
@@ -60,6 +61,7 @@ namespace BinRenderer
 		virtual void destroyImage(RHIImageHandle image) = 0;
 		virtual void destroyShader(RHIShaderHandle shader) = 0;
 		virtual void destroyPipeline(RHIPipelineHandle pipeline) = 0;
+		virtual void destroyPipelineLayout(RHIPipelineLayoutHandle layout) = 0;
 		virtual void destroyImageView(RHIImageViewHandle imageView) = 0;
 		virtual void destroySampler(RHISamplerHandle sampler) = 0;
 

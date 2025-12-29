@@ -1,13 +1,14 @@
 ﻿#pragma once
 
 #include "../Core/RHIType.h"
+#include "../Core/RHIResource.h"
 
 namespace BinRenderer
 {
 	/**
 	 * @brief 버퍼 리소스 추상 클래스
 	 */
-	class RHIBuffer
+	class RHIBuffer : public RHIResource
 	{
 	public:
 		virtual ~RHIBuffer() = default;

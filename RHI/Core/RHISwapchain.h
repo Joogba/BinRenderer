@@ -2,6 +2,7 @@
 
 #include "RHIType.h"
 #include "RHIHandle.h"
+#include "RHIResource.h"
 #include "../Resources/RHIImage.h"
 
 namespace BinRenderer
@@ -23,7 +24,7 @@ namespace BinRenderer
 	/**
 	 * @brief 스왑체인 추상 클래스
 	 */
-	class RHISwapchain
+	class RHISwapchain : public RHIResource
 	{
 	public:
 		virtual ~RHISwapchain() = default;

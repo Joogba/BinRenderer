@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "../Core/RHIType.h"
+#include "../Core/RHIResource.h"
 #include "../Resources/RHIBuffer.h"
 #include "../Resources/RHIImage.h"
 #include <vector>
@@ -10,7 +11,7 @@ namespace BinRenderer
 	/**
 	 * @brief 디스크립터 셋 dx12는 디스크립터 테이블
 	 */
-	class RHIDescriptorSet
+	class RHIDescriptorSet : public RHIResource
 	{
 	public:
 		virtual ~RHIDescriptorSet() = default;
@@ -26,7 +27,7 @@ namespace BinRenderer
 	/**
 	 * @brief 디스크립터 셋 레이아웃
 	 */
-	class RHIDescriptorSetLayout
+	class RHIDescriptorSetLayout : public RHIResource
 	{
 	public:
 		virtual ~RHIDescriptorSetLayout() = default;
@@ -38,7 +39,7 @@ namespace BinRenderer
 	 * @brief 디스크립터 풀
 	 * directx11 은 디스크립터 힙으로
    */
-	class RHIDescriptorPool
+	class RHIDescriptorPool : public RHIResource
 	{
 	public:
 		virtual ~RHIDescriptorPool() = default;

@@ -1,13 +1,14 @@
 ﻿#pragma once
 
 #include "../Core/RHIType.h"
+#include "../Core/RHIResource.h"
 
 namespace BinRenderer
 {
 	/**
 	 * @brief 파이프라인 레이아웃
    */
-	class RHIPipelineLayout
+	class RHIPipelineLayout : public RHIResource
 	{
 	public:
 		virtual ~RHIPipelineLayout() = default;

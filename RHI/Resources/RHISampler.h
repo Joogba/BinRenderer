@@ -1,13 +1,14 @@
 ﻿#pragma once
 
 #include "../Core/RHIType.h"
+#include "../Core/RHIResource.h"
 
 namespace BinRenderer
 {
 	/**
   * @brief 샘플러 리소스 추상 클래스
 	 */
-	class RHISampler
+	class RHISampler : public RHIResource
 	{
 	public:
 		virtual ~RHISampler() = default;

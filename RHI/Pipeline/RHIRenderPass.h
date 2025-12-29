@@ -1,13 +1,14 @@
 ﻿#pragma once
 
 #include "../Core/RHIType.h"
+#include "../Core/RHIResource.h"
 
 namespace BinRenderer
 {
     /**
      * @brief 렌더 패스
      */
-    class RHIRenderPass
+    class RHIRenderPass : public RHIResource
     {
     public:
         virtual ~RHIRenderPass() = default;
