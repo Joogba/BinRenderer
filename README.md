@@ -32,10 +32,36 @@ Render Graph 시스템을 기반으로 구현된 다양한 렌더링 패스들�
   - **Post Processing**: `PostProcessPassRG`
   - **GUI**: `GUIPassRG` (ImGui 통합)
 
+## Branchs
+
+### **main**
+
+#### 📝 개발 현황 (진행중)
+현재 프로젝트는 **LegacyVulkan** 구조에서 **RHI 및 Render Graph** 기반의 새로운 아키텍처로 마이그레이션 및 고도화 작업이 진행 중입니다.
+- `LegacyVulkan/` 폴더의 코드는 빌드에서 제외되어 있으며, 참고용으로 보존되어 있습니다.
+- 주요 개발 초점은 `RenderPass/` 내의 RG(RenderGraph) 기반 패스 구현과 `RHI/` 안정화에 있습니다.
+- 완료후 dev, feature 브랜치로 분리후 작업예정
+### **VulkanHelmet** 
+ `VulkanBistro`를 기반으로 엔진의 코어 아키텍처를 재설계하고 필수 시스템을 추가했습니다.
+
+#### 주요 변경 사항
+*   **Core Refactoring**: `Application`과 `Renderer`의 역할을 명확히 분리하고
+*   **Scene System**: 렌더링 로직에서 데이터(`Scene`, `SceneNode`)를 분리하여 씬 그래프 관리 구조 도입.
+*   **Input System**: `InputManager`와 리스너 패턴(`IInputListener`)을 적용하여 입력 이벤트 처리 유연성 확보
+
+### **VulkanBistro** 
+
+*   **JSON 기반 Render Graph**: 복잡한 렌더링 파이프라인(의존성, 리소스)을 코드가 아닌 JSON 설정 파일로 유연하게 구성.
+*   **Deferred Rendering (지연 렌더링)**: G-Buffer를 활용하여 다수의 광원을 효율적으로 처리하는 파이프라인 구축.
+*   **Half Precision (FP16)**: 대역폭 절약 및 성능 최적화를 위해 16비트 부동소수점 포맷 적극 활용.
+*   **SSAO (Screen Space Ambient Occlusion)**: 깊이 버퍼를 활용한 차폐 계산으로 씬의 입체감 향상.
+*   **Tracy Profiler**: 실시간 성능 분석(CPU/GPU
+
 ## 📂 프로젝트 구조 (Directory Structure)
 
 ```
 BinRenderer/
+├── assets/         # 모델, 셰이더 등 에셋
 ├── Core/           # 엔진 핵심 기능 (설정, 로거, 입력 등)
 ├── RHI/            # Render Hardware Interface (Vulkan 추상화)
 │   ├── Core/       # RHI 인터페이스 및 공통 정의
@@ -87,7 +113,4 @@ BinRenderer/
 4. **실행**:
    - `BinRenderer` 프로젝트를 시작 프로젝트로 설정(Set as Startup Project)하고 실행합니다. (F5)
 
-## 📝 개발 현황 (Current Status)
-현재 프로젝트는 **LegacyVulkan** 구조에서 **RHI 및 Render Graph** 기반의 새로운 아키텍처로 마이그레이션 및 고도화 작업이 진행 중입니다.
-- `LegacyVulkan/` 폴더의 코드는 빌드에서 제외되어 있으며, 참고용으로 보존되어 있습니다.
-- 주요 개발 초점은 `RenderPass/` 내의 RG(RenderGraph) 기반 패스 구현과 `RHI/` 안정화에 있습니다.
+
