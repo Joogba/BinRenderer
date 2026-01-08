@@ -10,6 +10,9 @@
 #include "Pipeline/VulkanPipelineLayout.h"
 #include "Pipeline/VulkanDescriptor.h"
 #include "Utilities/VulkanBarrier.h"
+#include "Sync/VulkanSemaphore.h"
+#include "Sync/VulkanFence.h"
+#include "Conversion/TypeConversion.h"
 #include "Core/Logger.h"
 #include "../../Platform/IWindow.h"
 
@@ -84,32 +87,11 @@ namespace BinRenderer::Vulkan
 		VkDevice device = context_ ? context_->getDevice() : VK_NULL_HANDLE;
 		if (device != VK_NULL_HANDLE)
 		{
-			//  모든 semaphores 정리 (maxFramesInFlight가 아니라 실제 개수)
-			for (auto semaphore : imageAvailableSemaphores_)
-			{
-				if (semaphore != VK_NULL_HANDLE)
-				{
-					vkDestroySemaphore(device, semaphore, nullptr);
-				}
-			}
-			for (auto semaphore : renderFinishedSemaphores_)
-			{
-				if (semaphore != VK_NULL_HANDLE)
-				{
-					vkDestroySemaphore(device, semaphore, nullptr);
-				}
-			}
+			//  모든 semaphores 정리 (RAII)
 			imageAvailableSemaphores_.clear();
 			renderFinishedSemaphores_.clear();
 
-			//  Fences 정리 (maxFramesInFlight 개수)
-			for (auto fence : inFlightFences_)
-			{
-				if (fence != VK_NULL_HANDLE)
-				{
-					vkDestroyFence(device, fence, nullptr);
-				}
-			}
+			//  Fences 정리 (RAII)
 			inFlightFences_.clear();
 
 			// 전송 커맨드 풀 정리
@@ -157,11 +139,12 @@ namespace BinRenderer::Vulkan
 
 		VkDevice device = context_->getDevice();
 		
-		//  현재 frame의 fence 대기
-		vkWaitForFences(device, 1, &inFlightFences_[currentFrameIndex_], VK_TRUE, UINT64_MAX);
+		//  현재 frame의 fence 대기 (Wrapper 사용)
+		inFlightFences_[currentFrameIndex_]->wait();
 
-		//  먼저 fence만으로 imageIndex 획득
-		VkResult result = swapchain_->acquireNextImage(VK_NULL_HANDLE, imageIndex);
+		//  [FIX] 먼저 fence만으로 imageIndex 획득 -> 세마포어 사용해야 함
+		//  이미지가 준비되면 식별 신호를 보낼 세마포어를 전달
+		VkResult result = swapchain_->acquireNextImage(imageAvailableSemaphores_[currentFrameIndex_]->getVkSemaphore(), imageIndex);
 		
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
@@ -180,13 +163,13 @@ namespace BinRenderer::Vulkan
 		}
 		
 		//  이 image를 현재 frame의 fence로 마크
-		imagesInFlight_[imageIndex] = inFlightFences_[currentFrameIndex_];
+		imagesInFlight_[imageIndex] = inFlightFences_[currentFrameIndex_]->getVkFence();
 
 		//  imageIndex를 저장 (submitCommands와 endFrame에서 사용)
 		currentImageIndex_ = imageIndex;
 		
-		//  fence reset은 acquire 후, submit 전에 수행
-		vkResetFences(device, 1, &inFlightFences_[currentFrameIndex_]);
+		//  fence reset은 acquire 후, submit 전에 수행 (Wrapper 사용)
+		inFlightFences_[currentFrameIndex_]->reset();
 		
 		return true;
 	}
@@ -200,7 +183,7 @@ namespace BinRenderer::Vulkan
 
 		// submitCommands()가 이미 호출되었으므로 여기서는 present만 수행
 		//  currentImageIndex_로 semaphore 사용 (swapchain image별 semaphore)
-		VkResult result = swapchain_->present(context_->getPresentQueue(), imageIndex, renderFinishedSemaphores_[currentImageIndex_]);
+		VkResult result = swapchain_->present(context_->getPresentQueue(), imageIndex, renderFinishedSemaphores_[currentImageIndex_]->getVkSemaphore());
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 		{
@@ -267,27 +250,70 @@ RHIBufferHandle VulkanRHI::createBuffer(const RHIBufferCreateInfo& createInfo)
 		return shaderPool.insert(vulkanShader);
 	}
 
-	RHIPipelineHandle VulkanRHI::createPipeline(const RHIPipelineCreateInfo& createInfo)
+	RHIPipelineLayoutHandle VulkanRHI::createPipelineLayout(const RHIPipelineLayoutCreateInfo& createInfo)
 	{
-		// Descriptor Set Layout 핸들 해석
-		std::vector<RHIDescriptorSetLayout*> resolvedLayouts;
-		resolvedLayouts.reserve(createInfo.descriptorSetLayouts.size());
+		//  Descriptor Set Layouts 변환
+		std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
+		vkDescriptorSetLayouts.reserve(createInfo.setLayouts.size());
 		
-		for (const auto& handle : createInfo.descriptorSetLayouts)
+		for (const auto& handle : createInfo.setLayouts)
 		{
 			RHIDescriptorSetLayout* layout = descriptorSetLayoutPool.get(handle);
 			if (layout)
 			{
-				resolvedLayouts.push_back(layout);
+				auto* vulkanLayout = static_cast<VulkanDescriptorSetLayout*>(layout);
+				vkDescriptorSetLayouts.push_back(vulkanLayout->getVkDescriptorSetLayout());
 			}
 			else
 			{
-				printLog("❌ ERROR: Invalid descriptor set layout handle in createPipeline");
+				printLog("❌ ERROR: Invalid descriptor set layout handle in createPipelineLayout");
 				return {};
 			}
 		}
 
-		auto* vulkanPipeline = new VulkanPipeline(context_->getDevice());
+		//  Push Constant Ranges 변환
+		std::vector<VkPushConstantRange> vkPushConstantRanges;
+		vkPushConstantRanges.reserve(createInfo.pushConstantRanges.size());
+		
+		for (const auto& range : createInfo.pushConstantRanges)
+		{
+			VkPushConstantRange vkRange{};
+			vkRange.stageFlags = static_cast<VkShaderStageFlags>(range.stageFlags);
+			vkRange.offset = range.offset;
+			vkRange.size = range.size;
+			vkPushConstantRanges.push_back(vkRange);
+		}
+
+		// Pipeline Layout 생성
+		VkPipelineLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		layoutInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
+		layoutInfo.pSetLayouts = vkDescriptorSetLayouts.empty() ? nullptr : vkDescriptorSetLayouts.data();
+		layoutInfo.pushConstantRangeCount = static_cast<uint32_t>(vkPushConstantRanges.size());
+		layoutInfo.pPushConstantRanges = vkPushConstantRanges.empty() ? nullptr : vkPushConstantRanges.data();
+
+		VkPipelineLayout vkPipelineLayout = VK_NULL_HANDLE;
+		if (vkCreatePipelineLayout(context_->getDevice(), &layoutInfo, nullptr, &vkPipelineLayout) != VK_SUCCESS)
+		{
+			printLog("❌ ERROR: Failed to create pipeline layout");
+			return {};
+		}
+
+		auto* vulkanPipelineLayout = new VulkanPipelineLayout(context_->getDevice(), vkPipelineLayout);
+		vulkanPipelineLayout->setSetLayoutCount(static_cast<uint32_t>(vkDescriptorSetLayouts.size()));
+
+		return pipelineLayoutPool.insert(vulkanPipelineLayout);
+	}
+
+	RHIPipelineHandle VulkanRHI::createPipeline(const RHIPipelineCreateInfo& createInfo)
+	{
+		// Pipeline Layout 핸들 해석
+		RHIPipelineLayout* layout = pipelineLayoutPool.get(createInfo.layout);
+		if (!layout)
+		{
+			printLog("❌ ERROR: Invalid pipeline layout handle in createPipeline");
+			return {};
+		}
 
 		// createinfor로 ShaderPool 에서 받아온후 VulkanShader* 로 변환한후 함수호출
 		std::vector<VulkanShader*> vulkanShaders;
@@ -297,18 +323,24 @@ RHIBufferHandle VulkanRHI::createBuffer(const RHIBufferCreateInfo& createInfo)
 			if (!shader)
 			{
 				printLog("ERROR: Invalid shader handle in createPipeline");
-				delete vulkanPipeline;
 				return {};
 			}
 			vulkanShaders.push_back(static_cast<VulkanShader*>(shader));
 		}
 
-
-		if (!vulkanPipeline->create(createInfo, resolvedLayouts, vulkanShaders))
+		auto* vulkanPipeline = new VulkanPipeline(context_->getDevice(), createInfo, vulkanShaders, layout);
+		
+		// VulkanPipeline 생성자에서 이미 생성이 완료되었으므로 성공 여부 확인은 
+		// getVkPipeline()이 VK_NULL_HANDLE인지 확인하거나, 
+		// VulkanPipeline 내부에 isValid() 같은 메서드를 추가하는 것이 좋음.
+		// 현재 구조에서는 생성자에서 실패 시 로그를 찍고 pipeline_을 null로 둠.
+		
+		if (vulkanPipeline->getVkPipeline() == VK_NULL_HANDLE)
 		{
 			delete vulkanPipeline;
 			return {};
 		}
+
 		return pipelinePool.insert(vulkanPipeline);
 	}
 
@@ -323,20 +355,11 @@ RHIBufferHandle VulkanRHI::createBuffer(const RHIBufferCreateInfo& createInfo)
 		auto* vulkanImage = static_cast<VulkanImage*>(image);
 		auto* imageView = new VulkanImageView(context_->getDevice(), vulkanImage);
   
-    // createInfo를 Vulkan 타입으로 변환
-   VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-        if (createInfo.viewType == RHI_IMAGE_VIEW_TYPE_CUBE)
-    viewType = VK_IMAGE_VIEW_TYPE_CUBE;
-  else if (createInfo.viewType == RHI_IMAGE_VIEW_TYPE_3D)
-      viewType = VK_IMAGE_VIEW_TYPE_3D;
+		// createInfo를 Vulkan 타입으로 변환 (TypeConversion 이용)
+		VkImageViewType viewType = TypeConversion::toVkImageViewType(createInfo.viewType);
+		VkImageAspectFlags aspectFlags = TypeConversion::toVkImageAspectFlags(createInfo.aspectMask);
 
-        VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
-    if (createInfo.aspectMask == RHI_IMAGE_ASPECT_DEPTH_BIT)
-   aspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
-     else if (createInfo.aspectMask == RHI_IMAGE_ASPECT_STENCIL_BIT)
-   aspectFlags = VK_IMAGE_ASPECT_STENCIL_BIT;
-
-if (!imageView->create(viewType, aspectFlags))
+		if (!imageView->create(viewType, aspectFlags))
  {
       delete imageView;
             return {};
@@ -364,6 +387,7 @@ if (!imageView->create(viewType, aspectFlags))
 	void VulkanRHI::destroyImage(RHIImageHandle image) { imagePool.remove(image); }
 	void VulkanRHI::destroyShader(RHIShaderHandle shader) { shaderPool.remove(shader); }
 	void VulkanRHI::destroyPipeline(RHIPipelineHandle pipeline) { pipelinePool.remove(pipeline); }
+	void VulkanRHI::destroyPipelineLayout(RHIPipelineLayoutHandle layout) { pipelineLayoutPool.remove(layout); }
 	void VulkanRHI::destroyImageView(RHIImageViewHandle imageView) { imageViewPool.remove(imageView); }
 	void VulkanRHI::destroySampler(RHISamplerHandle sampler) { samplerPool.remove(sampler); }
 
@@ -423,11 +447,13 @@ if (!imageView->create(viewType, aspectFlags))
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		
-		// ❌ acquire에서 semaphore를 사용하지 않았으므로 wait 불필요
-		submitInfo.waitSemaphoreCount = 0;
-		submitInfo.pWaitSemaphores = nullptr;
-		submitInfo.pWaitDstStageMask = nullptr;
+
+		// [FIX] Wait for the image to be available
+		VkSemaphore waitSemaphores[] = { imageAvailableSemaphores_[currentFrameIndex_]->getVkSemaphore() };
+		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = waitSemaphores;
+		submitInfo.pWaitDstStageMask = waitStages;
 		
 		// 커맨드 버퍼 설정
 		submitInfo.commandBufferCount = 1;
@@ -435,12 +461,12 @@ if (!imageView->create(viewType, aspectFlags))
 		submitInfo.pCommandBuffers = &vkCmdBuffer;
 		
 		//  currentImageIndex_로 semaphore 선택 (present에서 사용)
-		VkSemaphore signalSemaphores[] = { renderFinishedSemaphores_[currentImageIndex_] };
+		VkSemaphore signalSemaphores[] = { renderFinishedSemaphores_[currentImageIndex_]->getVkSemaphore() };
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
 		// Fence와 함께 제출
-		VkResult result = vkQueueSubmit(context_->getGraphicsQueue(), 1, &submitInfo, inFlightFences_[currentFrameIndex_]);
+		VkResult result = vkQueueSubmit(context_->getGraphicsQueue(), 1, &submitInfo, inFlightFences_[currentFrameIndex_]->getVkFence());
 		if (result != VK_SUCCESS)
 		{
 			printLog("❌ ERROR: Failed to submit commands! Error: {}", static_cast<int>(result));
@@ -836,9 +862,9 @@ if (!imageView->create(viewType, aspectFlags))
 		uint32_t imageCount = swapchain_->getImageCount();
 		swapchainImageViewHandles_.resize(imageCount);
 		for(uint32_t i=0; i<imageCount; ++i) {
-			// 주의: VulkanSwapchain이 소유한 포인터를 풀에 등록함.
-			// Double Free 위험이 있으므로 추후 VulkanSwapchain 리팩토링 필요.
-			swapchainImageViewHandles_[i] = imageViewPool.insert(swapchain_->getImageViewRaw(i));
+			// VulkanSwapchain에서 래퍼 소유권을 가져와 풀에 등록
+			// 이제 Double Free 문제 해결됨
+			swapchainImageViewHandles_[i] = imageViewPool.insert(swapchain_->releaseImageViewWrapper(i));
 			
 			//  핸들을 Swapchain에 다시 설정 (RHISwapchain 인터페이스용)
 			swapchain_->setImageViewHandle(i, swapchainImageViewHandles_[i]);
@@ -849,8 +875,11 @@ if (!imageView->create(viewType, aspectFlags))
 	{
 		if (swapchain_)
 		{
-			// 핸들 정보만 지움 (Pool에서 remove하면 delete되므로 안됨)
-			// 하지만 Pool Destructor에서 delete될 것임.
+			// [FIX] Pool에서 명시적으로 제거하여 메모리 해제
+			for (auto handle : swapchainImageViewHandles_)
+			{
+				destroyImageView(handle);
+			}
 			swapchainImageViewHandles_.clear();
 
 			swapchain_->destroy();
@@ -867,26 +896,32 @@ if (!imageView->create(viewType, aspectFlags))
 		renderFinishedSemaphores_.resize(swapchainImageCount);
 		inFlightFences_.resize(maxFramesInFlight_);
 
-		VkSemaphoreCreateInfo semaphoreInfo{};
-		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-		VkFenceCreateInfo fenceInfo{};
-		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
 		VkDevice device = context_->getDevice();
 
 		//  Swapchain image 개수만큼 semaphores 생성
 		for (size_t i = 0; i < swapchainImageCount; i++)
 		{
-			vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores_[i]);
-			vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores_[i]);
+			imageAvailableSemaphores_[i] = std::make_unique<VulkanSemaphore>(device);
+			if (!imageAvailableSemaphores_[i]->create())
+			{
+				printLog("❌ Freeing Allocations because Semaphore creation failed");
+			}
+
+			renderFinishedSemaphores_[i] = std::make_unique<VulkanSemaphore>(device);
+			if (!renderFinishedSemaphores_[i]->create())
+			{
+				 printLog("❌ Freeing Allocations because Semaphore creation failed");
+			}
 		}
 		
-		//  Frame-in-flight만큼 fences 생성
+		//  Frame-in-flight만큼 fences 생성 (Signaled 상태로 시작)
 		for (size_t i = 0; i < maxFramesInFlight_; i++)
 		{
-			vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences_[i]);
+			inFlightFences_[i] = std::make_unique<VulkanFence>(device);
+			if (!inFlightFences_[i]->create(true))
+			{
+				printLog("❌ Fence creation failed");
+			}
 		}
 
 		//  Per-image fence tracking

@@ -58,8 +58,8 @@ namespace BinRenderer::Vulkan
 		const std::vector<VkImageView>& getVkImageViews() const { return imageViews_; }
 		VkImageView getVkImageView(uint32_t index) const { return imageViews_[index]; }
 		
-		// 내부적으로 사용하는 Raw Pointer 접근 (Pool 등록용)
-		RHIImageView* getImageViewRaw(uint32_t index) const { return imageViewWrappers_[index].get(); }
+		// 내부적으로 사용하는 Raw Pointer 접근 및 소유권 포기 (Pool 등록용)
+		RHIImageView* releaseImageViewWrapper(uint32_t index) { return imageViewWrappers_[index].release(); }
 
 	private:
 		VulkanContext* context_;

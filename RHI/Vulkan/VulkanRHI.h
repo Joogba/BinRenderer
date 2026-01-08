@@ -18,6 +18,9 @@
 
 namespace BinRenderer::Vulkan
 {
+	class VulkanSemaphore;
+	class VulkanFence;
+
 	/**
 	 * @brief Vulkan RHI 구현
 	 */
@@ -47,6 +50,7 @@ namespace BinRenderer::Vulkan
 		RHIImageHandle createImage(const RHIImageCreateInfo& createInfo) override;
 		RHIShaderHandle createShader(const RHIShaderCreateInfo& createInfo) override;
 		RHIPipelineHandle createPipeline(const RHIPipelineCreateInfo& createInfo) override;
+		RHIPipelineLayoutHandle createPipelineLayout(const RHIPipelineLayoutCreateInfo& createInfo) override;
 		RHIImageViewHandle createImageView(RHIImageHandle image, const RHIImageViewCreateInfo& createInfo) override;
 		RHISamplerHandle createSampler(const RHISamplerCreateInfo& createInfo) override;
 
@@ -63,6 +67,7 @@ namespace BinRenderer::Vulkan
 		void destroyImage(RHIImageHandle image) override;
 		void destroyShader(RHIShaderHandle shader) override;
 		void destroyPipeline(RHIPipelineHandle pipeline) override;
+		void destroyPipelineLayout(RHIPipelineLayoutHandle layout) override;
 		void destroyImageView(RHIImageViewHandle imageView) override;
 		void destroySampler(RHISamplerHandle sampler) override;
 
@@ -139,9 +144,9 @@ namespace BinRenderer::Vulkan
 		std::unique_ptr<VulkanSwapchain> swapchain_;
 
 		// 동기화 객체
-		std::vector<VkSemaphore> imageAvailableSemaphores_;
-		std::vector<VkSemaphore> renderFinishedSemaphores_;
-		std::vector<VkFence> inFlightFences_;
+		std::vector<std::unique_ptr<VulkanSemaphore>> imageAvailableSemaphores_;
+		std::vector<std::unique_ptr<VulkanSemaphore>> renderFinishedSemaphores_;
+		std::vector<std::unique_ptr<VulkanFence>> inFlightFences_;
 		std::vector<VkFence> imagesInFlight_;  //  각 swapchain image가 사용 중인 fence 추적
 
 		// 프레임 관리
@@ -162,6 +167,7 @@ namespace BinRenderer::Vulkan
 		RHIResourcePool<RHIImage, RHIImageHandle> imagePool;
 		RHIResourcePool<RHIShader, RHIShaderHandle> shaderPool;
 		RHIResourcePool<RHIPipeline, RHIPipelineHandle> pipelinePool;
+		RHIResourcePool<RHIPipelineLayout, RHIPipelineLayoutHandle> pipelineLayoutPool;
 		RHIResourcePool<RHIImageView, RHIImageViewHandle> imageViewPool;
 		RHIResourcePool<RHISampler, RHISamplerHandle> samplerPool;
 		RHIResourcePool<RHIDescriptorSet, RHIDescriptorSetHandle> descriptorSetPool;

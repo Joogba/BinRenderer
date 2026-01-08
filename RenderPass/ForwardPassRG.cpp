@@ -889,7 +889,7 @@ namespace BinRenderer
 			imageInfo.samples = RHI_SAMPLE_COUNT_1_BIT;
 
 			dummyCubemap_ = rhi_->createImage(imageInfo);
-			if (dummyCubemap_)
+			if (dummyCubemap_.isValid())
 			{
 				RHIImageViewCreateInfo viewInfo{};
 				viewInfo.viewType = RHI_IMAGE_VIEW_TYPE_2D;  //  2D로 변경
