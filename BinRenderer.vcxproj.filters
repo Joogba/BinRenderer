@@ -815,6 +815,9 @@
     <ClInclude Include="RHI\Structs\RHISyncStructs.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="RHI\Core\RHIResource.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="docs\ResourceHandleSystem.md" />

@@ -184,6 +184,7 @@
     <ClInclude Include="RHI\Core\RHI.h" />
     <ClInclude Include="RHI\Core\RHIDefinitions.h" />
     <ClInclude Include="RHI\Core\RHIHandle.h" />
+    <ClInclude Include="RHI\Core\RHIResource.h" />
     <ClInclude Include="RHI\Core\RHIResourcePool.h" />
     <ClInclude Include="RHI\Core\RHISwapchain.h" />
     <ClInclude Include="RHI\Pipeline\RHIDescriptor.h" />

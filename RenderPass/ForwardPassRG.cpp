@@ -5,9 +5,6 @@
 #include "../Rendering/RHIVertex.h"
 #include "../RHI/Vulkan/VulkanRHI.h"
 #include "../RHI/Vulkan/Pipeline/VulkanPipeline.h"
-#include "../RHI/Vulkan/Pipeline/VulkanDescriptor.h"
-#include "../RHI/Vulkan/Commands/VulkanCommandBuffer.h"
-#include <vulkan/vulkan.h>
 #include <fstream>
 #include <vector>
 
@@ -15,28 +12,27 @@ using namespace BinRenderer::Vulkan;
 
 namespace BinRenderer
 {
-	// 셰이더 파일 읽기 헬퍼 함수
-	static std::vector<uint32_t> readShaderFile(const std::string& filename)
+	// =========================================================================================
+	//  ForwardPassRG Implementation
+	//
+	//  이 클래스는 사용자 정의 렌더 패스를 구현하는 예시입니다.
+	//  RenderGraph (RG) 시스템 내에서 동작하며, 초기화 -> 설정 -> 실행 단계로 구성됩니다.
+	// =========================================================================================
+
+	// Helper: 셰이더 파일 로드 (유틸리티로 분리 가능)
+	static std::vector<uint32_t> loadShaderCode(const std::string& filename)
 	{
 		std::ifstream file(filename, std::ios::binary | std::ios::ate);
 		if (!file.is_open())
 		{
-			printLog("❌ Failed to open shader file: {}", filename);
+			printLog("❌ [ForwardPassRG] Failed to open shader file: {}", filename);
 			return {};
 		}
 
 		size_t fileSize = static_cast<size_t>(file.tellg());
-		if (fileSize == 0 || fileSize % 4 != 0)
-		{
-			printLog("❌ Invalid shader file size: {}", filename);
-			return {};
-		}
-
 		file.seekg(0);
 		std::vector<uint32_t> buffer(fileSize / sizeof(uint32_t));
 		file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
-		file.close();
-
 		return buffer;
 	}
 
@@ -52,23 +48,32 @@ namespace BinRenderer
 		shutdown();
 	}
 
+	// -----------------------------------------------------------------------------------------
+	//  1. Initialize (초기화)
+	//  - 렌더링에 필요한 고정 리소스(Pipeline, Shader, Constant Buffers)를 생성합니다.
+	//  - 앱 실행 시 한 번만 호출됩니다.
+	// -----------------------------------------------------------------------------------------
 	bool ForwardPassRG::initialize()
 	{
 		printLog("[ForwardPassRG] Initializing...");
 		
-		// 1. Dummy Resources 생성 (Descriptor Sets보다 먼저)
+		// 1. 테스트용 더미 리소스 생성 (실제 엔진에서는 Scene/AssetManager 등에서 가져옴)
 		createDummyResources();
 		
-		// 2. Descriptor Sets 생성
+		// 2. 디스크립터 세트 레이아웃 및 풀 생성
 		createDescriptorSets();
 		
-		// 3. 파이프라인 생성 (PBR 셰이더 사용)
+		// 3. 그래픽스 파이프라인 생성 (Shaders, States)
 		createPipeline();
 		
 		printLog("[ForwardPassRG] Initialized successfully");
 		return true;
 	}
 
+	// -----------------------------------------------------------------------------------------
+	//  4. Shutdown (종료)
+	//  - 생성된 모든 RHI 리소스를 정리합니다.
+	// -----------------------------------------------------------------------------------------
 	void ForwardPassRG::shutdown()
 	{
 		destroyDescriptorSets();
@@ -76,375 +81,190 @@ namespace BinRenderer
 		destroyDummyResources();
 	}
 
+	// -----------------------------------------------------------------------------------------
+	//  2. Setup (설정)
+	//  - Render Graph 빌더를 통해 이 패스가 사용하는 입력(Read)과 출력(Write) 리소스를 정의합니다.
+	//  - 텍스처 생성 및 의존성 관리가 여기서 수행됩니다.
+	// -----------------------------------------------------------------------------------------
 	void ForwardPassRG::setup(ForwardPassData& data, RenderGraphBuilder& builder)
 	{
-		printLog("[ForwardPassRG] Setup - Creating output texture");
-
-		// 출력: Forward Output
+		// 출력 텍스처 정의 (HDR Color Buffer)
 		RGTextureDesc forwardDesc;
 		forwardDesc.name = "Forward_Output";
-		forwardDesc.width = 1280;  // TODO: 동적으로 가져오기
+		forwardDesc.width = 1280;  // TODO: Window 크기에 동기화
 		forwardDesc.height = 720;
-		forwardDesc.format = RHI_FORMAT_R8G8B8A8_UNORM;
-		forwardDesc.usage = RHI_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | 
-		                    RHI_IMAGE_USAGE_TRANSFER_SRC_BIT;
+		forwardDesc.format = RHI_FORMAT_R8G8B8A8_UNORM; // 나중에 HDR 포맷(R16G16B16A16)으로 변경 권장
+		forwardDesc.usage = RHI_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | RHI_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
+		// 리소스 생성 및 쓰기 권한 요청
 		data.forwardOut = builder.createTexture(forwardDesc);
 		builder.writeTexture(data.forwardOut);
 		
-		printLog("[ForwardPassRG] Setup complete - Output texture created");
+		printLog("[ForwardPassRG] Setup complete - Output: Forward_Output");
 	}
 
+	// -----------------------------------------------------------------------------------------
+	//  3. Execute (실행)
+	//  - 실제 커맨드 버퍼에 렌더링 명령을 기록합니다.
+	//  - 매 프레임 호출됩니다.
+	// -----------------------------------------------------------------------------------------
 	void ForwardPassRG::execute(const ForwardPassData& data, RHI* rhi, uint32_t frameIndex)
 	{
-		if (frameIndex % 60 == 0)
-		{
-			printLog("[ForwardPassRG] Execute - Frame {}", frameIndex);
-			
-			// Scene 정보 출력
-			if (scene_)
-			{
-				auto models = scene_->getModels();
-				printLog("[ForwardPassRG]   - {} models in scene", models.size());
-			}
-			else
-			{
-				printLog("[ForwardPassRG]   - ⚠️  Scene is null!");
-			}
-		}
-
-		// 커맨드 버퍼 기록 시작
+		// RHI 기록 시작
 		rhi->beginCommandRecording();
 		
-		// ========================================
-		// Pass 책임: Render Target 및 상태 설정
-		// ========================================
-		
-		//  Swapchain 검증
+		// -------------------------------------------------------
+		// A. 렌더 타겟 준비 (Swapchain View 가져오기)
+		// -------------------------------------------------------
 		auto* swapchain = rhi->getSwapchain();
 		if (!swapchain)
 		{
-			printLog("[ForwardPassRG] ❌ Swapchain is null!");
 			rhi->endCommandRecording();
-			rhi->submitCommands();
 			return;
 		}
 
-		//  Swapchain image index 가져오기 (프레임 인덱스가 아님!)
 		uint32_t imageIndex = rhi->getCurrentImageIndex();
-		
-		//  RHIImageView 가져오기 (이제 제대로 구현됨!)
-		RHIImageViewHandle swapchainImageView = swapchain->getImageView(imageIndex);
-		if (swapchainImageView.isValid())
-		{
-			printLog("[ForwardPassRG] ❌ Swapchain image view is null! (index: {})", imageIndex);
-			rhi->endCommandRecording();
-			rhi->submitCommands();
-			return;
-		}
+		RHIImageViewHandle targetImageView = swapchain->getImageView(imageIndex);
 
-		if (frameIndex % 60 == 0)
-		{
-			printLog("[ForwardPassRG]   - Using swapchain image {} (frame: {})", imageIndex, frameIndex);
-		}
-
-		//  실제 렌더러 크기 사용 (하드코딩 제거)
 		uint32_t renderWidth = renderer_ ? renderer_->getWidth() : 1280;
 		uint32_t renderHeight = renderer_ ? renderer_->getHeight() : 720;
 
-		//  Dynamic Rendering 시작
-		rhi->cmdBeginRendering(renderWidth, renderHeight, swapchainImageView, {});
+		// -------------------------------------------------------
+		// B. Dynamic Rendering 시작
+		// - RenderPass 객체 없이 색상/깊이 첨부물을 직접 지정
+		// -------------------------------------------------------
+		rhi->cmdBeginRendering(renderWidth, renderHeight, targetImageView, {}); // Depth attachment 생략 (현재)
 		
-		// Viewport 및 Scissor 설정
-		RHIViewport viewport{};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(renderWidth);
-		viewport.height = static_cast<float>(renderHeight);
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
+		// -------------------------------------------------------
+		// C. 뷰포트 및 가위(Scissor) 설정
+		// -------------------------------------------------------
+		RHIViewport viewport{ 0.0f, 0.0f, (float)renderWidth, (float)renderHeight, 0.0f, 1.0f };
 		rhi->cmdSetViewport(viewport);
 
-		RHIRect2D scissor{};
-		scissor.offset = {0, 0};
-		scissor.extent = {renderWidth, renderHeight};
+		RHIRect2D scissor{ {0, 0}, {renderWidth, renderHeight} };
 		rhi->cmdSetScissor(scissor);
 
-		// Pipeline 바인딩
+		// -------------------------------------------------------
+		// D. 파이프라인 바인딩
+		// -------------------------------------------------------
 		if (pipeline_.isValid())
 		{
 			rhi->cmdBindPipeline(pipeline_);
-			
-			if (frameIndex % 60 == 0)
-			{
-				printLog("[ForwardPassRG]   - Pipeline bound");
-			}
 		}
 
-		//  PBR 셰이더용 Descriptor Sets 바인딩
+		// -------------------------------------------------------
+		// E. 디스크립터 세트(리소스) 바인딩
+		// -------------------------------------------------------
 		if (!sceneDescriptorSets_.empty() && pipeline_.isValid())
 		{
 			uint32_t currentFrame = frameIndex % sceneDescriptorSets_.size();
 			
-			//  모든 Descriptor Sets 바인딩 (Set 0, 1, 2, 3)
-			std::vector<RHIDescriptorSetHandle> allSets;
-			allSets.push_back(sceneDescriptorSets_[currentFrame]); // Set 0
-			if (materialDescriptorSet_.isValid()) allSets.push_back(materialDescriptorSet_); // Set 1
-			if (iblDescriptorSet_.isValid()) allSets.push_back(iblDescriptorSet_);           // Set 2
-			if (shadowDescriptorSet_.isValid()) allSets.push_back(shadowDescriptorSet_);     // Set 3
-			
-			if (!allSets.empty())
+			std::vector<RHIDescriptorSetHandle> setsToBind;
+			setsToBind.push_back(sceneDescriptorSets_[currentFrame]); // Set 0: Scene Data
+			if (materialDescriptorSet_.isValid()) setsToBind.push_back(materialDescriptorSet_); // Set 1: Material
+			if (iblDescriptorSet_.isValid()) setsToBind.push_back(iblDescriptorSet_);           // Set 2: IBL
+			if (shadowDescriptorSet_.isValid()) setsToBind.push_back(shadowDescriptorSet_);     // Set 3: Shadow
+
+			if (!setsToBind.empty())
 			{
-				rhi->cmdBindDescriptorSets(pipeline_, 0, allSets.data(), static_cast<uint32_t>(allSets.size()));
-				
-				if (frameIndex % 60 == 0)
-				{
-					printLog("[ForwardPassRG]    All descriptor sets bound ({} sets, frame: {})", 
-						allSets.size(), currentFrame);
-				}
+				rhi->cmdBindDescriptorSets(pipeline_, 0, setsToBind.data(), (uint32_t)setsToBind.size());
 			}
 		}
 
-		// ========================================
-		// Renderer 책임: 실제 렌더링 로직
-		// ========================================
-		
-		if (scene_ && renderer_ && pipeline_.isValid())
+		// -------------------------------------------------------
+		// F. 씬 렌더링 (Draw Calls)
+		// -------------------------------------------------------
+		if (scene_ && pipeline_.isValid())
 		{
-			//  View와 Projection 행렬 가져오기
-			auto& camera = scene_->getCamera();
-			glm::mat4 view = camera.getMatrices().view;
-			glm::mat4 projection = camera.getMatrices().perspective;
-
-			//  DEBUG: 첫 프레임에 행렬 출력
-			if (frameIndex == 0)
-			{
-				printLog("[ForwardPassRG] Camera Matrices:");
-				printLog("  Camera Position: ({:.2f}, {:.2f}, {:.2f})",
-					camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
-				printLog("  View[0]: ({:.2f}, {:.2f}, {:.2f}, {:.2f})", 
-					view[0][0], view[0][1], view[0][2], view[0][3]);
-				printLog("  View[1]: ({:.2f}, {:.2f}, {:.2f}, {:.2f})", 
-					view[1][0], view[1][1], view[1][2], view[1][3]);
-				printLog("  View[2]: ({:.2f}, {:.2f}, {:.2f}, {:.2f})", 
-					view[2][0], view[2][1], view[2][2], view[2][3]);
-				printLog("  View[3]: ({:.2f}, {:.2f}, {:.2f}, {:.2f})", 
-					view[3][0], view[3][1], view[3][2], view[3][3]);
-				printLog("  Proj[1][1]: {:.2f}", projection[1][1]);
-			}
-
-			//  Scene Nodes 순회 (transform 포함)
 			const auto& nodes = scene_->getNodes();
 			
 			for (const auto& node : nodes)
 			{
-				if (!node.model || !node.visible)
-					continue;
+				if (!node.model || !node.visible) continue;
 
-				//  Model matrix 계산: NodeTransform * ModelTransform
-				glm::mat4 modelMatrix = node.transform * node.model->getTransform();
-				
-				//  PBR Push Constants 구조체
+				// Push Constants: Model Matrix 등 전달
 				struct PushConstants {
 					glm::mat4 model;
 					uint32_t materialIndex;
-					float coeffs[15];
-				} pushConstants;
+					float coeffs[15]; // Padding/Extra
+				} pc;
 				
-				pushConstants.model = modelMatrix;
-				pushConstants.materialIndex = 0; // TODO: 실제 material index
-				// coeffs는 0으로 초기화됨
-				
-				//  Push constants 전달 (model + materialIndex + coeffs)
-				rhi->cmdPushConstants(
-					pipeline_,
-					RHI_SHADER_STAGE_VERTEX_BIT | RHI_SHADER_STAGE_FRAGMENT_BIT,
-					0,
-					sizeof(PushConstants),
-					&pushConstants
-				);
+				pc.model = node.transform * node.model->getTransform();
+				pc.materialIndex = 0; // Temp
 
-				//  각 메시 렌더링
-				for (const auto& meshPtr : node.model->getMeshes())
+				rhi->cmdPushConstants(pipeline_, RHI_SHADER_STAGE_VERTEX_BIT | RHI_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc), &pc);
+
+				// Mesh Draw
+				for (const auto& mesh : node.model->getMeshes())
 				{
-					if (!meshPtr)
-						continue;
-
-					// RHIMesh의 bind와 draw 메서드 사용
-					meshPtr->bind(rhi);
-					meshPtr->draw(rhi, 1);
+					if (mesh)
+					{
+						mesh->bind(rhi);
+						mesh->draw(rhi);
+					}
 				}
 			}
-			
-			if (frameIndex % 60 == 0)
-			{
-				printLog("[ForwardPassRG]   - {} scene nodes rendered with PBR", nodes.size());
-			}
 		}
 
-		//  Dynamic Rendering 종료
+		// -------------------------------------------------------
+		// G. 렌더링 종료 및 제출
+		// -------------------------------------------------------
 		rhi->cmdEndRendering();
-		
-		if (frameIndex % 60 == 0)
-		{
-			printLog("[ForwardPassRG]   - Rendering commands recorded");
-		}
-		
-		// 커맨드 버퍼 기록 종료 및 제출
 		rhi->endCommandRecording();
 		rhi->submitCommands();
 	}
 
+	// =========================================================================================
+	//  Private Methods: Resource Creation
+	// =========================================================================================
+
 	void ForwardPassRG::createPipeline()
 	{
-		printLog("[ForwardPassRG] Creating PBR pipeline...");
+		// 1. 셰이더 로드
+		auto vertCode = loadShaderCode("../../assets/shaders/pbrForward.vert.spv");
+		auto fragCode = loadShaderCode("../../assets/shaders/pbrForward.frag.spv");
 
-		//  PBR 셰이더 사용
-		auto vertCode = readShaderFile("../../assets/shaders/pbrForward.vert.spv");
-		if (vertCode.empty())
-		{
-			printLog("[ForwardPassRG] ❌ Failed to read PBR vertex shader file");
-			return;
-		}
+		if (vertCode.empty() || fragCode.empty()) return;
 
-		RHIShaderCreateInfo vertShaderInfo{};
-		vertShaderInfo.stage = RHI_SHADER_STAGE_VERTEX_BIT;
-		vertShaderInfo.name = "pbrForward.vert";
-		vertShaderInfo.entryPoint = "main";
-		vertShaderInfo.code = std::move(vertCode);
+		RHIShaderCreateInfo vInfo{ RHI_SHADER_STAGE_VERTEX_BIT, "pbrForward.vert", "main", std::move(vertCode) };
+		RHIShaderCreateInfo fInfo{ RHI_SHADER_STAGE_FRAGMENT_BIT, "pbrForward.frag", "main", std::move(fragCode) };
 
-		vertexShader_ = rhi_->createShader(vertShaderInfo);
-		if (!vertexShader_.isValid())
-		{
-			printLog("[ForwardPassRG] ❌ Failed to create PBR vertex shader");
-			return;
-		}
-		printLog("[ForwardPassRG]    PBR Vertex shader created");
+		vertexShader_ = rhi_->createShader(vInfo);
+		fragmentShader_ = rhi_->createShader(fInfo);
 
-		// Fragment Shader 로드
-		auto fragCode = readShaderFile("../../assets/shaders/pbrForward.frag.spv");
-		if (fragCode.empty())
-		{
-			printLog("[ForwardPassRG] ❌ Failed to read PBR fragment shader file");
-			return;
-		}
+		// 2. 파이프라인 상태 설정 (Desc)
+		RHIPipelineCreateInfo info{};
+		info.useDynamicRendering = true;
+		info.colorAttachmentFormats = { RHI_FORMAT_B8G8R8A8_SRGB }; // Swapchain format
+		info.depthAttachmentFormat = RHI_FORMAT_D32_SFLOAT;
+		info.shaderStages = { vertexShader_, fragmentShader_ };
+		
+		// Descriptor Layouts
+		if (sceneDescriptorLayout_.isValid()) info.descriptorSetLayouts.push_back(sceneDescriptorLayout_);
+		if (materialDescriptorLayout_.isValid()) info.descriptorSetLayouts.push_back(materialDescriptorLayout_);
+		if (iblDescriptorLayout_.isValid()) info.descriptorSetLayouts.push_back(iblDescriptorLayout_);
+		if (shadowDescriptorLayout_.isValid()) info.descriptorSetLayouts.push_back(shadowDescriptorLayout_);
 
-		RHIShaderCreateInfo fragShaderInfo{};
-		fragShaderInfo.stage = RHI_SHADER_STAGE_FRAGMENT_BIT;
-		fragShaderInfo.name = "pbrForward.frag";
-		fragShaderInfo.entryPoint = "main";
-		fragShaderInfo.code = std::move(fragCode);
+		// Vertex Input (From Helper)
+		info.vertexInputState.bindings = { RHIVertexHelper::getVertexBinding() };
+		auto attrs = RHIVertexHelper::getVertexAttributesAnimated();
+		info.vertexInputState.attributes.assign(attrs.begin(), attrs.end());
 
-		fragmentShader_ = rhi_->createShader(fragShaderInfo);
-		if (!fragmentShader_.isValid())
-		{
-			printLog("[ForwardPassRG] ❌ Failed to create PBR fragment shader");
-			return;
-		}
-		printLog("[ForwardPassRG]    PBR Fragment shader created");
+		// Push Constants (128 bytes)
+		info.pushConstantRanges.push_back({ RHI_SHADER_STAGE_VERTEX_BIT | RHI_SHADER_STAGE_FRAGMENT_BIT, 0, 128 });
 
-		// Pipeline 생성
-		RHIPipelineCreateInfo pipelineInfo{};
-		
-		//  Dynamic Rendering 설정
-		pipelineInfo.useDynamicRendering = true;
-		pipelineInfo.colorAttachmentFormats.push_back(RHI_FORMAT_B8G8R8A8_SRGB); // Swapchain format
-		pipelineInfo.depthAttachmentFormat = RHI_FORMAT_D32_SFLOAT;
-		
-		// Shader stages 설정
-		pipelineInfo.shaderStages.push_back(vertexShader_);
-		pipelineInfo.shaderStages.push_back(fragmentShader_);
-		
-		//  PBR 셰이더용 descriptor sets (4개 세트)
-		if (sceneDescriptorLayout_.isValid())
-		{
-			pipelineInfo.descriptorSetLayouts.push_back(sceneDescriptorLayout_);
-		}
-		if (materialDescriptorLayout_.isValid())
-		{
-			pipelineInfo.descriptorSetLayouts.push_back(materialDescriptorLayout_);
-		}
-		if (iblDescriptorLayout_.isValid())
-		{
-			pipelineInfo.descriptorSetLayouts.push_back(iblDescriptorLayout_);
-		}
-		if (shadowDescriptorLayout_.isValid())
-		{
-			pipelineInfo.descriptorSetLayouts.push_back(shadowDescriptorLayout_);
-		}
-		
-		printLog("[ForwardPassRG]   - Pipeline will use {} descriptor set layouts", 
-			pipelineInfo.descriptorSetLayouts.size());
+		// Rasterizer / Depth / Blend (Default similar settings)
+		info.rasterizationState.cullMode = RHI_CULL_MODE_BACK_BIT;
+		info.depthStencilState.depthTestEnable = false; // TODO: true for real depth
+		info.depthStencilState.depthWriteEnable = true;
+		info.colorBlendState.attachments.push_back({ false, 0xF }); // No blending
 
-		//  PBR 셰이더용 Push constants (model matrix + materialIndex + coeffs)
-		RHIPushConstantRange pushConstantRange{};
-		pushConstantRange.stageFlags = RHI_SHADER_STAGE_VERTEX_BIT | RHI_SHADER_STAGE_FRAGMENT_BIT;
-		pushConstantRange.offset = 0;
-		pushConstantRange.size = sizeof(glm::mat4) + sizeof(uint32_t) + sizeof(float) * 15; // 128 bytes
-		pipelineInfo.pushConstantRanges.push_back(pushConstantRange);
-
-		//  Vertex Input State - RHIVertexHelper 사용 (half precision 지원)
-		auto vertexBinding = RHIVertexHelper::getVertexBinding();
-		pipelineInfo.vertexInputState.bindings.push_back(vertexBinding);
-
-		//  Animated vertex attributes 사용 (bone data 포함)
-		auto vertexAttributes = RHIVertexHelper::getVertexAttributesAnimated();
-		for (const auto& attr : vertexAttributes)
-		{
-			pipelineInfo.vertexInputState.attributes.push_back(attr);
-		}
-		
-		printLog("[ForwardPassRG]    Vertex input: {} per-vertex attributes (using RHIVertexHelper, half precision)", 
-			vertexAttributes.size());
-
-		// ⚠️ GPU Instancing 비활성화 (현재 사용하지 않음)
-		pipelineInfo.enableInstancing = false;
-		
-		// Input Assembly State
-		pipelineInfo.inputAssemblyState.topology = RHI_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		pipelineInfo.inputAssemblyState.primitiveRestartEnable = false;
-		
-		// Viewport State (동적 상태로 설정)
-		pipelineInfo.viewportState.viewportCount = 1;
-		pipelineInfo.viewportState.scissorCount = 1;
-		
-		// Rasterization State
-		pipelineInfo.rasterizationState.depthClampEnable = false;
-		pipelineInfo.rasterizationState.rasterizerDiscardEnable = false;
-		pipelineInfo.rasterizationState.polygonMode = RHI_POLYGON_MODE_FILL;
-		pipelineInfo.rasterizationState.cullMode = RHI_CULL_MODE_BACK_BIT;
-		pipelineInfo.rasterizationState.frontFace = RHI_FRONT_FACE_COUNTER_CLOCKWISE;
-		pipelineInfo.rasterizationState.depthBiasEnable = false;
-		pipelineInfo.rasterizationState.lineWidth = 1.0f;
-		
-		// Multisample State
-		pipelineInfo.multisampleState.rasterizationSamples = RHI_SAMPLE_COUNT_1_BIT;
-		pipelineInfo.multisampleState.sampleShadingEnable = false;
-		
-		// Depth Stencil State
-		pipelineInfo.depthStencilState.depthTestEnable = false;
-		pipelineInfo.depthStencilState.depthWriteEnable = true;
-		pipelineInfo.depthStencilState.depthCompareOp = RHI_COMPARE_OP_LESS;
-		pipelineInfo.depthStencilState.stencilTestEnable = false;
-		
-		// Color Blend State
-		RHIPipelineColorBlendAttachment colorBlendAttachment{};
-		colorBlendAttachment.blendEnable = false;
-		colorBlendAttachment.colorWriteMask = 0xF; // RGBA
-		pipelineInfo.colorBlendState.attachments.push_back(colorBlendAttachment);
-		
 		// Dynamic States
-		pipelineInfo.dynamicStates.push_back(RHI_DYNAMIC_STATE_VIEWPORT);
-		pipelineInfo.dynamicStates.push_back(RHI_DYNAMIC_STATE_SCISSOR);
+		info.dynamicStates = { RHI_DYNAMIC_STATE_VIEWPORT, RHI_DYNAMIC_STATE_SCISSOR };
 
-		pipeline_ = rhi_->createPipeline(pipelineInfo);
-		if (!pipeline_.isValid())
-		{
-			printLog("[ForwardPassRG] ❌ Failed to create pipeline");
-			return;
-		}
-
-		printLog("[ForwardPassRG]  Pipeline created successfully");
+		// 3. 파이프라인 생성
+		pipeline_ = rhi_->createPipeline(info);
+		printLog("[ForwardPassRG] Pipeline created");
 	}
 
 	void ForwardPassRG::destroyPipeline()
@@ -467,371 +287,165 @@ namespace BinRenderer
 
 	void ForwardPassRG::createDescriptorSets()
 	{
-		printLog("[ForwardPassRG] Creating descriptor sets for PBR rendering...");
+		printLog("[ForwardPassRG] Creating descriptor layouts and sets...");
 		
-		if (!renderer_)
+		if (!renderer_) return;
+
+		// -------------------------------------------------------
+		// 1. Descriptor Set Layouts 정의
+		// - 셰이더 리소스(UBO, Texture 등)의 바인딩 슬롯을 정의합니다.
+		// -------------------------------------------------------
+		
+		// Set 0: Scene Global Data (UBOs)
 		{
-			printLog("[ForwardPassRG] ⚠️  Renderer is null, cannot create descriptor sets");
-			return;
+			RHIDescriptorSetLayoutCreateInfo info;
+			info.bindings = {
+				{ 0, RHI_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, RHI_SHADER_STAGE_VERTEX_BIT | RHI_SHADER_STAGE_FRAGMENT_BIT }, // SceneData
+				{ 1, RHI_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, RHI_SHADER_STAGE_VERTEX_BIT | RHI_SHADER_STAGE_FRAGMENT_BIT }, // Options
+				{ 2, RHI_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, RHI_SHADER_STAGE_VERTEX_BIT }  // BoneData
+			};
+			sceneDescriptorLayout_ = rhi_->createDescriptorSetLayout(info);
 		}
 
-		// ========================================
-		// Set 0: Scene UBO (SceneData, Options, BoneData)
-		// ========================================
+		// Set 1: Materials (StorageBuffer + Textures)
 		{
-			RHIDescriptorSetLayoutCreateInfo layoutInfo{};
-			
-			// Binding 0: SceneDataUBO
-			RHIDescriptorSetLayoutBinding sceneBinding{};
-			sceneBinding.binding = 0;
-			sceneBinding.descriptorType = RHI_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			sceneBinding.descriptorCount = 1;
-			sceneBinding.stageFlags = RHI_SHADER_STAGE_VERTEX_BIT | RHI_SHADER_STAGE_FRAGMENT_BIT;
-			layoutInfo.bindings.push_back(sceneBinding);
-			
-			// Binding 1: OptionsUBO
-			RHIDescriptorSetLayoutBinding optionsBinding{};
-			optionsBinding.binding = 1;
-			optionsBinding.descriptorType = RHI_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			optionsBinding.descriptorCount = 1;
-			optionsBinding.stageFlags = RHI_SHADER_STAGE_VERTEX_BIT | RHI_SHADER_STAGE_FRAGMENT_BIT;
-			layoutInfo.bindings.push_back(optionsBinding);
-			
-			// Binding 2: BoneDataUBO
-			RHIDescriptorSetLayoutBinding boneBinding{};
-			boneBinding.binding = 2;
-			boneBinding.descriptorType = RHI_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			boneBinding.descriptorCount = 1;
-			boneBinding.stageFlags = RHI_SHADER_STAGE_VERTEX_BIT;
-			layoutInfo.bindings.push_back(boneBinding);
-			
-			sceneDescriptorLayout_ = rhi_->createDescriptorSetLayout(layoutInfo);
-			if (!sceneDescriptorLayout_.isValid())
-			{
-				printLog("[ForwardPassRG] ❌ Failed to create scene descriptor layout");
-				return;
-			}
-			printLog("[ForwardPassRG]    Scene descriptor layout created");
+			RHIDescriptorSetLayoutCreateInfo info;
+			info.bindings = {
+				{ 0, RHI_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, RHI_SHADER_STAGE_FRAGMENT_BIT }, // Material Data
+				{ 1, RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 512, RHI_SHADER_STAGE_FRAGMENT_BIT } // Bindless Textures
+			};
+			materialDescriptorLayout_ = rhi_->createDescriptorSetLayout(info);
 		}
 
-		// ========================================
-		// Set 1: Material (Material Buffer + Textures)
-		// ========================================
+		// Set 2: IBL (Environment Maps)
 		{
-			RHIDescriptorSetLayoutCreateInfo layoutInfo{};
-			
-			// Binding 0: Material Storage Buffer
-			RHIDescriptorSetLayoutBinding materialBufferBinding{};
-			materialBufferBinding.binding = 0;
-			materialBufferBinding.descriptorType = RHI_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			materialBufferBinding.descriptorCount = 1;
-			materialBufferBinding.stageFlags = RHI_SHADER_STAGE_FRAGMENT_BIT;
-			layoutInfo.bindings.push_back(materialBufferBinding);
-			
-			// Binding 1: Material Textures (bindless, 512개)
-			RHIDescriptorSetLayoutBinding texturesBinding{};
-			texturesBinding.binding = 1;
-			texturesBinding.descriptorType = RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			texturesBinding.descriptorCount = 512; // TextureManager::kMaxTextures_
-			texturesBinding.stageFlags = RHI_SHADER_STAGE_FRAGMENT_BIT;
-			layoutInfo.bindings.push_back(texturesBinding);
-			
-			materialDescriptorLayout_ = rhi_->createDescriptorSetLayout(layoutInfo);
-			if (!materialDescriptorLayout_.isValid())
-			{
-				printLog("[ForwardPassRG] ❌ Failed to create material descriptor layout");
-				return;
-			}
-			printLog("[ForwardPassRG]    Material descriptor layout created");
+			RHIDescriptorSetLayoutCreateInfo info;
+			info.bindings = {
+				{ 0, RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, RHI_SHADER_STAGE_FRAGMENT_BIT }, // Prefiltered
+				{ 1, RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, RHI_SHADER_STAGE_FRAGMENT_BIT }, // Irradiance
+				{ 2, RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, RHI_SHADER_STAGE_FRAGMENT_BIT }  // BRDF LUT
+			};
+			iblDescriptorLayout_ = rhi_->createDescriptorSetLayout(info);
 		}
 
-		// ========================================
-		// Set 2: IBL (Dummy for now)
-		// ========================================
+		// Set 3: Shadow Maps
 		{
-			RHIDescriptorSetLayoutCreateInfo layoutInfo{};
-			
-			// Binding 0: Prefiltered Map (cubemap)
-			RHIDescriptorSetLayoutBinding prefilteredBinding{};
-			prefilteredBinding.binding = 0;
-			prefilteredBinding.descriptorType = RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			prefilteredBinding.descriptorCount = 1;
-			prefilteredBinding.stageFlags = RHI_SHADER_STAGE_FRAGMENT_BIT;
-			layoutInfo.bindings.push_back(prefilteredBinding);
-			
-			// Binding 1: Irradiance Map (cubemap)
-			RHIDescriptorSetLayoutBinding irradianceBinding{};
-			irradianceBinding.binding = 1;
-			irradianceBinding.descriptorType = RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			irradianceBinding.descriptorCount = 1;
-			irradianceBinding.stageFlags = RHI_SHADER_STAGE_FRAGMENT_BIT;
-			layoutInfo.bindings.push_back(irradianceBinding);
-			
-			// Binding 2: BRDF LUT (2D texture)
-			RHIDescriptorSetLayoutBinding brdfBinding{};
-			brdfBinding.binding = 2;
-			brdfBinding.descriptorType = RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			brdfBinding.descriptorCount = 1;
-			brdfBinding.stageFlags = RHI_SHADER_STAGE_FRAGMENT_BIT;
-			layoutInfo.bindings.push_back(brdfBinding);
-			
-			iblDescriptorLayout_ = rhi_->createDescriptorSetLayout(layoutInfo);
-			if (!iblDescriptorLayout_.isValid())
-			{
-				printLog("[ForwardPassRG] ❌ Failed to create IBL descriptor layout");
-				return;
-			}
-			printLog("[ForwardPassRG]    IBL descriptor layout created");
+			RHIDescriptorSetLayoutCreateInfo info;
+			info.bindings = {
+				{ 0, RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, RHI_SHADER_STAGE_FRAGMENT_BIT } // Shadow map
+			};
+			shadowDescriptorLayout_ = rhi_->createDescriptorSetLayout(info);
 		}
 
-		// ========================================
-		// Set 3: Shadow Map (Dummy for now)
-		// ========================================
+		// -------------------------------------------------------
+		// 2. Descriptor Pool 생성
+		// - 필요한 총 디스크립터 개수를 추산하여 풀을 생성합니다.
+		// -------------------------------------------------------
+		RHIDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.maxSets = 100; // 넉넉하게
+		poolInfo.poolSizes = {
+			{ RHI_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100 },
+			{ RHI_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10 },
+			{ RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 }
+		};
+		descriptorPool_ = rhi_->createDescriptorPool(poolInfo);
+
+		// -------------------------------------------------------
+		// 3. Descriptor Sets 할당 및 업데이트 
+		// - 실제 리소스(Buffer, ImageView)를 바인딩합니다.
+		// -------------------------------------------------------
+		
+		// Set 0: Per-Frame Scene Data
+		uint32_t maxFrames = 2; // Double Buffering
+		sceneDescriptorSets_.resize(maxFrames);
+		for (uint32_t i = 0; i < maxFrames; i++)
 		{
-			RHIDescriptorSetLayoutCreateInfo layoutInfo{};
-			
-			// Binding 0: Shadow Map (depth texture)
-			RHIDescriptorSetLayoutBinding shadowBinding{};
-			shadowBinding.binding = 0;
-			shadowBinding.descriptorType = RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			shadowBinding.descriptorCount = 1;
-			shadowBinding.stageFlags = RHI_SHADER_STAGE_FRAGMENT_BIT;
-			layoutInfo.bindings.push_back(shadowBinding);
-			
-			shadowDescriptorLayout_ = rhi_->createDescriptorSetLayout(layoutInfo);
-			if (!shadowDescriptorLayout_.isValid())
+			sceneDescriptorSets_[i] = rhi_->allocateDescriptorSet(descriptorPool_, sceneDescriptorLayout_);
+			if (renderer_)
 			{
-				printLog("[ForwardPassRG] ❌ Failed to create shadow descriptor layout");
-				return;
+				rhi_->updateDescriptorSet(sceneDescriptorSets_[i], 0, renderer_->getSceneUniformBuffer(i), 0, sizeof(SceneUniform));
+				rhi_->updateDescriptorSet(sceneDescriptorSets_[i], 1, renderer_->getOptionsUniformBuffer(i), 0, sizeof(OptionsUniform));
+				rhi_->updateDescriptorSet(sceneDescriptorSets_[i], 2, renderer_->getBoneDataUniformBuffer(i), 0, sizeof(BoneDataUniform));
 			}
-			printLog("[ForwardPassRG]    Shadow descriptor layout created");
 		}
 
-		// ========================================
-		// Descriptor Pool 생성
-		// ========================================
+		// Set 1: Material (Global)
+		materialDescriptorSet_ = rhi_->allocateDescriptorSet(descriptorPool_, materialDescriptorLayout_);
+		if (dummyMaterialBuffer_.isValid())
 		{
-			RHIDescriptorPoolCreateInfo poolInfo{};
-			poolInfo.maxSets = 20; // 여유있게 할당
-			
-			// Uniform buffers (Set 0: 3 bindings * 2 frames)
-			RHIDescriptorPoolSize uniformPoolSize{};
-			uniformPoolSize.type = RHI_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			uniformPoolSize.descriptorCount = 6;
-			poolInfo.poolSizes.push_back(uniformPoolSize);
-			
-			// Storage buffers (Set 1: Material buffer)
-			RHIDescriptorPoolSize storagePoolSize{};
-			storagePoolSize.type = RHI_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			storagePoolSize.descriptorCount = 2;
-			poolInfo.poolSizes.push_back(storagePoolSize);
-			
-			// Combined image samplers (Set 1: 512 textures + Set 2: 3 IBL + Set 3: 1 shadow)
-			RHIDescriptorPoolSize samplerPoolSize{};
-			samplerPoolSize.type = RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			samplerPoolSize.descriptorCount = 520;
-			poolInfo.poolSizes.push_back(samplerPoolSize);
-			
-			descriptorPool_ = rhi_->createDescriptorPool(poolInfo);
-			if (!descriptorPool_.isValid())
-			{
-				printLog("[ForwardPassRG] ❌ Failed to create descriptor pool");
-				return;
-			}
-			printLog("[ForwardPassRG]    Descriptor pool created");
-		}
-
-		// ========================================
-		// Scene Descriptor Sets 할당 (per-frame)
-		// ========================================
-		{
-			uint32_t maxFrames = 2; // TODO: renderer에서 가져오기
-			sceneDescriptorSets_.resize(maxFrames);
-			
-			for (uint32_t i = 0; i < maxFrames; i++)
-			{
-				sceneDescriptorSets_[i] = rhi_->allocateDescriptorSet(descriptorPool_, sceneDescriptorLayout_);
-				if (!sceneDescriptorSets_[i].isValid())
-				{
-					printLog("[ForwardPassRG] ❌ Failed to allocate scene descriptor set {}", i);
-					return;
-				}
-				
-				// Uniform buffers 바인딩
-				RHIBufferHandle sceneBuffer = renderer_->getSceneUniformBuffer(i);
-				RHIBufferHandle optionsBuffer = renderer_->getOptionsUniformBuffer(i);
-				RHIBufferHandle boneBuffer = renderer_->getBoneDataUniformBuffer(i);
-				
-				if (sceneBuffer.isValid())
-				{
-					rhi_->updateDescriptorSet(sceneDescriptorSets_[i], 0, sceneBuffer, 0, sizeof(SceneUniform));
-				}
-				if (optionsBuffer.isValid())
-				{
-					rhi_->updateDescriptorSet(sceneDescriptorSets_[i], 1, optionsBuffer, 0, sizeof(OptionsUniform));
-				}
-				if (boneBuffer.isValid())
-				{
-					rhi_->updateDescriptorSet(sceneDescriptorSets_[i], 2, boneBuffer, 0, sizeof(BoneDataUniform));
-				}
-			}
-			
-			printLog("[ForwardPassRG]    Scene descriptor sets allocated and updated ({})", maxFrames);
-		}
-
-		// ========================================
-		// Material Descriptor Set 할당 (공유)
-		// ========================================
-		{
-			materialDescriptorSet_ = rhi_->allocateDescriptorSet(descriptorPool_, materialDescriptorLayout_);
-			if (!materialDescriptorSet_.isValid())
-			{
-				printLog("[ForwardPassRG] ❌ Failed to allocate material descriptor set");
-				return;
-			}
-			
-			//  Material buffer 바인딩
-			if (dummyMaterialBuffer_.isValid())
-			{
-				rhi_->updateDescriptorSet(materialDescriptorSet_, 0, dummyMaterialBuffer_, 0, 0);
-			}
-
-			//  Dummy texture 바인딩 (binding 1에 첫 번째만 - 나머지는 나중에)
-			// TODO: 512개 배열 바인딩 API 필요
-			if (dummyTextureView_.isValid() && dummySampler_.isValid())
+			rhi_->updateDescriptorSet(materialDescriptorSet_, 0, dummyMaterialBuffer_, 0, 0); // Full range
+			// Textures are bound dynamically or bindless (TODO implementation)
+			if (dummyTextureView_.isValid())
 			{
 				rhi_->updateDescriptorSet(materialDescriptorSet_, 1, dummyTextureView_, dummySampler_);
 			}
-
-			printLog("[ForwardPassRG]    Material descriptor set allocated and bound");
 		}
 
-		// ========================================
-		// IBL Descriptor Set 할당 (공유)
-		// ========================================
+		// Set 2: IBL (Global)
+		iblDescriptorSet_ = rhi_->allocateDescriptorSet(descriptorPool_, iblDescriptorLayout_);
+		if (dummyCubemapView_.isValid())
 		{
-			iblDescriptorSet_ = rhi_->allocateDescriptorSet(descriptorPool_, iblDescriptorLayout_);
-			if (!iblDescriptorSet_.isValid())
-			{
-				printLog("[ForwardPassRG] ❌ Failed to allocate IBL descriptor set");
-				return;
-			}
-			
-			//  Dummy cubemaps 바인딩
-			if (dummyCubemapView_.isValid() && dummySampler_.isValid())
-			{
-				rhi_->updateDescriptorSet(iblDescriptorSet_, 0, dummyCubemapView_, dummySampler_); // Prefiltered
-				rhi_->updateDescriptorSet(iblDescriptorSet_, 1, dummyCubemapView_, dummySampler_); // Irradiance
-				rhi_->updateDescriptorSet(iblDescriptorSet_, 2, dummyTextureView_, dummySampler_);  // BRDF LUT (2D)
-			}
-
-			printLog("[ForwardPassRG]    IBL descriptor set allocated and bound");
+			rhi_->updateDescriptorSet(iblDescriptorSet_, 0, dummyCubemapView_, dummySampler_);
+			rhi_->updateDescriptorSet(iblDescriptorSet_, 1, dummyCubemapView_, dummySampler_);
+			rhi_->updateDescriptorSet(iblDescriptorSet_, 2, dummyTextureView_, dummySampler_); // BRDF (Use 2D for now)
 		}
 
-		// ========================================
-		// Shadow Descriptor Set 할당 (공유)
-		// ========================================
+		// Set 3: Shadows (Global)
+		shadowDescriptorSet_ = rhi_->allocateDescriptorSet(descriptorPool_, shadowDescriptorLayout_);
+		if (dummyShadowMapView_.isValid())
 		{
-			shadowDescriptorSet_ = rhi_->allocateDescriptorSet(descriptorPool_, shadowDescriptorLayout_);
-			if (!shadowDescriptorSet_.isValid())
-			{
-				printLog("[ForwardPassRG] ❌ Failed to allocate shadow descriptor set");
-				return;
-			}
-			
-			//  Dummy shadow map 바인딩
-			if (dummyShadowMapView_.isValid() && dummySampler_.isValid())
-			{
-				rhi_->updateDescriptorSet(shadowDescriptorSet_, 0, dummyShadowMapView_, dummySampler_);
-			}
-
-			printLog("[ForwardPassRG]    Shadow descriptor set allocated and bound");
+			rhi_->updateDescriptorSet(shadowDescriptorSet_, 0, dummyShadowMapView_, dummySampler_);
 		}
-		
-		printLog("[ForwardPassRG]  All descriptor sets created successfully");
+
+		printLog("[ForwardPassRG] Descriptor sets prepared.");
 	}
 
 	void ForwardPassRG::destroyDescriptorSets()
 	{
 		printLog("[ForwardPassRG] Cleaning up descriptor sets...");
 		
-		// Descriptor Sets는 Pool이 파괴되면 자동으로 해제됨
 		sceneDescriptorSets_.clear();
 		materialDescriptorSet_ = {};
 		iblDescriptorSet_ = {};
 		shadowDescriptorSet_ = {};
 		
-		// Descriptor Pool 파괴
-		if (descriptorPool_.isValid())
-		{
-			rhi_->destroyDescriptorPool(descriptorPool_);
-			descriptorPool_ = {};
-		}
+		if (descriptorPool_.isValid()) rhi_->destroyDescriptorPool(descriptorPool_);
+		if (sceneDescriptorLayout_.isValid()) rhi_->destroyDescriptorSetLayout(sceneDescriptorLayout_);
+		if (materialDescriptorLayout_.isValid()) rhi_->destroyDescriptorSetLayout(materialDescriptorLayout_);
+		if (iblDescriptorLayout_.isValid()) rhi_->destroyDescriptorSetLayout(iblDescriptorLayout_);
+		if (shadowDescriptorLayout_.isValid()) rhi_->destroyDescriptorSetLayout(shadowDescriptorLayout_);
 		
-		// Descriptor Layouts 파괴
-		if (sceneDescriptorLayout_.isValid())
-		{
-			rhi_->destroyDescriptorSetLayout(sceneDescriptorLayout_);
-			sceneDescriptorLayout_ = {};
-		}
-		if (materialDescriptorLayout_.isValid())
-		{
-			rhi_->destroyDescriptorSetLayout(materialDescriptorLayout_);
-			materialDescriptorLayout_ = {};
-		}
-		if (iblDescriptorLayout_.isValid())
-		{
-			rhi_->destroyDescriptorSetLayout(iblDescriptorLayout_);
-			iblDescriptorLayout_ = {};
-		}
-		if (shadowDescriptorLayout_.isValid())
-		{
-			rhi_->destroyDescriptorSetLayout(shadowDescriptorLayout_);
-			shadowDescriptorLayout_ = {};
-		}
-		
-		printLog("[ForwardPassRG]  Descriptor sets cleanup complete");
+		descriptorPool_ = {};
+		sceneDescriptorLayout_ = {};
+		materialDescriptorLayout_ = {};
+		iblDescriptorLayout_ = {};
+		shadowDescriptorLayout_ = {};
 	}
 
 	void ForwardPassRG::updateDescriptorSets(uint32_t frameIndex)
 	{
-		// TODO: Update descriptor sets per frame
-		// - Scene UBO binding
-		// - Material textures binding
+		// 이 예제에서는 정적 바인딩을 주로 사용하거나 execute() 시점에 동적 바인딩을 처리합니다.
+		// 만약 매 프레임 갱신이 필요한 디스크립터가 있다면 여기서 처리합니다.
 	}
 
 	void ForwardPassRG::createDummyResources()
 	{
-		printLog("[ForwardPassRG] Creating dummy resources...");
+		printLog("[ForwardPassRG] Creating dummy resources (Fallback for missing assets)...");
 
-		// ========================================
-		// Dummy Sampler
-		// ========================================
-		RHISamplerCreateInfo samplerInfo{};
+		// 1. Dummy Sampler
+		RHISamplerCreateInfo samplerInfo{}; 
 		dummySampler_ = rhi_->createSampler(samplerInfo);
-		if (!dummySampler_.isValid())
-		{
-			printLog("[ForwardPassRG] ❌ Failed to create dummy sampler");
-			return;
-		}
 
-		// ========================================
-		// Dummy Material Buffer (단일 material)
-		// ========================================
+		// 2. Dummy Material Buffer (Default White Material)
 		{
 			struct DummyMaterialData {
 				glm::vec4 emissiveFactor = glm::vec4(0.0f);
-				glm::vec4 baseColorFactor = glm::vec4(1.0f); // 흰색
+				glm::vec4 baseColorFactor = glm::vec4(1.0f);
 				float roughness = 1.0f;
 				float transparency = 1.0f;
 				float discardAlpha = 0.0f;
 				float metallic = 0.0f;
-				int32_t baseColorTextureIndex = -1;
-				int32_t emissiveTextureIndex = -1;
-				int32_t normalTextureIndex = -1;
-				int32_t opacityTextureIndex = -1;
-				int32_t metallicRoughnessTextureIndex = -1;
-				int32_t occlusionTextureIndex = -1;
+				int32_t textureIndices[6] = { -1, -1, -1, -1, -1, -1 }; // Base, Emissive, Normal, Opacity, MetallicRoughness, Occlusion
 			};
 
 			RHIBufferCreateInfo bufferInfo{};
@@ -842,147 +456,67 @@ namespace BinRenderer
 			dummyMaterialBuffer_ = rhi_->createBuffer(bufferInfo);
 			if (dummyMaterialBuffer_.isValid())
 			{
-				DummyMaterialData materialData;
-				void* data = rhi_->mapBuffer(dummyMaterialBuffer_);
-				memcpy(data, &materialData, sizeof(DummyMaterialData));
+				DummyMaterialData data;
+				void* mapped = rhi_->mapBuffer(dummyMaterialBuffer_);
+				memcpy(mapped, &data, sizeof(DummyMaterialData));
 				rhi_->unmapBuffer(dummyMaterialBuffer_);
-				printLog("[ForwardPassRG]    Dummy material buffer created");
 			}
 		}
 
-		// ========================================
-		// Dummy 2D Texture (흰색 4x4) -  1x1 대신 4x4 사용
-		// ========================================
-		{
-			RHIImageCreateInfo imageInfo{};
-			imageInfo.width = 4;   //  4x4로 변경 (1x1은 1D로 인식됨)
-			imageInfo.height = 4;  // 
-			imageInfo.depth = 1;   //  명시적으로 설정
-			imageInfo.format = RHI_FORMAT_R8G8B8A8_UNORM;
-			imageInfo.usage = RHI_IMAGE_USAGE_SAMPLED_BIT | RHI_IMAGE_USAGE_TRANSFER_DST_BIT;
-			imageInfo.samples = RHI_SAMPLE_COUNT_1_BIT;
-
-			dummyTexture_ = rhi_->createImage(imageInfo);
-			if (dummyTexture_.isValid())
-			{
+		// Helper to create valid 4x4 dummy textures
+		auto createDummyImage = [&](RHIFormat format, RHIImageUsageFlags usage, RHIImageAspectFlags aspect) -> std::pair<RHIImageHandle, RHIImageViewHandle> {
+			RHIImageCreateInfo imgInfo{};
+			imgInfo.width = 4; imgInfo.height = 4; imgInfo.depth = 1;
+			imgInfo.format = format;
+			imgInfo.usage = usage | RHI_IMAGE_USAGE_TRANSFER_DST_BIT; // Transfer dst for potential clearing/upload
+			
+			RHIImageHandle img = rhi_->createImage(imgInfo);
+			RHIImageViewHandle view = {};
+			
+			if (img.isValid()) {
 				RHIImageViewCreateInfo viewInfo{};
 				viewInfo.viewType = RHI_IMAGE_VIEW_TYPE_2D;
-				viewInfo.aspectMask = RHI_IMAGE_ASPECT_COLOR_BIT;
-
-				dummyTextureView_ = rhi_->createImageView(dummyTexture_, viewInfo);
-				printLog("[ForwardPassRG]    Dummy 2D texture created (4x4)");
+				viewInfo.aspectMask = aspect;
+				view = rhi_->createImageView(img, viewInfo);
 			}
-		}
+			return { img, view };
+		};
 
-		// ========================================
-		// Dummy Cubemap (검은색 4x4x6) -  임시로 2D 텍스처로 대체
-		// ========================================
-		{
-			RHIImageCreateInfo imageInfo{};
-			imageInfo.width = 4;   //  4x4로 변경
-			imageInfo.height = 4;  // 
-			imageInfo.depth = 1;   //  명시적으로 설정
-			// ❌ Cubemap은 나중에 구현 - 지금은 2D로 대체
-			// imageInfo.arrayLayers = 6;  
-			imageInfo.format = RHI_FORMAT_R8G8B8A8_UNORM;
-			imageInfo.usage = RHI_IMAGE_USAGE_SAMPLED_BIT | RHI_IMAGE_USAGE_TRANSFER_DST_BIT;
-			imageInfo.samples = RHI_SAMPLE_COUNT_1_BIT;
+		// 3. Create Textures
+		// White Texture
+		auto [tex, texView] = createDummyImage(RHI_FORMAT_R8G8B8A8_UNORM, RHI_IMAGE_USAGE_SAMPLED_BIT, RHI_IMAGE_ASPECT_COLOR_BIT);
+		dummyTexture_ = tex; dummyTextureView_ = texView;
 
-			dummyCubemap_ = rhi_->createImage(imageInfo);
-			if (dummyCubemap_.isValid())
-			{
-				RHIImageViewCreateInfo viewInfo{};
-				viewInfo.viewType = RHI_IMAGE_VIEW_TYPE_2D;  //  2D로 변경
-				viewInfo.aspectMask = RHI_IMAGE_ASPECT_COLOR_BIT;
+		// Cubemap (Using 2D fallback for now as requested)
+		auto [cube, cubeView] = createDummyImage(RHI_FORMAT_R8G8B8A8_UNORM, RHI_IMAGE_USAGE_SAMPLED_BIT, RHI_IMAGE_ASPECT_COLOR_BIT);
+		dummyCubemap_ = cube; dummyCubemapView_ = cubeView;
 
-				dummyCubemapView_ = rhi_->createImageView(dummyCubemap_, viewInfo);
-				printLog("[ForwardPassRG]    Dummy cubemap created (4x4 2D - TODO: make real cubemap)");
-			}
-		}
+		// Shadow Map (Depth)
+		auto [shadow, shadowView] = createDummyImage(RHI_FORMAT_D32_SFLOAT, RHI_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | RHI_IMAGE_USAGE_SAMPLED_BIT, RHI_IMAGE_ASPECT_DEPTH_BIT);
+		dummyShadowMap_ = shadow; dummyShadowMapView_ = shadowView;
 
-		// ========================================
-		// Dummy Shadow Map (4x4 depth) -  1x1 대신 4x4 사용
-		// ========================================
-		{
-			RHIImageCreateInfo imageInfo{};
-			imageInfo.width = 4;   //  4x4로 변경
-			imageInfo.height = 4;  // 
-			imageInfo.depth = 1;   //  명시적으로 설정
-			imageInfo.format = RHI_FORMAT_D32_SFLOAT;
-			imageInfo.usage = RHI_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | RHI_IMAGE_USAGE_SAMPLED_BIT;
-			imageInfo.samples = RHI_SAMPLE_COUNT_1_BIT;
-
-			dummyShadowMap_ = rhi_->createImage(imageInfo);
-			if (dummyShadowMap_)
-			{
-				RHIImageViewCreateInfo viewInfo{};
-				viewInfo.viewType = RHI_IMAGE_VIEW_TYPE_2D;
-				viewInfo.aspectMask = RHI_IMAGE_ASPECT_DEPTH_BIT;
-
-				dummyShadowMapView_ = rhi_->createImageView(dummyShadowMap_, viewInfo);
-				printLog("[ForwardPassRG]    Dummy shadow map created (4x4)");
-			}
-		}
-
-		// ========================================
-		//  Dummy Images Layout Transition
-		// ========================================
-		printLog("[ForwardPassRG]   Transitioning dummy images to SHADER_READ_ONLY_OPTIMAL...");
-		
+		// 4. Transition Layouts
+		// 리소스를 사용 가능한 상태(Shader Read Only)로 전이합니다.
 		rhi_->beginCommandRecording();
 		
-		// 1. Dummy Texture (2D color)
-		if (dummyTexture_)
-		{
-			rhi_->cmdTransitionImageLayout(
-				dummyTexture_,
-				RHI_IMAGE_LAYOUT_UNDEFINED,
-				RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				RHI_IMAGE_ASPECT_COLOR_BIT,
-				0, 1,  // mipLevel range
-				0, 1   // arrayLayer range
-			);
-		}
+		if (dummyTexture_.isValid())
+			rhi_->cmdTransitionImageLayout(dummyTexture_, RHI_IMAGE_LAYOUT_UNDEFINED, RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, RHI_IMAGE_ASPECT_COLOR_BIT);
 		
-		// 2. Dummy Cubemap (2D color - TODO: should be cube)
-		if (dummyCubemap_)
-		{
-			rhi_->cmdTransitionImageLayout(
-				dummyCubemap_,
-				RHI_IMAGE_LAYOUT_UNDEFINED,
-				RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				RHI_IMAGE_ASPECT_COLOR_BIT,
-				0, 1,  // mipLevel range
-				0, 1   // arrayLayer range (현재 2D이므로 1)
-			);
-		}
-		
-		// 3. Dummy Shadow Map (Depth)
-		if (dummyShadowMap_)
-		{
-			rhi_->cmdTransitionImageLayout(
-				dummyShadowMap_,
-				RHI_IMAGE_LAYOUT_UNDEFINED,
-				RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				RHI_IMAGE_ASPECT_DEPTH_BIT,
-				0, 1,  // mipLevel range
-				0, 1   // arrayLayer range
-			);
-		}
-		
-		rhi_->endCommandRecording();
-		rhi_->submitCommands();
-		rhi_->waitIdle();
-		
-		printLog("[ForwardPassRG]    All dummy images transitioned to SHADER_READ_ONLY_OPTIMAL");
+		if (dummyCubemap_.isValid())
+			rhi_->cmdTransitionImageLayout(dummyCubemap_, RHI_IMAGE_LAYOUT_UNDEFINED, RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, RHI_IMAGE_ASPECT_COLOR_BIT);
+			
+		if (dummyShadowMap_.isValid())
+			rhi_->cmdTransitionImageLayout(dummyShadowMap_, RHI_IMAGE_LAYOUT_UNDEFINED, RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, RHI_IMAGE_ASPECT_DEPTH_BIT);
 
-		printLog("[ForwardPassRG]  All dummy resources created");
+		rhi_->endCommandRecording();
+		rhi_->submitCommands(); // Immediate submit for initialization
+		rhi_->waitIdle();
+
+		printLog("[ForwardPassRG] Dummy resources created.");
 	}
 
 	void ForwardPassRG::destroyDummyResources()
 	{
-		printLog("[ForwardPassRG] Cleaning up dummy resources...");
-
 		if (dummyShadowMapView_.isValid()) rhi_->destroyImageView(dummyShadowMapView_);
 		if (dummyShadowMap_.isValid()) rhi_->destroyImage(dummyShadowMap_);
 		if (dummyCubemapView_.isValid()) rhi_->destroyImageView(dummyCubemapView_);
@@ -992,16 +526,10 @@ namespace BinRenderer
 		if (dummySampler_.isValid()) rhi_->destroySampler(dummySampler_);
 		if (dummyMaterialBuffer_.isValid()) rhi_->destroyBuffer(dummyMaterialBuffer_);
 
-		dummyShadowMapView_ = {};
-		dummyShadowMap_ = {};
-		dummyCubemapView_ = {};
-		dummyCubemap_ = {};
-		dummyTextureView_ = {};
-		dummyTexture_ = {};
-		dummySampler_ = {};
-		dummyMaterialBuffer_ = {};
-
-		printLog("[ForwardPassRG]  Dummy resources cleanup complete");
+		dummyShadowMapView_ = {}; dummyShadowMap_ = {};
+		dummyCubemapView_ = {}; dummyCubemap_ = {};
+		dummyTextureView_ = {}; dummyTexture_ = {};
+		dummySampler_ = {}; dummyMaterialBuffer_ = {};
 	}
 
 } // namespace BinRenderer
