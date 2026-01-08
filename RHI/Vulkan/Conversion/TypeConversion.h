@@ -33,6 +33,12 @@ namespace BinRenderer::Vulkan
 		// Image Tiling 변환
 		static VkImageTiling toVkImageTiling(RHIImageTiling tiling);
 
+		// Image View Type 변환
+		static VkImageViewType toVkImageViewType(RHIImageViewType type);
+
+		// Image Aspect Flags 변환
+		static VkImageAspectFlags toVkImageAspectFlags(RHIImageAspectFlagBits flags);
+
 	private:
 		TypeConversion() = delete;
 	};

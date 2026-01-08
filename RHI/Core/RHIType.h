@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -635,6 +635,7 @@ namespace BinRenderer
 		RHI_PRESENT_MODE_FIFO_KHR = 2,
 		RHI_PRESENT_MODE_FIFO_RELAXED_KHR = 3,
 	};
+
 
 	// Typedefs for flag types
 	typedef uint32_t RHIAccessFlags;

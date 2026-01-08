@@ -42,4 +42,14 @@ namespace BinRenderer::Vulkan
 		return static_cast<VkImageTiling>(tiling);
 	}
 
+	VkImageViewType TypeConversion::toVkImageViewType(RHIImageViewType type)
+	{
+		return static_cast<VkImageViewType>(type);
+	}
+
+	VkImageAspectFlags TypeConversion::toVkImageAspectFlags(RHIImageAspectFlagBits flags)
+	{
+		return static_cast<VkImageAspectFlags>(flags);
+	}
+
 } // namespace BinRenderer::Vulkan
